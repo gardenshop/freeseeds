@@ -64,6 +64,7 @@ class OrdersDb {
   failOrderReads = false;
   failOrderDetailReads = false;
   syncCursor = false;
+  failIntentTable = false;
   changedRows: Array<{ id: string; updated_at: string }> = [];
 
   prepare(sql: string): D1PreparedStatement {
@@ -89,9 +90,11 @@ class OrdersDb {
   private first(sql: string, args: unknown[]): Record<string, unknown> | null {
     this.calls.push({ sql, args });
     if (this.failOrderReads && sql.startsWith("SELECT COUNT(*) AS all_count")) throw new Error("D1 row read limit exceeded");
+    if (this.failIntentTable && sql.startsWith("SELECT COUNT(*) AS active_intent_count")) throw new Error("no such table: order_confirmation_intents");
     if (this.failOrderDetailReads && sql.startsWith("SELECT o.id") && sql.includes("WHERE o.id=?")) throw new Error("D1 error 7500: daily row read limit exceeded");
     if (sql.startsWith("SELECT updated_at,id FROM (")) return this.syncCursor ? { updated_at: syntheticOrder.updated_at, id: syntheticOrder.id } : null;
-    if (sql.startsWith("SELECT COUNT(*) AS all_count")) return { all_count: 58, verify_count: 7, confirmed_count: 19, fulfillment_count: 14, total_count: 58 };
+    if (sql.startsWith("SELECT COUNT(*) AS all_count")) return { all_count: 58, verify_count: 7, confirmed_count: 19, fulfillment_count: 14, total_count: 58, reconciliation_paid_recorded_count: 12, reconciliation_confirmed_cod_count: 3, reconciliation_payment_review_count: 7, reconciliation_unresolved_count: 23, reconciliation_cod_confirmation_unknown_count: 2, reconciliation_expired_count: 4, reconciliation_cancelled_count: 5, reconciliation_unreachable_count: 6, reconciliation_fulfillment_conflict_count: 1, reconciliation_fulfillment_started_count: 14 };
+    if (sql.startsWith("SELECT COUNT(*) AS active_intent_count")) return { active_intent_count: 2 };
     if (sql.startsWith("SELECT p.review_state")) return this.approvalRow;
     if (sql.startsWith("SELECT o.id") && sql.includes("WHERE o.id=?")) return syntheticOrder;
     return null;
@@ -99,6 +102,8 @@ class OrdersDb {
 
   private all(sql: string, args: unknown[]): Record<string, unknown>[] {
     this.calls.push({ sql, args });
+    if (this.failIntentTable && sql.startsWith("SELECT order_id,state,presented_at,deadline_at FROM order_confirmation_intents")) throw new Error("no such table: order_confirmation_intents");
+    if (sql.startsWith("SELECT order_id,state,presented_at,deadline_at FROM order_confirmation_intents")) return [];
     if (sql.startsWith("SELECT id,MAX(updated_at) AS updated_at")) return this.changedRows;
     if (sql.startsWith("SELECT o.id") && sql.includes("o.id IN (")) return this.changedRows.length ? [syntheticOrder] : [];
     if (sql.includes("o.pack_quantity") && sql.includes("ORDER BY o.created_at DESC,o.id DESC")) {
@@ -120,6 +125,19 @@ async function csrf(db: OrdersDb) {
 }
 
 describe("GFS-139 orders dashboard API", () => {
+  it("exposes a read-only reconciliation tab without a sequence-start action", async () => {
+    const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: auth }), environment(new OrdersDb()));
+    const html = await response.text();
+    expect(response.status).toBe(200);
+    expect(html).toContain('data-tab="reconcile"');
+    expect(html).toContain("read-only overlapping counts");
+    expect(html).toContain("no bank re-verification, writes, or messages");
+    expect(html).toContain("tab==='reconcile'&&!new URLSearchParams(location.search).has('archived')");
+    expect(html).toContain("Reconciliation: '+esc(r.paymentClass)+' · COD consent: '");
+    expect(html).toContain("reconciliationExportButton.hidden=true");
+    expect(html).not.toContain("Start confirmation sequence");
+  });
+
   it("returns 503 when the order database binding is unavailable", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/api/orders", { headers: auth }), environment());
     expect(response.status).toBe(503);
@@ -131,11 +149,12 @@ describe("GFS-139 orders dashboard API", () => {
     const response = await app.fetch(new Request("https://admin.example.test/api/orders?tab=verify&page=2&pageSize=25&q=03001234567&date=2026-10-16&paymentStatus=REVIEW&archived=all", { headers: auth }), environment(db));
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toContain("private, no-store");
-    const body = await response.json() as { counts: Record<string, number>; total: number; pagination: Record<string, number>; orders: Array<Record<string, unknown>> };
-    expect(body.counts).toEqual({ all: 58, verify: 7, confirmed: 19, fulfillment: 14, noMethod: 0, paymentChoicePending: 0, paymentNotSent: 0, deliveryFailed: 0, unpaidAfterDelivery: 0 });
+    const body = await response.json() as { counts: Record<string, number>; reconciliationCounts: Record<string, unknown> | null; total: number; pagination: Record<string, number>; orders: Array<Record<string, unknown>> };
+    expect(body.counts).toEqual({ all: 58, verify: 7, confirmed: 19, fulfillment: 14, reconcile: 58, noMethod: 0, paymentChoicePending: 0, paymentNotSent: 0, deliveryFailed: 0, unpaidAfterDelivery: 0 });
+    expect(body.reconciliationCounts).toBeNull();
     expect(body.total).toBe(58);
     expect(body.pagination).toEqual({ page: 2, pageSize: 25, totalPages: 3 });
-    expect(body.orders[0]).toMatchObject({ id: "synthetic-order-newest", itemSummary: "Synthetic seed packs x 5", receiptCount: 1 });
+    expect(body.orders[0]).toMatchObject({ id: "synthetic-order-newest", itemSummary: "Synthetic seed packs x 5", receiptCount: 1, reconciliation: { paymentClass: "PAYMENT_REVIEW", codConsent: "NOT_COD", sequenceDisposition: "RESOLVED_NO_SEND", dispatchDisposition: "BLOCKED_PAYMENT_REVIEW" } });
     const listCall = db.calls.find((call) => call.sql.startsWith("SELECT o.id") && call.sql.includes("LIMIT ? OFFSET ?"));
     expect(listCall?.sql).toContain("ORDER BY o.created_at DESC,o.id DESC");
     expect(listCall?.args.slice(-2)).toEqual([25, 25]);
@@ -144,6 +163,39 @@ describe("GFS-139 orders dashboard API", () => {
     expect(listCall?.sql).not.toContain("substr(o.created_at");
     expect(listCall?.args).toContain("2026-10-16T00:00:00.000Z");
     expect(listCall?.args).toContain("2026-10-17T00:00:00.000Z");
+  });
+
+  it("shows an all-history read-only reconciliation snapshot with active intent counts", async () => {
+    const db = new OrdersDb();
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders?tab=reconcile", { headers: auth }), environment(db));
+    expect(response.status).toBe(200);
+    const body = await response.json() as { reconciliationCounts: Record<string, unknown>; countsAsOf: string; orders: Array<Record<string, unknown>> };
+    expect(body.reconciliationCounts).toMatchObject({ activeIntent: 2, intentSchemaAvailable: true });
+    expect(Number.isFinite(Date.parse(body.countsAsOf))).toBe(true);
+    expect(body.orders[0].reconciliation).toBeDefined();
+    const listCall = db.calls.find((call) => call.sql.startsWith("SELECT o.id") && call.sql.includes("LIMIT ? OFFSET ?"));
+    expect(listCall?.sql).not.toContain("o.archived_at IS NULL");
+    expect(db.batches).toBe(0);
+    expect(db.calls.every((call) => !/\b(INSERT|UPDATE|DELETE|REPLACE)\b/i.test(call.sql))).toBe(true);
+  });
+
+  it("denies CSV export from the reconciliation worklist before reading order rows", async () => {
+    const db = new OrdersDb();
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders/export?tab=reconcile", { headers: auth }), environment(db));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "RECONCILIATION_EXPORT_DISABLED" });
+    expect(db.calls).toHaveLength(0);
+  });
+
+  it("marks intent schema as unavailable without fabricating a zero count when migration 0050 is absent", async () => {
+    const db = new OrdersDb();
+    db.failIntentTable = true;
+    const response = await app.fetch(new Request("https://admin.example.test/api/orders?tab=reconcile", { headers: auth }), environment(db));
+    expect(response.status).toBe(200);
+    const body = await response.json() as { reconciliationCounts: Record<string, unknown>; orders: Array<Record<string, unknown>> };
+    expect(body.reconciliationCounts).toMatchObject({ activeIntent: null, intentSchemaAvailable: false });
+    expect(body.orders[0].reconciliation).toMatchObject({ sequenceDisposition: "INTENT_SCHEMA_NOT_DEPLOYED" });
+    expect(db.batches).toBe(0);
   });
 
   it("returns a bounded no-change response for an authenticated sync cursor", async () => {

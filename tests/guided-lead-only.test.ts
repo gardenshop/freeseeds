@@ -98,7 +98,7 @@ async function adminPost(path: string, body: Record<string, unknown>, referenceR
 }
 
 async function inbound(input: string | Record<string, unknown>, id = `synthetic-inbound-${++sequence}`, waId = sender) {
-  const message = { from: waId, id, timestamp: "1792497600", ...(typeof input === "string" ? { type: "text", text: { body: input } } : { type: "interactive", interactive: input }) };
+  const message = { from: waId, id, timestamp: String(Math.floor(Date.now() / 1000)), ...(typeof input === "string" ? { type: "text", text: { body: input } } : { type: "interactive", interactive: input }) };
   const response = await callback([message]);
   expect(response.status).toBe(200);
   return message;
@@ -169,6 +169,23 @@ async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: s
 }
 
 describe("frozen V1 receipt hotfix", () => {
+  it("allows one synthetic mobile-CTWA first response without preexisting FEP expiry or pricing evidence", async () => {
+    const id="synthetic-ctwa-opening-response";
+    const timestamp=String(Math.floor(Date.now()/1000));
+    const message={from:sender,id,timestamp,type:"text",text:{body:"Hello"},referral:{ctwa_clid:"synthetic-ctwa-click-id",source_type:"ad",platform:"android"}};
+    expect((await callback([message])).status).toBe(200);
+    expect(sends).toHaveLength(1);
+    expect(buttonTitles()).toEqual(["اردو","English"]);
+    const stateRow=sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE wa_id=?").get(sender) as {state_data:string};
+    const state=JSON.parse(stateRow.state_data) as {freeMessagingEvidence:{openingResponse:Record<string,unknown>;fep?:unknown;pricing?:unknown}};
+    expect(state.freeMessagingEvidence.openingResponse).toMatchObject({sourceType:"CTWA_AD",platform:"ANDROID",policyVerified:true,firstResponseAttemptedAt:expect.any(String),firstBusinessResponseAt:expect.any(String),firstResponseMessageIdHash:expect.stringMatching(/^[a-f0-9]{64}$/)});
+    expect(state.freeMessagingEvidence.openingResponse).not.toHaveProperty("ctwaClid");
+    expect(state.freeMessagingEvidence).not.toHaveProperty("fep");
+    expect(state.freeMessagingEvidence).not.toHaveProperty("pricing");
+    expect((await callback([message])).status).toBe(200);
+    expect(sends).toHaveLength(1);
+  });
+
   it.each(["en", "ur"] as const)("keeps CONTACT for invalid mobile input and normalizes a valid hyphenated number (%s)", async (language) => {
     await inbound("START");
     await inbound(tap(language === "ur" ? "LANG_UR" : "LANG_EN"));
@@ -199,7 +216,7 @@ describe("frozen V1 receipt hotfix", () => {
       return sendFetch(input,init);
     }));
 
-    const response=await callback([{from:sender,id:"synthetic-v1-image-event",timestamp:"1792497600",type:"image",image:{id:"synthetic-v1-media-id",mime_type:"image/png"}}]);
+    const response=await callback([{from:sender,id:"synthetic-v1-image-event",timestamp:String(Math.floor(Date.now()/1000)),type:"image",image:{id:"synthetic-v1-media-id",mime_type:"image/png"}}]);
 
     expect(response.status).toBe(200);
     expect(conversation(sender)).toMatchObject({state:"PAYMENT_REFERENCE",data:{orderId:order.orderId,orderNumber:order.orderNumber}});
@@ -222,7 +239,7 @@ describe("frozen V1 receipt hotfix", () => {
       if (url === "https://synthetic-media.test/document.jpg") return new Response(new Uint8Array([9, 8, 7]), { headers: { "content-type": "image/jpeg" } });
       return originalFetch(input, init);
     }));
-    const document = { from: sender, id: "synthetic-document-event", timestamp: "1792497600", type: "document", document: { id: "synthetic-document-media", mime_type: "image/jpeg" }, context: { id: "synthetic-unrelated-chat-message" } };
+    const document = { from: sender, id: "synthetic-document-event", timestamp: String(Math.floor(Date.now()/1000)), type: "document", document: { id: "synthetic-document-media", mime_type: "image/jpeg" }, context: { id: "synthetic-unrelated-chat-message" } };
     expect((await callback([document])).status).toBe(200);
     expect(sqlite.prepare("SELECT order_id,mime_type FROM payment_receipts WHERE provider_media_id=?").get("synthetic-document-media")).toEqual({ order_id: order.orderId, mime_type: "image/jpeg" });
     const audit = sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='RECEIPT_SUBMITTED' AND entity_id=(SELECT id FROM payments WHERE order_id=?)").get(order.orderId) as { metadata_json: string };
@@ -251,7 +268,7 @@ describe("frozen V1 receipt hotfix", () => {
       if(url==="https://synthetic-media.test/non-payment.png")return new Response(new Uint8Array([7,8,9]),{headers:{"content-type":"image/png"}});
       return sendFetch(input,init);
     }));
-    const image={from:waId,id:`synthetic-image-event-${language}`,timestamp:"1792497600",type:"image",image:{id:`synthetic-wamid-media-id-${language}`,mime_type:"image/png"},context:{id:paymentMessageId}};
+    const image={from:waId,id:`synthetic-image-event-${language}`,timestamp:String(Math.floor(Date.now()/1000)),type:"image",image:{id:`synthetic-wamid-media-id-${language}`,mime_type:"image/png"},context:{id:paymentMessageId}};
 
     expect((await callback([image])).status).toBe(200);
     expect(body()).toBe(language === "ur" ? `آرڈر ${order.orderNumber} کی رسید موصول ہو گئی۔ ادائیگی ایڈمن کے جائزے میں ہے۔ تصدیق کے بعد اطلاع دی جائے گی۔` : `Receipt received for order ${order.orderNumber}. Your payment is under Admin review. We will notify you after verification.`);
@@ -274,7 +291,7 @@ describe("frozen V1 receipt hotfix", () => {
     sqlite.prepare("UPDATE customers SET wa_id=NULL,whatsapp_number=?,normalized_whatsapp_number=NULL WHERE id=?").run(waId,ambiguousOrder.customerId);
     sqlite.prepare("UPDATE orders SET state='PAYMENT_PENDING',payment_status='PENDING' WHERE id=?").run(ambiguousOrder.orderId);
     sqlite.prepare("UPDATE payments SET review_state='PENDING' WHERE id=?").run(secondPayment.id);
-    const unassociatedImage={from:waId,id:`synthetic-ambiguous-image-event-${language}`,timestamp:"1792497601",type:"image",image:{id:`synthetic-unassociated-media-id-${language}`,mime_type:"image/png"}};
+    const unassociatedImage={from:waId,id:`synthetic-ambiguous-image-event-${language}`,timestamp:String(Math.floor(Date.now()/1000)),type:"image",image:{id:`synthetic-unassociated-media-id-${language}`,mime_type:"image/png"}};
     expect((await callback([unassociatedImage])).status).toBe(200);
     expect(sends).toHaveLength(outboundCount);
     expect(receiptPuts).toBe(1);
@@ -717,9 +734,16 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(audit.metadata_json).not.toContain(codHmacKey);
 
     const adminResponse = await admin.fetch(new Request("https://admin.example.test/api/orders?tab=all", { headers: { "cf-access-authenticated-user-email": "admin@example.test" } }), { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as never);
-    const adminOrders = await adminResponse.json() as { orders: Array<{ id: string; paymentStatus: string; paymentReviewState: string; expectedAmountPkr: number; totalPayablePkr: number; codBaseAmountPkr: number; codQuotedTotalPkr: number }> };
+    const adminOrders = await adminResponse.json() as { orders: Array<{ id: string; paymentStatus: string; paymentReviewState: string; expectedAmountPkr: number; totalPayablePkr: number; codBaseAmountPkr: number; codQuotedTotalPkr: number; reconciliation: { paymentClass: string; codConsent: string; sequenceDisposition: string; dispatchDisposition: string } }> };
     const adminOrder = adminOrders.orders.find((item) => item.id === confirmedData.orderId)!;
-    expect(adminOrder).toMatchObject({ paymentMethod: "COD", paymentStatus: "COD_PENDING", paymentReviewState: "COD_PENDING", expectedAmountPkr: 325, totalPayablePkr: 325, codBaseAmountPkr: 200, codQuotedTotalPkr: 325 });
+    expect(adminOrder).toMatchObject({ paymentMethod: "COD", paymentStatus: "COD_PENDING", paymentReviewState: "COD_PENDING", expectedAmountPkr: 325, totalPayablePkr: 325, codBaseAmountPkr: 200, codQuotedTotalPkr: 325, reconciliation: { paymentClass: "CONFIRMED_COD", codConsent: "CUSTOMER_CONFIRMED", sequenceDisposition: "RESOLVED_NO_SEND", dispatchDisposition: "BLOCKED_HOLD" } });
+    const sendsBeforeReconciliation = sends.length;
+    const reconciliationResponse = await admin.fetch(new Request("https://admin.example.test/api/orders?tab=reconcile", { headers: { "cf-access-authenticated-user-email": "admin@example.test" } }), { DB: db, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" } as never);
+    expect(reconciliationResponse.status).toBe(200);
+    const reconciliation = await reconciliationResponse.json() as { reconciliationCounts: Record<string, unknown>; orders: Array<{ id: string }> };
+    expect(reconciliation.reconciliationCounts).toMatchObject({ confirmedCod: 1, intentSchemaAvailable: true });
+    expect(reconciliation.orders.some((item) => item.id === confirmedData.orderId)).toBe(true);
+    expect(sends).toHaveLength(sendsBeforeReconciliation);
 
     const sendsAfterConfirmation = sends.length;
     await callback([confirmedEvent]);
@@ -738,7 +762,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(body()).toContain("Order Status: COD Confirmed/Pending Dispatch");
     expect(body()).toContain("Total Payable: PKR 325");
 
-    const image = { from: sender, id: "synthetic-cod-receipt-image", timestamp: "1792497600", type: "image", image: { id: "synthetic-cod-media-id", mime_type: "image/png" } };
+    const image = { from: sender, id: "synthetic-cod-receipt-image", timestamp: String(Math.floor(Date.now()/1000)), type: "image", image: { id: "synthetic-cod-media-id", mime_type: "image/png" } };
     const sentBeforeImage = sends.length;
     expect((await callback([image])).status).toBe(200);
     expect(sends).toHaveLength(sentBeforeImage);
@@ -845,7 +869,7 @@ beforeEach(() => {
       const checkedAt = Date.now();
       const syntheticFreeEvidence = {
         fep: { sourceType: "CTWA_AD", platform: "ANDROID", clickIdHash: "d".repeat(64), referralAt: new Date(checkedAt - 2 * 60_000).toISOString(), firstBusinessResponseAt: new Date(checkedAt - 60_000).toISOString(), expiryVerified: true, verifiedAt: new Date(checkedAt - 30_000).toISOString(), verifiedExpiresAt: new Date(checkedAt + 6 * 24 * 60 * 60_000).toISOString(), expiryEvidenceRef: "synthetic-meta-expiry-evidence" },
-        pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", subtype: "free_entry_point", category: "SERVICE", form: "FREEFORM", evidenceRef: "synthetic-meta-pricing-evidence", observedAt: new Date(checkedAt - 30_000).toISOString(), verifiedAt: new Date(checkedAt - 30_000).toISOString(), validUntil: new Date(checkedAt + 60 * 60_000).toISOString() }
+        pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", category: "REFERRAL_CONVERSION", messageCategory: "SERVICE", pricingModel: "PMP", form: "FREEFORM", evidenceRef: "synthetic-meta-pricing-evidence", observedAt: new Date(checkedAt - 30_000).toISOString(), verifiedAt: new Date(checkedAt - 30_000).toISOString(), validUntil: new Date(checkedAt + 60 * 60_000).toISOString() }
       };
       for (const row of sqlite.prepare("SELECT id,state_data FROM whatsapp_conversations").all() as Array<{ id: string; state_data: string | null }>) {
         try {
@@ -1115,10 +1139,9 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT count(*) AS count FROM capi_events WHERE event_name='Purchase'").get()).toEqual({count:0});
   });
 
-  it("stores trusted inbound receipt time and leaves it unchanged for status-only callbacks", async () => {
+  it("stores the provider inbound timestamp and leaves it unchanged for status-only callbacks", async () => {
     const message = await inbound("START", "synthetic-window-inbound");
-    const event = sqlite.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").get(`message:${message.id}`) as { created_at: string };
-    expect(lastInboundAt()).toBe(event.created_at);
+    expect(lastInboundAt()).toBe(new Date(Number(message.timestamp)*1000).toISOString());
     const recordedAt = lastInboundAt();
     await callback([], [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: [{ id: "synthetic-provider-status", status: "delivered" }] } }]);
     expect(lastInboundAt()).toBe(recordedAt);
@@ -1168,7 +1191,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run("synthetic-stale-conversation", sender, "LANGUAGE", "{}", inboundId, oldAt, oldAt, oldAt);
     sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES(?,?,?,?,?,?,?)").run("synthetic-stale-outbound", `conversation_reply:${inboundId}`, "CONVERSATION_REPLY", "FAILED", 1, oldAt, oldAt);
     const sentBefore = sends.length;
-    const response = await callback([{ from: sender, id: inboundId, type: "text", text: { body: "invalid-language" } }]);
+    const response = await callback([{ from: sender, id: inboundId, timestamp:String(Math.floor(Date.parse(oldAt)/1000)),type: "text", text: { body: "invalid-language" } }]);
     expect(response.status).toBe(200);
     expect(sends).toHaveLength(sentBefore);
     expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").get(`conversation_reply:${inboundId}`)).toEqual({ status: "PERMANENT_FAILURE", last_error: "WHATSAPP_SERVICE_WINDOW_CLOSED" });
@@ -1603,7 +1626,7 @@ describe("GFS-403 cancellation reasons, feedback, and immutable stage facts", ()
     const inboundId = "gfs403-old-window";
     sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES(?,?,?,?,?,?,?)").run("gfs403-old-event", `message:${inboundId}`, "INTERACTIVE", "synthetic-old-hash", "RECEIVED", "gfs403-old-correlation", oldAt);
     sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)").run("gfs403-old-conversation", sender, "OFFER", JSON.stringify({ language: "en" }), inboundId, oldAt, oldAt, oldAt);
-    const response = await callback([{ from: sender, id: inboundId, type: "interactive", interactive: tap("CANCEL_OFFER") }]);
+    const response = await callback([{ from: sender, id: inboundId, timestamp:String(Math.floor(Date.parse(oldAt)/1000)),type: "interactive", interactive: tap("CANCEL_OFFER") }]);
     expect(response.status).toBe(200);
     expect(conversation()?.state).toBe("CANCELLED");
     expect(sqlite.prepare("SELECT original_stage FROM checkout_cancellation_events").get()).toEqual({ original_stage: "OFFER" });

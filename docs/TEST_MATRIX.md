@@ -30,6 +30,39 @@
 
 TID-001 is local acceptance only. Meta/FEP, actual bank credit and WhatsApp client rendering were not tested live. Unknown free eligibility fails closed; no paid fallback. Total Payable is the only customer amount label.
 
+## GFS ORDERFLOW FEP-001 closeout (2026-11-26 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Focused FEP/intent/API/service-window suites | PASS136/SKIP1 | Four synthetic files: `free-messaging`, `order-intent`, `guided-lead-only` and `service-window`. |
+| Full Vitest after FEP-001 | PASS451/SKIP1 | `npm.cmd test -- --run`; 38 files, no live provider/hosted DB/customer fixture. |
+| Documented Node suites | PASS52/52 | Eight safety/controller/capacity scripts; mocks only, not a live rollback exercise. |
+| Build/lint/production audit | PASS | `npm.cmd run build`; `npm.cmd run lint`; `npm.cmd audit --omit=dev` (0 production findings). Six known moderate development-tool findings remain unchanged. |
+| Migration boundary | PASS / LOCAL ONLY | `0049` -> unchanged `0050` -> local `0051`; no remote apply. `0050` SHA-256 remains `d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4`. |
+| Template register | PASS / READ-ONLY HISTORICAL | Policy register lists only the two last-observed EN/UR Utility names and their exact **Active - Quality pending** status; no inferred mapping or fresh approval claim. U01-U11 remain local specs. |
+| Protected checkout | PASS923/923 | Recomputed SHA-256 against the existing 923-entry Label Printer baseline: 923 identical,0 changed,0 missing. |
+| External/release boundary | NO MUTATION | No account audit repeated, page navigated, template submitted, live message, billing change, payment, migration, deployment or routing change. WhatsApp remains NO-GO. |
+
+FEP-001 is local acceptance only. Per-contact mobile referral/platform, exact FEP expiry/pricing, current monthly service-tier balance, template quality/approval, sender display-name clearance and A10 rollback remain open production gates. No paid fallback or launch authorization.
+
+## GFS ORDERFLOW PENDING-001 closeout (2026-11-26 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Focused PENDING/Admin/fulfillment suite | PASS218/SKIP1 | Eight files: `order-reconciliation`, `admin-orders`, `cod-admin`, `admin-fulfillment`, `admin-payment`, `guided-lead-only`, `admin-controls`, `admin-layout`; synthetic D1/SQLite only. |
+| Focused FEP/intent/service-window suite after PENDING-001 | PASS136/SKIP1 | Four files: `free-messaging`, `order-intent`, `guided-lead-only`, `service-window`. |
+| Final full Vitest | PASS465/SKIP1 | `npm.cmd test -- --run`; 39 files, no hosted/live customer fixture. |
+| Documented Node safety suites | PASS52/52 | Eight controller/capacity scripts; mocked only. |
+| Build and lint | PASS | `npm.cmd run build`; `npm.cmd run lint`. |
+| Dependency audit | PASS production / OPEN dev | `npm.cmd audit --omit=dev`:0 production findings. Six registered moderate development-tool findings remain unchanged. |
+| Reconciliation-query integration | PASS local | Real synthetic SQLite/Admin route test asserts explicit COD matching, archived-inclusive counts, active-intent schema handling and no message send. Missing migration0050 is surfaced as unavailable, not as a fabricated zero. |
+| Report side effects/export | PASS local | Report performs no DML/enqueue/backfill; reconciliation CSV route is denied before row reads and the UI hides the export control while on this tab. |
+| Fulfillment guards | PASS local | COD state transition requires exact customer confirmation; Advance state transition atomically rechecks PAID, exact expected/approved amount, stored receipt, and matched Admin settlement/TID-hash evidence. Failed evidence leaves order state unchanged. |
+| Migrations/protected files | PASS local boundary | No migration applied; `0050` remains SHA-256 `d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4`; Label Printer hashes923/923. |
+| Live data/external actions | NOT PERFORMED | No current production counts or per-order decisions refreshed; no browser connector was exposed. No direct D1 workaround, external identity re-audit, migration, deployment, send, payment, COD/order transition or account change. |
+
+PENDING-001 local implementation/test acceptance passes. S2 operational exit remains partial until supported authenticated read-only current/historical row evidence and final A-G denominators are reviewed. Local synthetic data is not live order classification. WhatsApp stays NO-GO; LAUNCH-001 is not started.
+
 INT01-21/S1 local acceptance is complete. The timer is customer-confirmation policy only. No stock/warehouse schema or dependency; eligibility locks are cooldown-only. Per-contact live FEP expiry/pricing, display-name/template quality and release-specific rollback remain production gates; no paid fallback and no WhatsApp launch authorization.
 
 ## GFS ORDERFLOW Hono security correction (2026-11-25 UTC)

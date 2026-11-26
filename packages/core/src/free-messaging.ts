@@ -2,8 +2,21 @@ import { WHATSAPP_SERVICE_WINDOW_MS } from "./service-window";
 
 export type WhatsAppOutboundForm = "FREEFORM" | "TEMPLATE";
 export type WhatsAppBillingCategory = "SERVICE" | "UTILITY" | "MARKETING" | "AUTHENTICATION";
+export const FEP_OPENING_POLICY_VERSION = "META-PMP-CTWA-FEP-2026-10-01";
 
 export type FreeMessagingEvidence = {
+  openingResponse?: {
+    sourceType: "CTWA_AD";
+    platform: "ANDROID" | "IOS";
+    clickIdHash: string;
+    referralAt: string;
+    policyVerified: true;
+    policyRef: typeof FEP_OPENING_POLICY_VERSION;
+    sourceEvidenceRef: string;
+    firstResponseAttemptedAt?: string;
+    firstResponseKeyHash?: string;
+    firstResponseMessageIdHash?: string;
+  };
   fep?: {
     sourceType: "CTWA_AD";
     platform: "ANDROID" | "IOS";
@@ -20,8 +33,10 @@ export type FreeMessagingEvidence = {
     billable: false;
     basis: "FEP" | "SERVICE_ALLOWANCE";
     type: "free_entry_point" | "free_customer_service";
-    subtype: "free_entry_point" | "free_tier";
-    category: WhatsAppBillingCategory;
+    subtype?: "free_tier";
+    category: WhatsAppBillingCategory | "REFERRAL_CONVERSION";
+    messageCategory: WhatsAppBillingCategory;
+    pricingModel: "PMP";
     evidenceRef: string;
     observedAt: string;
     verifiedAt: string;
@@ -39,7 +54,7 @@ export type FreeMessagingEvidence = {
   };
 };
 
-export type FreeMessagingDecision = { eligible: true; reason: "VERIFIED_FREE"; basis: "FEP" | "SERVICE_ALLOWANCE"; expiresAt: string; evidenceRef: string; locale: "en" | "ur" } | { eligible: false; reason: string };
+export type FreeMessagingDecision = { eligible: true; reason: "VERIFIED_FREE"; basis: "FEP_OPENING_RESPONSE" | "FEP" | "SERVICE_ALLOWANCE"; expiresAt: string; evidenceRef: string; locale: "en" | "ur" } | { eligible: false; reason: string };
 
 export function evaluateFreeWhatsAppOutbound(input: {
   now: Date;
@@ -49,6 +64,7 @@ export function evaluateFreeWhatsAppOutbound(input: {
   form: WhatsAppOutboundForm;
   category: WhatsAppBillingCategory;
   locale: "en" | "ur";
+  allowFepOpeningResponse?: boolean;
   templateId?: string;
   evidence?: unknown;
   safetyMarginMs?: number;
@@ -67,8 +83,15 @@ export function evaluateFreeWhatsAppOutbound(input: {
   if (input.form === "FREEFORM" && !serviceWindowOpen) return deny("SERVICE_WINDOW_CLOSED_OR_MARGIN");
 
   const evidence = input.evidence && typeof input.evidence === "object" ? input.evidence as FreeMessagingEvidence : undefined;
+  if(input.allowFepOpeningResponse){
+    const opening=evidence?.openingResponse;
+    if(input.form==="FREEFORM"&&input.category==="SERVICE"&&serviceWindowOpen&&opening&&opening.sourceType==="CTWA_AD"&&["ANDROID","IOS"].includes(opening.platform)&&/^[a-f0-9]{64}$/i.test(opening.clickIdHash)&&opening.policyVerified===true&&opening.policyRef===FEP_OPENING_POLICY_VERSION&&opening.sourceEvidenceRef?.trim()&&!opening.firstResponseAttemptedAt){
+      const referralAt=Date.parse(opening.referralAt);
+      if(Number.isFinite(referralAt)&&referralAt<=now&&now-referralAt<=WHATSAPP_SERVICE_WINDOW_MS)return {eligible:true,reason:"VERIFIED_FREE",basis:"FEP_OPENING_RESPONSE",expiresAt:new Date(serviceWindowExpiresAt).toISOString(),evidenceRef:opening.sourceEvidenceRef,locale:input.locale};
+    }
+  }
   const pricing = evidence?.pricing;
-  if (!pricing || pricing.verified !== true || pricing.billable !== false || !pricing.evidenceRef?.trim() || pricing.form !== input.form || pricing.category !== input.category) return deny("FREE_BILLING_UNKNOWN_OR_MISMATCHED");
+  if (!pricing || pricing.verified !== true || pricing.billable !== false || pricing.pricingModel!=="PMP" || !pricing.evidenceRef?.trim() || (pricing.basis==="SERVICE_ALLOWANCE"&&(pricing.form!==input.form||pricing.messageCategory!==input.category))) return deny("FREE_BILLING_UNKNOWN_OR_MISMATCHED");
   const pricingObservedAt = Date.parse(pricing.observedAt);
   const pricingVerifiedAt = Date.parse(pricing.verifiedAt);
   const pricingExpiresAt = Date.parse(pricing.validUntil);
@@ -83,11 +106,11 @@ export function evaluateFreeWhatsAppOutbound(input: {
   }
 
   if (pricing.basis === "SERVICE_ALLOWANCE") {
-    if (!serviceWindowOpen || input.category !== "SERVICE" || pricing.type !== "free_customer_service" || pricing.subtype !== "free_tier" || !Number.isSafeInteger(pricing.remainingServiceMessages) || Number(pricing.remainingServiceMessages) <= 0) return deny("FREE_SERVICE_ALLOWANCE_UNVERIFIED");
+    if (!serviceWindowOpen || input.category !== "SERVICE" || pricing.category!=="SERVICE" || pricing.type !== "free_customer_service" || pricing.subtype !== "free_tier" || !Number.isSafeInteger(pricing.remainingServiceMessages) || Number(pricing.remainingServiceMessages) <= 0) return deny("FREE_SERVICE_ALLOWANCE_UNVERIFIED");
     return { eligible: true, reason: "VERIFIED_FREE", basis: "SERVICE_ALLOWANCE", expiresAt: new Date(Math.min(serviceWindowExpiresAt, pricingExpiresAt)).toISOString(), evidenceRef: pricing.evidenceRef, locale: input.locale };
   }
 
-  if (pricing.basis !== "FEP" || pricing.type !== "free_entry_point" || pricing.subtype !== "free_entry_point") return deny("FREE_BILLING_UNKNOWN_OR_MISMATCHED");
+  if (pricing.basis !== "FEP" || pricing.type !== "free_entry_point" || pricing.category!=="REFERRAL_CONVERSION") return deny("FREE_BILLING_UNKNOWN_OR_MISMATCHED");
   const fep = evidence?.fep;
   if (pricing.basis !== "FEP" || !fep || fep.sourceType !== "CTWA_AD" || !["ANDROID", "IOS"].includes(fep.platform) || !/^[a-f0-9]{64}$/i.test(fep.clickIdHash) || fep.expiryVerified !== true || !fep.expiryEvidenceRef?.trim()) return deny("QUALIFYING_CTWA_EVIDENCE_UNKNOWN");
   const referralAt = Date.parse(fep.referralAt);
@@ -98,7 +121,7 @@ export function evaluateFreeWhatsAppOutbound(input: {
   return { eligible: true, reason: "VERIFIED_FREE", basis: "FEP", expiresAt: new Date(Math.min(fepExpiresAt, pricingExpiresAt, input.form === "FREEFORM" ? serviceWindowExpiresAt : Number.POSITIVE_INFINITY)).toISOString(), evidenceRef: `${fep.expiryEvidenceRef}:${pricing.evidenceRef}`, locale: input.locale };
 }
 
-export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date()): Promise<FreeMessagingDecision> {
+export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date(), options: {allowFepOpeningResponse?:boolean} = {}): Promise<FreeMessagingDecision> {
   let conversation: { state_data: string | null; last_inbound_at: string | null } | null | undefined;
   try {
     conversation = await db.prepare("SELECT state_data,last_inbound_at FROM whatsapp_conversations WHERE wa_id=?").bind(waId).first<{ state_data: string | null; last_inbound_at: string | null }>();
@@ -113,5 +136,5 @@ export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: s
   } catch { return { eligible: false, reason: "FREE_OPT_OUT_STATE_UNKNOWN" }; }
   const locale = localeHint ?? state.language;
   if (locale !== "en" && locale !== "ur") return { eligible: false, reason: "CUSTOMER_LOCALE_UNKNOWN" };
-  return evaluateFreeWhatsAppOutbound({ now, lastInboundAt: conversation.last_inbound_at, optedOut, blocked: state.blocked === true, form: "FREEFORM", category: "SERVICE", locale, evidence: state.freeMessagingEvidence });
+  return evaluateFreeWhatsAppOutbound({ now, lastInboundAt: conversation.last_inbound_at, optedOut, blocked: state.blocked === true, form: "FREEFORM", category: "SERVICE", locale, evidence: state.freeMessagingEvidence, allowFepOpeningResponse:options.allowFepOpeningResponse });
 }

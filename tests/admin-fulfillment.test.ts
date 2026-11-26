@@ -17,6 +17,8 @@ class FulfillmentDb {
   state = "PAID";
   paymentStatus = "PAID";
   reviewState = "APPROVED";
+  paymentApprovalEvidenceVerified = true;
+  verifiedReceipt = true;
   audits: string[] = [];
   confirmed = false;
 
@@ -41,7 +43,7 @@ class FulfillmentDb {
 
   private first(sql: string): Record<string, unknown> | null {
     if (sql.startsWith("SELECT o.id,o.order_number,o.state")) return { id: "order", order_number: this.orderNumber, state: this.state, payment_status: this.paymentStatus, total_payable: 1000, province: "Punjab", created_at: "2026-10-16T12:00:00.000Z", updated_at: "2026-10-16T12:00:00.000Z", archived_at: null, order_confirmed_at: null, full_name: "Synthetic Tester", delivery_address: "Synthetic address", nearby_place: "Synthetic landmark", city: "Synthetic city", wa_id: "923000000001", contact_number: "03000000000", normalized_contact_number: "923000000000", whatsapp_number: "923000000001", normalized_whatsapp_number: "923000000001", payment_id: "payment", method: "BANK_TRANSFER", expected_amount: 1000, approved_amount: 1000, review_state: this.reviewState, submitted_at: "2026-10-16T12:01:00.000Z", approved_by: "admin@example.test", approved_at: "2026-10-16T12:02:00.000Z", rejection_reason: null, customer_transaction_reference: null, payment_created_at: "2026-10-16T12:01:00.000Z", payment_updated_at: "2026-10-16T12:02:00.000Z", receipt_count: 1, items_json: "[]", receipts_json: "[]", tracking_number: null, cancelled_at: null, cancelled_by: null, cancellation_reason: null, archived_by: null, archive_reason: null };
-    if (sql.includes("SELECT o.order_number,o.state,o.payment_status")) return { order_number: this.orderNumber, state: this.state, payment_status: this.paymentStatus, review_state: this.reviewState, archived_at: null };
+    if (sql.includes("SELECT o.order_number,o.state,o.payment_status")) return { order_number: this.orderNumber, state: this.state, payment_status: this.paymentStatus, total_payable: 1000, expected_amount: 1000, approved_amount: 1000, approved_at: "2026-10-16T12:02:00.000Z", review_state: this.reviewState, verified_receipt: this.verifiedReceipt ? 1 : 0, payment_approval_evidence_verified: this.paymentApprovalEvidenceVerified ? 1 : 0, archived_at: null };
     if (sql.includes("SELECT order_number,state,archived_at")) return { order_number: this.orderNumber, state: this.state, archived_at: null };
     if (sql.includes("action='ORDER_CONFIRMED'")) return this.confirmed ? { created_at: "2026-10-16T12:00:00.000Z" } : null;
     return null;
@@ -113,6 +115,11 @@ describe("GFS-141 admin fulfillment actions", () => {
     expect(await blocked.json()).toEqual({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" });
     db.paymentStatus = "PAID";
     db.reviewState = "APPROVED";
+    db.paymentApprovalEvidenceVerified = false;
+    const missingEvidence = await transition("PAID", "PACKING");
+    expect(missingEvidence.status).toBe(409);
+    expect(await missingEvidence.json()).toEqual({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" });
+    db.paymentApprovalEvidenceVerified = true;
     expect((await transition("PAID", "PACKING")).status).toBe(200);
     expect(db.state).toBe("PACKING");
     expect((await transition("PACKING", "DELIVERED")).status).toBe(409);

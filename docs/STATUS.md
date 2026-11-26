@@ -1,5 +1,17 @@
 # GFS ORDERFLOW / Get Free Seeds Status
 
+## GFS-ORDERFLOW-PENDING-001 local status (2026-11-26)
+
+**Local implementation/tests: PASS. Live row reconciliation: NOT REFRESHED. Production: NO-GO.** Admin Orders now has a read-only active+archived Reconciliation tab with per-order payment/COD/review/unresolved/conflict classification and overlapped as-of counts. It does not create messages, backfill INTENT-030, or alter any order. Fulfillment requires matching approved-payment/receipt/settlement-audit evidence or an explicit customer COD audit matched to the quoted amount; unknown/mismatched state is blocked. Focused/full acceptance is recorded in `GFS_ORDERFLOW_PENDING_001.md` and `TEST_MATRIX.md`.
+
+The authenticated Chrome/Admin connector is unavailable in this session, so live current/historical counts and actual per-order decisions remain unrefreshed; existing 2026-11-25 aggregates are historical and were not re-labeled as current. No direct D1/API workaround, migration, deployment, payment, order, COD, message, account, or routing mutation occurred. Existing INTENT-030 continues only for an already-presented qualifying intent through the free-only send guard; there is no bulk or historical outreach. Next task is LAUNCH-001 only after supported live read-only reconciliation and its separate gates.
+
+## GFS-ORDERFLOW-FEP-001 local status (2026-11-26)
+
+Official Meta pricing and webhook references were read-only checked. The local guard now supports one qualifying initial mobile-CTWA response without preexisting FEP expiry/post-delivery pricing; signed referral/hash/provider timestamps and an explicit Android/iOS origin are required. Subsequent FEP activation is stored only from a matched provider response status with `referral_conversion`, actual `conversation.expiration_timestamp`, `free_entry_point`/PMP/nonbillable evidence. Service-tier allowance remains independently verified and count-based. No FEP/stock architecture or paid fallback was added; raw CTWA IDs/payloads are not persisted.
+
+No live per-contact FEP, sender-template or payment-pricing evidence was read; the existing identity audit was not repeated. Unknown platform/pricing/expiry remains fail-closed. External account/browser state, campaigns, messages, migrations, routing and production are unchanged. WhatsApp launch stays **NO-GO**; PENDING-001 local acceptance is recorded, with live row reconciliation still unrefreshed. LAUNCH-001 is not started.
+
 ## GFS-ORDERFLOW-TID-001 local status (2026-11-26)
 
 **TID-001 local acceptance: PASS. Production launch: NO-GO.** Admin provides one `Confirm Payment` action; order ID, method and Total Payable are loaded. The TID remains text (leading zeros preserved). Approval still requires a receipt, independently verified method/QR ownership, exact amount, actual receiving-account credit, non-sensitive settlement-evidence reference, CSRF/Access and atomic audit. Same-method duplicates reject with authorized conflict-order detail; cross-method matches warn and require provider/account verification. Approval sets APPROVED/PAID, stops pending reminders and prepares a locale-pinned Payment Received outbox notice through the free-only guard. Unknown FEP suppresses only the notice. No CAPI switch or parcel dispatch was enabled. Bidi LRM/RLM/LRI/RLI/PDI formatting preserves paragraph order and isolates amounts/IDs/URLs; live-client rendering remains a release gate.

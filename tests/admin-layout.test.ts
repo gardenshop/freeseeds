@@ -18,14 +18,14 @@ function computeDesktopLayout(cssViewportWidth: number): Layout {
   const workspace = shell - 48;
   const split = workspace - 14;
   const master = split / 2.35;
-  return { shell, workspace, master, detail: split - master, tabs: (workspace - 30) / 4, filters: workspace };
+  return { shell, workspace, master, detail: split - master, tabs: (workspace - 40) / 5, filters: workspace };
 }
 
 function computeResponsiveLayout(cssViewportWidth: number): { columns: number; tabs: number; filters: number; minHeight: number } {
-  if (cssViewportWidth <= 560) return { columns: 1, tabs: 2, filters: 1, minHeight: 850 };
-  if (cssViewportWidth <= 760) return { columns: 1, tabs: 2, filters: 2, minHeight: 850 };
-  if (cssViewportWidth <= 900) return { columns: 1, tabs: 4, filters: 2, minHeight: 850 };
-  return { columns: 2, tabs: 4, filters: 7, minHeight: 560 };
+  const tabs = cssViewportWidth <= 560 ? 2 : Math.min(5, Math.max(1, Math.floor((Math.min(cssViewportWidth, 1700) - 38) / 160)));
+  if (cssViewportWidth <= 560) return { columns: 1, tabs, filters: 1, minHeight: 850 };
+  if (cssViewportWidth <= 900) return { columns: 1, tabs, filters: 2, minHeight: 850 };
+  return { columns: 2, tabs, filters: 7, minHeight: 560 };
 }
 
 function computeMasterScrollLayout(masterHeight: number, rowCount: number, rowHeight = 92, listHeadHeight = 42, pagerHeight = 56) {
@@ -48,7 +48,7 @@ describe("Admin layout regression contract", () => {
     expect(html).toContain(".master{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}");
     expect(html).toContain(".detail{min-width:0;min-height:0;overflow:auto}");
     expect(html).toContain(".orders{display:flex;flex:1 1 auto;flex-direction:column;gap:8px;overflow:auto;min-height:0}");
-    expect(html).toContain("grid-template-columns:repeat(4,minmax(0,1fr))");
+    expect(html).toContain("grid-template-columns:repeat(auto-fit,minmax(150px,1fr))");
     expect(html).toContain("@media(max-width:900px){.filters{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace{grid-template-columns:1fr;height:auto;min-height:850px}");
     expect(html).toContain("@media(max-width:560px){.shell{padding:14px}.tabs{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr}");
     expect(html).not.toContain("width:330px");
@@ -80,7 +80,7 @@ describe("Admin layout regression contract", () => {
       expect(layout.workspace).toBeGreaterThanOrEqual(1232);
       expect(layout.master).toBeGreaterThanOrEqual(500);
       expect(layout.detail).toBeGreaterThanOrEqual(680);
-      expect(layout.tabs).toBeGreaterThanOrEqual(300);
+      expect(layout.tabs).toBeGreaterThanOrEqual(220);
       expect(layout.filters).toBe(layout.workspace);
       for (const dpr of [0.8, 1]) {
         expect(layout.master * dpr).toBeGreaterThan(330);
@@ -90,8 +90,8 @@ describe("Admin layout regression contract", () => {
   });
 
   it("asserts the intended breakpoint model instead of only checking overflow", () => {
-    expect(computeResponsiveLayout(1280)).toEqual({ columns: 2, tabs: 4, filters: 7, minHeight: 560 });
-    expect(computeResponsiveLayout(900)).toEqual({ columns: 1, tabs: 4, filters: 2, minHeight: 850 });
+    expect(computeResponsiveLayout(1280)).toEqual({ columns: 2, tabs: 5, filters: 7, minHeight: 560 });
+    expect(computeResponsiveLayout(900)).toEqual({ columns: 1, tabs: 5, filters: 2, minHeight: 850 });
     expect(computeResponsiveLayout(768)).toEqual({ columns: 1, tabs: 4, filters: 2, minHeight: 850 });
     expect(computeResponsiveLayout(430)).toEqual({ columns: 1, tabs: 2, filters: 1, minHeight: 850 });
     expect(computeResponsiveLayout(320)).toEqual({ columns: 1, tabs: 2, filters: 1, minHeight: 850 });

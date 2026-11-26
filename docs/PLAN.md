@@ -4,11 +4,19 @@ Permanent master reference: **GFS ORDERFLOW**. All GFS-ORDER-001 REV.2 stages S0
 
 ## GFS-ORDER-001 REV.2 S0 (2026-11-25)
 
-Current lifecycle checkout: `D:\free seeds\gfs-order-001-rev2`, branch `codex/gfs-order-001-rev2`. See [master plan](GFS_ORDER_001_MASTER_PLAN.md), [audit](GFS_ORDER_001_CURRENT_AUDIT.md), [task register](GFS_ORDER_001_TASK_REGISTER.md), [INTENT-030 closeout](GFS_ORDERFLOW_INTENT_030.md) and [TID-001 closeout](GFS_ORDERFLOW_TID_001.md). S0 remains partial with Meta/original-spec/notification-identity/provenance gates. INTENT-030 and TID-001 local acceptance are complete; live per-contact FEP evidence and release-specific rollback remain production gates. The deadline governs customer confirmation only; stock management is not required, and existing eligibility locks are not stock reservations. No external runtime/release change occurred. Preserve historical MO and protected Label Printer/Hoja boundaries below.
+Current lifecycle checkout: `D:\free seeds\gfs-order-001-rev2`, branch `codex/gfs-order-001-rev2`. See [master plan](GFS_ORDER_001_MASTER_PLAN.md), [audit](GFS_ORDER_001_CURRENT_AUDIT.md), [task register](GFS_ORDER_001_TASK_REGISTER.md), and the INTENT-030, TID-001 and FEP-001 closeout reports. S0 remains partial with Meta/original-spec/notification-identity/provenance gates. INTENT-030/TID-001/FEP-001 local acceptance is complete; live per-contact platform/expiry/pricing, A10 rollback and template release checks remain production gates. The30-minute deadline is confirmation-only; stock management is not required, and eligibility locks are cooldown-only. No external runtime/release change occurred. Preserve historical MO and protected Label Printer/Hoja boundaries below.
 
 ## TID-001 local acceptance (2026-11-26)
 
 One Admin `Confirm Payment` action reuses the saved order/method/amount, submits a text TID, and only approves with bound receipt, independently verified payment method/destination, exact amount, actual receiving-credit evidence, CSRF/Access and atomic audit. Same-provider duplicates are rejected and identified; cross-provider matches warn, require explicit verification acknowledgement and remain method-scoped. Payment notification is localized/direction-formatted and passes the shared free-only guard; unknown eligibility suppresses notification without undoing approved financial state. No CAPI enablement or parcel dispatch. See [TID-001 closeout](GFS_ORDERFLOW_TID_001.md).
+
+## FEP-001 local acceptance (2026-11-26)
+
+The shared fail-closed guard now distinguishes a single initial free FEP-opening response (signed explicit mobile CTWA referral in the CSW; no pre-existing expiry/pricing receipt required) from active FEP, service allowance, approved template and unknown eligibility. Signed referral IDs and exact provider pricing/expiry status are minimized into existing conversation state; no separate FEP table/service or 168-hour assumption. Unknown platform, expiry, pricing or template state suppresses. Per-contact live WABA evidence, current remaining free-service counter and template quality status remain launch gates. See [FEP-001 closeout](GFS_ORDERFLOW_FEP_001.md).
+
+## PENDING-001 local acceptance (2026-11-26)
+
+The Admin Orders reconciliation tab now reports per-order payment/COD/review/unresolved/conflict state, sequence disposition, fulfillment disposition, and filtered as-of overlapping counts across active and archived orders. It never writes, backfills, sends, or claims a live refresh. Advance fulfillment requires exact approved totals, stored receipt, and matching Admin settlement-evidence audit; COD fulfillment requires explicit customer confirmation of the immutable quote. Local/synthetic acceptance is complete; authenticated live history/current counts remain unrefreshed because the approved browser tool is not exposed. See [PENDING-001 closeout](GFS_ORDERFLOW_PENDING_001.md). Do not proceed to LAUNCH-001 live activity until the supported authenticated Admin refresh and the separate launch gates pass.
 
 ## GFS-COD-MO-109 canonicalization stages (2026-11-16 UTC)
 

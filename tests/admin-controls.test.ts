@@ -142,7 +142,7 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("new URLSearchParams(location.search)");
     expect(html).toContain('id="download-export"');
     expect(html).toContain("/api/orders/export?");
-    for (const tab of ["All Orders", "Verify Payments", "Confirmed Payments", "Fulfillment"]) expect(html).toContain(tab);
+    for (const tab of ["All Orders", "Verify Payments", "Confirmed Payments", "Fulfillment", "Order Reconciliation"]) expect(html).toContain(tab);
     for (const size of ["25", "50", "100"]) expect(html).toContain(`<option>${size}</option>`);
     expect(html).toContain("selectedId=list[0].id");
     expect(html).toContain(".orders{display:flex;flex:1 1 auto;flex-direction:column;gap:8px;overflow:auto;min-height:0}");

@@ -6,6 +6,7 @@ import { ConversationInputError, parseConversationFilters, readConversation, rea
 import { conversationsDashboardPageHtml } from "./conversations-dashboard";
 import { CancellationInputError, cancellationDashboardPageHtml, parseCancellationFilters, readCancellationReport } from "./cancellations";
 import { readAttributionReport } from "./attribution";
+import { classifyOrderReconciliation } from "./order-reconciliation";
 
   type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
@@ -217,6 +218,32 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
   const state = String(row.state);
   const codTestHold = row.cod_status != null && Number(row.cod_test_hold) !== 0;
   const fulfillmentHold = String(row.order_number) === "FS-261019-000001" || codTestHold;
+  const reconciliation = classifyOrderReconciliation({
+    state,
+    paymentStatus: String(row.payment_status ?? "UNKNOWN"),
+    reviewState: String(row.review_state ?? "UNKNOWN"),
+    totalPayable: row.total_payable == null ? null : Number(row.total_payable),
+    expectedAmount: row.expected_amount == null ? null : Number(row.expected_amount),
+    approvedAmount: row.approved_amount == null ? null : Number(row.approved_amount),
+    approvedAt: row.approved_at == null ? null : String(row.approved_at),
+    paymentApprovalEvidenceVerified: Number(row.payment_approval_evidence_verified ?? 0) === 1,
+    receiptCount,
+    transactionReference: row.customer_transaction_reference == null ? null : String(row.customer_transaction_reference),
+    codStatus: row.cod_status == null ? null : String(row.cod_status),
+    codQuotedTotal: row.cod_quoted_total_pkr == null ? null : Number(row.cod_quoted_total_pkr),
+    codConfirmationVerified: Number(row.cod_confirmation_verified ?? 0) === 1,
+    historicalSettlementVerified: row.historical_mo_order_id != null && Number(row.historical_mo_amount_pkr) === Number(row.total_payable),
+    testHold: codTestHold,
+    archived: row.archived_at != null,
+    hasWhatsAppId: Boolean(normalizeWhatsAppWaId(String(row.wa_id ?? ""))),
+    intentState: row.intent_state == null ? null : String(row.intent_state),
+    intentPresentedAt: row.intent_presented_at == null ? null : String(row.intent_presented_at),
+    intentDeadlineAt: row.intent_deadline_at == null ? null : String(row.intent_deadline_at),
+    intentSchemaAvailable: row.intent_schema_available == null ? undefined : Number(row.intent_schema_available) === 1,
+    fulfillmentHold,
+    hasTrackingNumber: Number(row.tracking_evidence_available ?? 0) === 1 ? row.has_tracking_number == null ? null : Number(row.has_tracking_number) === 1 : null,
+    trackingEvidenceAvailable: row.tracking_evidence_available == null ? undefined : Number(row.tracking_evidence_available) === 1
+  });
   const unpaidState = ["NEW", "DETAILS_COMPLETED", "PAYMENT_PENDING", "PAYMENT_REJECTED", "CANCELLED"].includes(state);
   return {
     id: String(row.id),
@@ -224,6 +251,7 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
     internalSequence: row.internal_sequence == null ? null : Number(row.internal_sequence),
     internalSequenceDate: row.internal_sequence_date == null ? null : String(row.internal_sequence_date),
     state,
+    reconciliation,
     fulfillmentHold,
     fulfillmentHoldReason: codTestHold ? "TEST ONLY / DO NOT SHIP. Release requires authenticated Admin provenance verification; registered test orders remain blocked." : fulfillmentHold ? "Independent bank settlement and customer transaction reference are missing." : null,
     codTestHold,
@@ -1131,9 +1159,18 @@ addActions=(order)=>{
   for(const button of actionRoot.querySelectorAll('button'))if(['Record courier collection','Reconcile exact remittance','Mark Payment Received'].includes(button.textContent.trim()))button.remove();
   if(!actionRoot.querySelector('[data-cod-mo-received]'))addCodMoInfo(order,actionRoot);
 };`;
+const PENDING_RECONCILIATION_SCRIPT = `const pendingReconTab=document.querySelector('[data-tab="reconcile"]');if(pendingReconTab)pendingReconTab.addEventListener('click',()=>{filters.elements.archived.value='all'},true);document.querySelector('#clear')?.addEventListener('click',()=>{if(tab==='reconcile')filters.elements.archived.value='all'},true);const pendingReconOrderCard=orderCard;orderCard=function(order){const html=pendingReconOrderCard(order);if(tab!=='reconcile'||!order.reconciliation)return html;const r=order.reconciliation;const detail='<span class="order-bottom"><span>Reconciliation: '+esc(r.paymentClass)+' · COD consent: '+esc(r.codConsent)+'</span><span>Sequence: '+esc(r.sequenceDisposition)+' · Dispatch: '+esc(r.dispatchDisposition)+'</span></span>';return html.replace('</button>',detail+'</button>')};const pendingReconRenderList=renderList;renderList=function(data){pendingReconRenderList(data);if(tab!=='reconcile')return;const c=data.reconciliationCounts||{};const value=(name)=>c[name]===null||c[name]===undefined?'unavailable':Number(c[name]).toLocaleString('en-PK');listStatus.textContent+=' · read-only overlapping counts: paid recorded '+value('paidRecorded')+' · confirmed COD '+value('confirmedCod')+' · payment review '+value('paymentReview')+' · unresolved '+value('unresolved')+' · COD consent unknown '+value('codConfirmationUnknown')+' · payment state conflicts '+value('paymentStateConflict')+' · expired '+value('expired')+' · cancelled '+value('cancelled')+' · no valid WhatsApp ID '+value('unreachable')+' · fulfillment conflicts '+value('fulfillmentConflict')+' · active intents '+value('activeIntent')+' (guarded at send) · as of '+esc(data.countsAsOf||'unknown')+'; no bank re-verification, writes, or messages'};`;
+const PENDING_RECONCILIATION_EXPORT_SCRIPT = `const reconciliationExportButton=document.querySelector('#download-export');if(reconciliationExportButton){if(tab==='reconcile')reconciliationExportButton.hidden=true;for(const button of document.querySelectorAll('[data-tab]'))button.addEventListener('click',()=>{reconciliationExportButton.hidden=button.dataset.tab==='reconcile'},true);document.querySelector('#clear')?.addEventListener('click',()=>{reconciliationExportButton.hidden=false},true)}`;
+
 app.get("/orders", (c) => {
   const page=professionalOrdersPageHtml(issueCsrfToken(c)).replace("function renderDetail(data){", `${COD_ORDERS_SCRIPT}\n${COD_HOLD_SCRIPT}\nfunction renderDetail(data){`).replace('<option value="REJECTED">Rejected</option>', '<option value="REJECTED">Rejected</option><option value="COD_PENDING">COD pending</option><option value="COD_PAID">COD paid</option>').replace('<option value="NOT_STARTED">Ready to pack</option>', '<option value="NOT_STARTED">Ready to pack</option><option value="COD_PENDING">COD pending</option><option value="COLLECTION_PENDING">Collection pending</option>').replace('<label>Archive<select name="archived">', '<label>Payment stage<select name="paymentStage"><option value="">Any payment stage</option><option value="no-method">No method selected</option><option value="payment-not-sent">Instructions not sent</option><option value="delivery-failed">Delivery failed</option><option value="unpaid-after-delivery">Unpaid after delivery</option></select></label><label>Archive<select name="archived">').replace("['q','date','paymentStatus','fulfillment','archived','pageSize']", "['q','date','paymentStatus','paymentStage','fulfillment','archived','pageSize']").replace("listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total';", "listStatus.textContent=Number(data.total).toLocaleString('en-PK')+' total · no method '+Number(data.counts?.noMethod||0).toLocaleString('en-PK')+' · failed '+Number(data.counts?.deliveryFailed||0).toLocaleString('en-PK')+' · unpaid after delivery '+Number(data.counts?.unpaidAfterDelivery||0).toLocaleString('en-PK');").replace("['Status',text(order.paymentReviewState||order.paymentStatus)]", "['Status',text(order.paymentReviewState||order.paymentStatus)],['Instruction delivery',text(order.paymentInstructionStatus)]").replace("Request the transaction reference in the customer's selected language", "Request a transaction reference in the selected language");
-  return c.html(enhanceTidApprovalMarkup(page));
+  const reconciliationPage = page
+    .replace('<button class="tab" data-tab="fulfillment" type="button"><span>Fulfillment</span><strong data-count="fulfillment">-</strong></button></section>', '<button class="tab" data-tab="fulfillment" type="button"><span>Fulfillment</span><strong data-count="fulfillment">-</strong></button><button class="tab" data-tab="reconcile" type="button"><span>Order Reconciliation</span><strong data-count="reconcile">-</strong></button></section>')
+    .replace("const tabNames={all:'All Orders'", "const tabNames={reconcile:'Order Reconciliation',all:'All Orders'")
+    .replace('.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));', '.tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));')
+    .replace('function params(){const result=new URLSearchParams(new FormData(filters));', "function params(){if(tab==='reconcile'&&!new URLSearchParams(location.search).has('archived'))filters.elements.archived.value='all';const result=new URLSearchParams(new FormData(filters));");
+  const securedReconciliationPage = enhanceTidApprovalMarkup(reconciliationPage).replace("</script></body></html>", `${PENDING_RECONCILIATION_SCRIPT}${PENDING_RECONCILIATION_EXPORT_SCRIPT}</script></body></html>`);
+  return c.html(securedReconciliationPage);
 });
 app.get("/payment-reminders", (c) => {
   const csrf = issueCsrfToken(c);
@@ -2066,6 +2103,19 @@ app.get("/api/payment-methods/:method/qr", async (c) => {
   }
 });
 
+function codConfirmationEvidenceSql(orderAlias: string, codAlias: string): string {
+  const metadata = `CASE WHEN json_valid(cod_confirmation.metadata_json) THEN cod_confirmation.metadata_json ELSE '{}' END`;
+  return `EXISTS(SELECT 1 FROM audit_log cod_confirmation WHERE cod_confirmation.entity_type='ORDER' AND cod_confirmation.entity_id=${orderAlias}.id AND cod_confirmation.actor_type='CUSTOMER' AND (
+    (cod_confirmation.action='COD_ORDER_CONFIRMED' AND CAST(json_extract(${metadata},'$.totalPkr') AS INTEGER)=${codAlias}.quoted_total_pkr)
+    OR (cod_confirmation.action='PAYMENT_REMINDER_COD_CONFIRMED' AND json_extract(${metadata},'$.choice')='CONFIRMED_COD' AND json_extract(${metadata},'$.consentSource')='WHATSAPP_INTERACTIVE' AND CAST(json_extract(${metadata},'$.quotedTotalPkr') AS INTEGER)=${codAlias}.quoted_total_pkr)
+  ))`;
+}
+
+function paymentApprovalEvidenceSql(orderAlias: string, paymentAlias: string): string {
+  const metadata = `CASE WHEN json_valid(payment_approval.metadata_json) THEN payment_approval.metadata_json ELSE '{}' END`;
+  return `EXISTS(SELECT 1 FROM audit_log payment_approval WHERE payment_approval.entity_type='PAYMENT' AND payment_approval.entity_id=${paymentAlias}.id AND payment_approval.actor_type='ADMIN' AND payment_approval.action='PAYMENT_APPROVED' AND json_extract(${metadata},'$.orderId')=${orderAlias}.id AND CAST(json_extract(${metadata},'$.amountPkr') AS INTEGER)=${orderAlias}.total_payable AND trim(COALESCE(json_extract(${metadata},'$.settlementEvidenceRef'),''))<>'' AND trim(COALESCE(json_extract(${metadata},'$.transactionReferenceHash'),''))<>'')`;
+}
+
 const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.internal_sequence,o.internal_sequence_date,o.total_payable,o.province,o.created_at,o.updated_at,
   o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
   (SELECT created_at FROM audit_log confirmation WHERE confirmation.entity_type='ORDER' AND confirmation.entity_id=o.id AND confirmation.action='ORDER_CONFIRMED' ORDER BY confirmation.created_at DESC LIMIT 1) AS order_confirmed_at,
@@ -2079,8 +2129,11 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
   EXISTS(SELECT 1 FROM outbox_jobs ref_request WHERE ref_request.entity_id=p.id AND ref_request.kind='WHATSAPP_TRANSACTION_REFERENCE_REQUEST' AND ref_request.status IN ('SENT','PENDING','RETRY')) AS reference_request_sent,
   EXISTS(SELECT 1 FROM audit_log tracking WHERE tracking.entity_type='ORDER' AND tracking.entity_id=o.id AND tracking.action='ORDER_TRACKING_ASSIGNED') AS has_tracking_number,
   (SELECT COUNT(*) FROM payment_receipts receipt_count WHERE receipt_count.order_id=o.id) AS receipt_count,
-  COALESCE((SELECT json_group_array(json_object('id',items.id,'itemType',items.item_type,'productCode',items.product_code,'description',items.description,'quantity',items.quantity,'unitPricePkr',items.unit_price_pkr,'lineTotalPkr',items.line_total_pkr,'createdAt',items.created_at)) FROM order_items items WHERE items.order_id=o.id),'[]') AS items_json,
-  COALESCE((SELECT json_group_array(json_object('id',receipts.id,'paymentId',receipts.payment_id,'objectKey',receipts.r2_object_key,'mimeType',receipts.mime_type,'sizeBytes',receipts.size_bytes,'submittedAt',receipts.submitted_at,'createdAt',receipts.created_at)) FROM payment_receipts receipts WHERE receipts.order_id=o.id),'[]') AS receipts_json
+   COALESCE((SELECT json_group_array(json_object('id',items.id,'itemType',items.item_type,'productCode',items.product_code,'description',items.description,'quantity',items.quantity,'unitPricePkr',items.unit_price_pkr,'lineTotalPkr',items.line_total_pkr,'createdAt',items.created_at)) FROM order_items items WHERE items.order_id=o.id),'[]') AS items_json,
+   COALESCE((SELECT json_group_array(json_object('id',receipts.id,'paymentId',receipts.payment_id,'objectKey',receipts.r2_object_key,'mimeType',receipts.mime_type,'sizeBytes',receipts.size_bytes,'submittedAt',receipts.submitted_at,'createdAt',receipts.created_at)) FROM payment_receipts receipts WHERE receipts.order_id=o.id),'[]') AS receipts_json,
+   ${codConfirmationEvidenceSql("o", "cod")} AS cod_confirmation_verified,
+   ${paymentApprovalEvidenceSql("o", "p")} AS payment_approval_evidence_verified,
+   1 AS tracking_evidence_available
   FROM orders o JOIN customers c ON c.id=o.customer_id
   LEFT JOIN payments p ON p.order_id=o.id
   LEFT JOIN cod_order_details cod ON cod.order_id=o.id
@@ -2099,8 +2152,11 @@ const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_st
   CASE WHEN cod.order_id IS NOT NULL OR p.method IS NOT NULL THEN 'SELECTED' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) OR EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY' AND m.status IN ('FAILED','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY' AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY' AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind='PAYMENT_CHOICE_RECOVERY' AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status='SENT') THEN 'SENT' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND j.status IN ('PENDING','RETRY','QUEUED')) THEN 'PENDING' ELSE 'UNKNOWN' END AS payment_choice_status,
   CASE WHEN cod.order_id IS NOT NULL THEN 'NOT_APPLICABLE' WHEN EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status IN ('DEAD_LETTER','PERMANENT_FAILURE')) THEN 'FAILED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='READ') THEN 'READ' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status='DELIVERED') THEN 'DELIVERED' WHEN EXISTS(SELECT 1 FROM outbound_messages m WHERE m.order_id=o.id AND m.kind IN ('WHATSAPP_PAYMENT_TEXT','WHATSAPP_PAYMENT_QR') AND m.status IN ('SENT','SENDING')) OR EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS' AND j.status='SENT') THEN 'SENT' ELSE 'NOT_SENT' END AS payment_instruction_status,
   COALESCE((SELECT group_concat(items.description || ' x ' || items.quantity, ', ') FROM order_items items WHERE items.order_id=o.id),'') AS item_summary,
-  0 AS payment_method_verified,0 AS reference_request_sent,0 AS has_tracking_number,0 AS receipt_count,
-  '[]' AS items_json,'[]' AS receipts_json
+   0 AS payment_method_verified,0 AS reference_request_sent,0 AS has_tracking_number,0 AS receipt_count,
+   ${codConfirmationEvidenceSql("o", "cod")} AS cod_confirmation_verified,
+   ${paymentApprovalEvidenceSql("o", "p")} AS payment_approval_evidence_verified,
+   0 AS tracking_evidence_available,
+   '[]' AS items_json,'[]' AS receipts_json
   FROM orders o JOIN customers c ON c.id=o.customer_id
   LEFT JOIN payments p ON p.order_id=o.id
   LEFT JOIN cod_order_details cod ON cod.order_id=o.id
@@ -2120,7 +2176,8 @@ const ORDER_TAB_SQL: Record<string, string> = {
   all: "1=1",
   verify: "o.state='PAYMENT_REVIEW' AND p.review_state='REVIEW'",
   confirmed: "(p.review_state='APPROVED' OR o.payment_status='PAID') AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)",
-  fulfillment: "o.state IN ('COD_PENDING','PAID','PACKING','DISPATCHED','DELIVERED','COLLECTION_PENDING')"
+  fulfillment: "o.state IN ('COD_PENDING','PAID','PACKING','DISPATCHED','DELIVERED','COLLECTION_PENDING')",
+  reconcile: "1=1"
 };
 
 const ADVANCE_UNPAID_SQL = "o.archived_at IS NULL AND o.state NOT IN ('PAID','CANCELLED') AND o.payment_status NOT IN ('PAID','COD_PENDING','COD_PAID') AND p.method IS NOT 'COD' AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)";
@@ -2145,7 +2202,7 @@ type OrderFilterPlan = {
 function parseOrderFilterPlan(c: AdminContext): OrderFilterPlan | { error: string } {
   const tab = c.req.query("tab")?.trim() || "all";
   if (!ORDER_TAB_SQL[tab]) return { error: "ORDER_TAB_INVALID" };
-  const archived = c.req.query("archived") ?? "active";
+  const archived = c.req.query("archived") ?? (tab === "reconcile" ? "all" : "active");
   if (!["active", "only", "all"].includes(archived)) return { error: "ARCHIVED_FILTER_INVALID" };
   const paymentStatus = c.req.query("paymentStatus")?.trim();
   if (paymentStatus && !["PENDING", "REVIEW", "APPROVED", "REJECTED", "COD_PENDING", "COD_PAID"].includes(paymentStatus)) return { error: "PAYMENT_STATUS_INVALID" };
@@ -2238,10 +2295,65 @@ function exportCsv(rows: Record<string, unknown>[]): string {
 }
 
 const ORDER_ADMIN_JOINS = " FROM orders o JOIN customers c ON c.id=o.customer_id LEFT JOIN payments p ON p.order_id=o.id";
+const ORDER_RECONCILIATION_JOINS = `${ORDER_ADMIN_JOINS} LEFT JOIN cod_order_details cod ON cod.order_id=o.id LEFT JOIN cod_mo_receipts mo ON mo.order_id=o.id LEFT JOIN cod_historical_mo_receipts historical_mo ON historical_mo.order_id=o.id`;
+
+const PAYMENT_APPROVAL_EVIDENCE_SQL = paymentApprovalEvidenceSql("o", "p");
+const PAID_RECORDED_SQL = `(
+  (o.state='PAID' AND o.payment_status='PAID' AND p.review_state='APPROVED' AND p.approved_amount=o.total_payable AND p.expected_amount=o.total_payable AND p.approved_at IS NOT NULL AND ${PAYMENT_APPROVAL_EVIDENCE_SQL})
+  OR (o.state='PAID' AND o.payment_status='PAID' AND p.review_state='COD_PAID' AND cod.status='PAID' AND p.approved_amount=cod.quoted_total_pkr AND cod.collection_amount_pkr=cod.quoted_total_pkr AND cod.remittance_amount_pkr=cod.quoted_total_pkr AND p.approved_at IS NOT NULL)
+  OR (o.state='PAID' AND o.payment_status='PAID' AND historical_mo.order_id IS NOT NULL AND historical_mo.received_amount_pkr=o.total_payable)
+)`;
+const PAYMENT_STATE_CONFLICT_SQL = `((o.state='PAID' OR o.payment_status='PAID') AND NOT ${PAID_RECORDED_SQL})`;
+const PAYMENT_REVIEW_SQL = `(NOT ${PAID_RECORDED_SQL} AND NOT ${PAYMENT_STATE_CONFLICT_SQL} AND (o.state='PAYMENT_REVIEW' OR p.review_state='REVIEW' OR EXISTS(SELECT 1 FROM payment_receipts evidence WHERE evidence.order_id=o.id) OR trim(COALESCE(p.customer_transaction_reference,''))<>''))`;
+const COD_CONFIRMATION_SQL = codConfirmationEvidenceSql("o", "cod");
+const CONFIRMED_COD_SQL = `(cod.order_id IS NOT NULL AND cod.status<>'PAID' AND o.payment_status='COD_PENDING' AND ${COD_CONFIRMATION_SQL})`;
+const RECONCILIATION_COUNT_COLUMNS = `,SUM(CASE WHEN ${PAID_RECORDED_SQL} THEN 1 ELSE 0 END) AS reconciliation_paid_recorded_count,
+  SUM(CASE WHEN ${CONFIRMED_COD_SQL} THEN 1 ELSE 0 END) AS reconciliation_confirmed_cod_count,
+  SUM(CASE WHEN ${PAYMENT_REVIEW_SQL} THEN 1 ELSE 0 END) AS reconciliation_payment_review_count,
+  SUM(CASE WHEN o.state IN ('NEW','DETAILS_COMPLETED','PAYMENT_PENDING','PAYMENT_REJECTED') AND o.payment_status NOT IN ('PAID','COD_PENDING','COD_PAID','EXPIRED','CANCELLED') AND COALESCE(p.review_state,'PENDING') NOT IN ('REVIEW','APPROVED','COD_PAID','CANCELLED') AND cod.order_id IS NULL AND NOT EXISTS(SELECT 1 FROM payment_receipts pending_receipt WHERE pending_receipt.order_id=o.id) AND trim(COALESCE(p.customer_transaction_reference,''))='' THEN 1 ELSE 0 END) AS reconciliation_unresolved_count,
+  SUM(CASE WHEN cod.order_id IS NOT NULL AND cod.status<>'PAID' AND NOT ${COD_CONFIRMATION_SQL} THEN 1 ELSE 0 END) AS reconciliation_cod_confirmation_unknown_count,
+  SUM(CASE WHEN ${PAYMENT_STATE_CONFLICT_SQL} THEN 1 ELSE 0 END) AS reconciliation_payment_state_conflict_count,
+  SUM(CASE WHEN o.state='EXPIRED' OR o.payment_status='EXPIRED' THEN 1 ELSE 0 END) AS reconciliation_expired_count,
+  SUM(CASE WHEN o.state='CANCELLED' OR o.payment_status='CANCELLED' THEN 1 ELSE 0 END) AS reconciliation_cancelled_count,
+  SUM(CASE WHEN c.wa_id IS NULL OR length(trim(c.wa_id)) NOT BETWEEN 8 AND 15 OR trim(c.wa_id) GLOB '*[^0-9]*' THEN 1 ELSE 0 END) AS reconciliation_unreachable_count,
+  SUM(CASE WHEN o.state IN ('PACKING','DISPATCHED','DELIVERED','COLLECTION_PENDING') AND NOT ${PAID_RECORDED_SQL} AND NOT ${CONFIRMED_COD_SQL} THEN 1 ELSE 0 END) AS reconciliation_fulfillment_conflict_count,
+  SUM(CASE WHEN o.state IN ('DISPATCHED','DELIVERED','COLLECTION_PENDING') THEN 1 ELSE 0 END) AS reconciliation_fulfillment_started_count`;
 
 async function readOrderCounts(db: D1Database, plan: OrderFilterPlan): Promise<Record<string, unknown> | null> {
-  const countsSql = `SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count,SUM(CASE WHEN ${ORDER_TAB_SQL[plan.tab]} THEN 1 ELSE 0 END) AS total_count${Object.entries(PAYMENT_STAGE_SQL).map(([key, sql]) => `,SUM(CASE WHEN ${sql} THEN 1 ELSE 0 END) AS ${key.replaceAll('-', '_')}_count`).join('')}${ORDER_ADMIN_JOINS}${plan.commonSql}`;
+  const reconciliationColumns = plan.tab === "reconcile" ? RECONCILIATION_COUNT_COLUMNS : ",NULL AS reconciliation_paid_recorded_count,NULL AS reconciliation_confirmed_cod_count,NULL AS reconciliation_payment_review_count,NULL AS reconciliation_unresolved_count,NULL AS reconciliation_cod_confirmation_unknown_count,NULL AS reconciliation_payment_state_conflict_count,NULL AS reconciliation_expired_count,NULL AS reconciliation_cancelled_count,NULL AS reconciliation_unreachable_count,NULL AS reconciliation_fulfillment_conflict_count,NULL AS reconciliation_fulfillment_started_count";
+  const joins = plan.tab === "reconcile" ? ORDER_RECONCILIATION_JOINS : ORDER_ADMIN_JOINS;
+  const countsSql = `SELECT COUNT(*) AS all_count,SUM(CASE WHEN ${ORDER_TAB_SQL.verify} THEN 1 ELSE 0 END) AS verify_count,SUM(CASE WHEN ${ORDER_TAB_SQL.confirmed} THEN 1 ELSE 0 END) AS confirmed_count,SUM(CASE WHEN ${ORDER_TAB_SQL.fulfillment} THEN 1 ELSE 0 END) AS fulfillment_count,SUM(CASE WHEN ${ORDER_TAB_SQL[plan.tab]} THEN 1 ELSE 0 END) AS total_count${Object.entries(PAYMENT_STAGE_SQL).map(([key, sql]) => `,SUM(CASE WHEN ${sql} THEN 1 ELSE 0 END) AS ${key.replaceAll('-', '_')}_count`).join('')}${reconciliationColumns}${joins}${plan.commonSql}`;
   return db.prepare(countsSql).bind(...plan.commonBindings).first<Record<string, unknown>>();
+}
+
+type OrderIntentSnapshot = { state: string; presented_at: string | null; deadline_at: string | null };
+type OrderIntentSnapshots = { available: boolean | null; rows: Map<string, OrderIntentSnapshot> };
+
+async function readOrderIntentSnapshots(db: D1Database, orderIds: string[]): Promise<OrderIntentSnapshots> {
+  if (orderIds.length === 0) return { available: null, rows: new Map() };
+  const placeholders = orderIds.map(() => "?").join(",");
+  try {
+    const result = await db.prepare(`SELECT order_id,state,presented_at,deadline_at FROM order_confirmation_intents WHERE order_id IN (${placeholders})`).bind(...orderIds).all<OrderIntentSnapshot & { order_id: string }>();
+    return { available: true, rows: new Map((result.results ?? []).map((row) => [String(row.order_id), row])) };
+  } catch (error) {
+    if (/no such table.*order_confirmation_intents|order_confirmation_intents.*no such table/i.test(error instanceof Error ? error.message : String(error))) {
+      return { available: false, rows: new Map() };
+    }
+    throw error;
+  }
+}
+
+async function readActiveOrderIntentCount(db: D1Database, plan: OrderFilterPlan): Promise<{ available: boolean; count: number | null }> {
+  try {
+    const separator = plan.commonWhere.length ? " AND " : " WHERE ";
+    const result = await db.prepare(`SELECT COUNT(*) AS active_intent_count${ORDER_RECONCILIATION_JOINS} JOIN order_confirmation_intents active_intent ON active_intent.order_id=o.id JOIN whatsapp_conversations intent_conversation ON intent_conversation.id=active_intent.conversation_id${plan.commonSql}${separator}active_intent.workflow_version='GFS-ORDERFLOW-INTENT-030-V1' AND active_intent.state IN ('AWAITING_DECISION','ADVANCE_PENDING','COD_CONFIRM_PENDING') AND active_intent.presented_at IS NOT NULL AND active_intent.deadline_at>? AND o.state IN ('DETAILS_COMPLETED','PAYMENT_PENDING','COD_PENDING') AND o.payment_status IN ('PENDING','COD_PENDING') AND COALESCE(p.review_state,'PENDING') IN ('PENDING','COD_PENDING') AND (cod.order_id IS NULL OR (cod.status<>'PAID' AND NOT ${COD_CONFIRMATION_SQL})) AND length(intent_conversation.wa_id) BETWEEN 8 AND 15 AND intent_conversation.wa_id NOT GLOB '*[^0-9]*'`).bind(...plan.commonBindings, new Date().toISOString()).first<{ active_intent_count: number }>();
+    return { available: true, count: Number(result?.active_intent_count ?? 0) };
+  } catch (error) {
+    if (/no such table.*order_confirmation_intents|order_confirmation_intents.*no such table/i.test(error instanceof Error ? error.message : String(error))) {
+      return { available: false, count: null };
+    }
+    throw error;
+  }
 }
 
 async function readOrderSyncCursor(db: D1Database): Promise<{ updatedAt: string; id: string } | null> {
@@ -2272,19 +2384,50 @@ app.get("/api/orders", async (c) => {
   let countsRow: Record<string, unknown> | null;
   let result: D1Result<unknown>;
   let syncCursor: { updatedAt: string; id: string } | null;
+  let intentCount: { available: boolean; count: number | null } = { available: false, count: null };
+  let intentSnapshots: OrderIntentSnapshots = { available: null, rows: new Map() };
   try {
-    [countsRow, result, syncCursor] = await Promise.all([
+    [countsRow, result, syncCursor, intentCount] = await Promise.all([
       readOrderCounts(c.env.DB, plan),
       c.env.DB.prepare(`${ORDER_ADMIN_LIST_SELECT}${plan.tabSql} ORDER BY o.created_at DESC,o.id DESC LIMIT ? OFFSET ?`).bind(...plan.commonBindings, pageSize, offset).all(),
-      readOrderSyncCursor(c.env.DB)
+      readOrderSyncCursor(c.env.DB),
+      plan.tab === "reconcile" ? readActiveOrderIntentCount(c.env.DB, plan) : Promise.resolve(intentCount)
     ]);
+    intentSnapshots = await readOrderIntentSnapshots(c.env.DB, (result.results ?? []).map((row) => String((row as Record<string, unknown>).id)));
   } catch {
     return c.json({ error: "ORDER_ADMIN_QUERY_FAILED", message: "Orders are temporarily unavailable. No counts or records were returned; retry shortly." }, 503);
   }
   const total = Number(countsRow?.total_count ?? 0);
+  const reconciliationCounts = plan.tab === "reconcile" ? {
+    paidRecorded: Number(countsRow?.reconciliation_paid_recorded_count ?? 0),
+    confirmedCod: Number(countsRow?.reconciliation_confirmed_cod_count ?? 0),
+    paymentReview: Number(countsRow?.reconciliation_payment_review_count ?? 0),
+    unresolved: Number(countsRow?.reconciliation_unresolved_count ?? 0),
+    codConfirmationUnknown: Number(countsRow?.reconciliation_cod_confirmation_unknown_count ?? 0),
+    paymentStateConflict: Number(countsRow?.reconciliation_payment_state_conflict_count ?? 0),
+    expired: Number(countsRow?.reconciliation_expired_count ?? 0),
+    cancelled: Number(countsRow?.reconciliation_cancelled_count ?? 0),
+    unreachable: Number(countsRow?.reconciliation_unreachable_count ?? 0),
+    fulfillmentConflict: Number(countsRow?.reconciliation_fulfillment_conflict_count ?? 0),
+    fulfillmentStarted: Number(countsRow?.reconciliation_fulfillment_started_count ?? 0),
+    activeIntent: intentCount.count,
+    intentSchemaAvailable: intentCount.available
+  } : null;
   return c.json({
-    orders: result.results.map((row) => orderView(row as Record<string, unknown>, c.env.REFERENCE_REQUESTS_ENABLED === "true")),
-    counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0), noMethod: Number(countsRow?.no_method_count ?? 0), paymentChoicePending: Number(countsRow?.payment_choice_pending_count ?? 0), paymentNotSent: Number(countsRow?.payment_not_sent_count ?? 0), deliveryFailed: Number(countsRow?.delivery_failed_count ?? 0), unpaidAfterDelivery: Number(countsRow?.unpaid_after_delivery_count ?? 0) },
+    orders: result.results.map((value) => {
+      const row = value as Record<string, unknown>;
+      const intent = intentSnapshots.rows.get(String(row.id));
+      return orderView({
+        ...row,
+        intent_state: intent?.state ?? null,
+        intent_presented_at: intent?.presented_at ?? null,
+        intent_deadline_at: intent?.deadline_at ?? null,
+        intent_schema_available: intentSnapshots.available === null ? null : intentSnapshots.available ? 1 : 0
+      }, c.env.REFERENCE_REQUESTS_ENABLED === "true");
+    }),
+    counts: { all: Number(countsRow?.all_count ?? 0), verify: Number(countsRow?.verify_count ?? 0), confirmed: Number(countsRow?.confirmed_count ?? 0), fulfillment: Number(countsRow?.fulfillment_count ?? 0), reconcile: Number(countsRow?.all_count ?? 0), noMethod: Number(countsRow?.no_method_count ?? 0), paymentChoicePending: Number(countsRow?.payment_choice_pending_count ?? 0), paymentNotSent: Number(countsRow?.payment_not_sent_count ?? 0), deliveryFailed: Number(countsRow?.delivery_failed_count ?? 0), unpaidAfterDelivery: Number(countsRow?.unpaid_after_delivery_count ?? 0) },
+    reconciliationCounts,
+    countsAsOf: new Date().toISOString(),
     total,
     pagination: { page, pageSize, totalPages: Math.ceil(total / pageSize) },
     syncCursor
@@ -2321,11 +2464,15 @@ app.get("/api/orders/changes", async (c) => {
     const ids = limited.map((row) => String(row.id));
     const placeholders = ids.map(() => "?").join(",");
     const visible = await c.env.DB.prepare(`${ORDER_ADMIN_LIST_SELECT} WHERE o.id IN (${placeholders}) AND ${[...plan.commonWhere, ORDER_TAB_SQL[plan.tab]].join(" AND ")}`).bind(...ids, ...plan.commonBindings).all<Record<string, unknown>>();
+    const intentSnapshots = await readOrderIntentSnapshots(c.env.DB, (visible.results ?? []).map((row) => String(row.id)));
     const visibleIds = new Set((visible.results ?? []).map((row) => String(row.id)));
     const removedIds = ids.filter((id) => !visibleIds.has(id));
     const next = limited[limited.length - 1];
     return c.json({
-      changed: (visible.results ?? []).map((row) => orderView(row, c.env.REFERENCE_REQUESTS_ENABLED === "true")),
+      changed: (visible.results ?? []).map((row) => {
+        const intent = intentSnapshots.rows.get(String(row.id));
+        return orderView({ ...row, intent_state: intent?.state ?? null, intent_presented_at: intent?.presented_at ?? null, intent_deadline_at: intent?.deadline_at ?? null, intent_schema_available: intentSnapshots.available === null ? null : intentSnapshots.available ? 1 : 0 }, c.env.REFERENCE_REQUESTS_ENABLED === "true");
+      }),
       removedIds,
       requiresFullReload: true,
       hasMore: changedRows.length > 100,
@@ -2340,6 +2487,7 @@ app.get("/api/orders/export", async (c) => {
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   const plan = parseOrderFilterPlan(c);
   if ("error" in plan) return c.json({ error: plan.error }, 400);
+  if (plan.tab === "reconcile") return c.json({ error: "RECONCILIATION_EXPORT_DISABLED" }, 409);
   const rows: Record<string, unknown>[] = [];
   let cursor: { createdAt: string; id: string } | undefined;
   const exportPageSize = 100;
@@ -2416,7 +2564,9 @@ app.get("/api/orders/:id", async (c) => {
     const row = await c.env.DB.prepare(`${ORDER_ADMIN_SELECT} WHERE o.id=?`).bind(c.req.param("id")).first<Record<string, unknown>>();
     if (!row) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
     const audit = await c.env.DB.prepare("SELECT id,action,actor_type,actor_id,metadata_json,created_at FROM audit_log WHERE (entity_type='ORDER' AND entity_id=?) OR (entity_type='PAYMENT' AND entity_id=(SELECT id FROM payments WHERE order_id=?)) ORDER BY created_at DESC LIMIT 100").bind(c.req.param("id"), c.req.param("id")).all();
-    const order = orderView(row, c.env.REFERENCE_REQUESTS_ENABLED === "true");
+    const intentSnapshots = await readOrderIntentSnapshots(c.env.DB, [String(row.id)]);
+    const intent = intentSnapshots.rows.get(String(row.id));
+    const order = orderView({ ...row, intent_state: intent?.state ?? null, intent_presented_at: intent?.presented_at ?? null, intent_deadline_at: intent?.deadline_at ?? null, intent_schema_available: intentSnapshots.available === null ? null : intentSnapshots.available ? 1 : 0 }, c.env.REFERENCE_REQUESTS_ENABLED === "true");
     order.trackingNumber = await assignedTrackingNumber(c.env.DB, c.req.param("id")) ?? order.trackingNumber;
     return c.json({ order, items: order.items, receipts: order.receipts, audit: audit.results });
   } catch (error) {
@@ -2600,7 +2750,10 @@ app.post("/api/orders/:id/transition", async (c) => {
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!canTransition(from.data, to.data)) return c.json({ error: "INVALID_STATE_TRANSITION" }, 409);
   if (!c.env.DB) return c.json({ ok: true, simulated: true });
-  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state,cod.status AS cod_status,cod.test_hold FROM orders o LEFT JOIN payments p ON p.order_id=o.id LEFT JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null; cod_status: string | null; test_hold: number | null }>();
+  const current = await c.env.DB.prepare(`SELECT o.order_number,o.state,o.payment_status,o.total_payable,o.archived_at,p.id AS payment_id,p.review_state,p.expected_amount,p.approved_amount,p.approved_at,cod.status AS cod_status,cod.test_hold,
+    EXISTS(SELECT 1 FROM payment_receipts verified_receipt WHERE verified_receipt.order_id=o.id AND verified_receipt.payment_id=p.id AND verified_receipt.r2_object_key<>'' AND verified_receipt.sha256<>'') AS verified_receipt,
+    ${paymentApprovalEvidenceSql("o", "p")} AS payment_approval_evidence_verified
+    FROM orders o LEFT JOIN payments p ON p.order_id=o.id LEFT JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?`).bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; total_payable: number; review_state: string | null; expected_amount: number | null; approved_amount: number | null; approved_at: string | null; payment_id: string | null; verified_receipt: number; payment_approval_evidence_verified: number; archived_at: string | null; cod_status: string | null; test_hold: number | null }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
@@ -2612,12 +2765,23 @@ app.post("/api/orders/:id/transition", async (c) => {
     || (from.data === "DISPATCHED" && to.data === "DELIVERED")
     || (from.data === "DELIVERED" && to.data === "COLLECTION_PENDING");
   if (cod && (!codTransition || current.cod_status !== from.data || current.payment_status !== "COD_PENDING")) return c.json({ error: "COD_STATE_CONFLICT" }, 409);
-  if (!cod && (from.data === "COD_PENDING" || to.data === "COLLECTION_PENDING" || current.payment_status !== "PAID" && current.review_state !== "APPROVED")) return c.json({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" }, 409);
+  if (cod) {
+    const confirmation = await c.env.DB.prepare(`SELECT ${codConfirmationEvidenceSql("o", "cod")} AS verified FROM orders o JOIN cod_order_details cod ON cod.order_id=o.id WHERE o.id=?`).bind(c.req.param("id")).first<{ verified: number }>();
+    if (Number(confirmation?.verified ?? 0) !== 1) return c.json({ error: "COD_CUSTOMER_CONFIRMATION_REQUIRED" }, 409);
+  }
+  const advancePaymentApproved = current.payment_status === "PAID"
+    && current.review_state === "APPROVED"
+    && Number(current.expected_amount) === Number(current.total_payable)
+    && Number(current.approved_amount) === Number(current.total_payable)
+    && current.approved_at !== null
+    && Number(current.verified_receipt) === 1
+    && Number(current.payment_approval_evidence_verified) === 1;
+  if (!cod && (from.data === "COD_PENDING" || to.data === "COLLECTION_PENDING" || !advancePaymentApproved)) return c.json({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" }, 409);
   if (cod && from.data === "PACKING" && to.data === "DISPATCHED" && !(await assignedTrackingNumber(c.env.DB, c.req.param("id")))) return c.json({ error: "COD_TRACKING_REQUIRED_BEFORE_DISPATCH" }, 409);
   const now = new Date().toISOString();
   const update = cod
-    ? c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.status=? AND cod.test_hold=0)").bind(to.data, now, c.req.param("id"), from.data, from.data)
-    : c.env.DB.prepare("UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND archived_at IS NULL").bind(to.data, now, c.req.param("id"), from.data);
+    ? c.env.DB.prepare(`UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.status=? AND cod.test_hold=0 AND ${codConfirmationEvidenceSql("orders", "cod")})`).bind(to.data, now, c.req.param("id"), from.data, from.data)
+    : c.env.DB.prepare(`UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='PAID' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM payments p WHERE p.order_id=orders.id AND p.review_state='APPROVED' AND p.expected_amount=orders.total_payable AND p.approved_amount=orders.total_payable AND p.approved_at IS NOT NULL AND ${paymentApprovalEvidenceSql("orders", "p")} AND EXISTS(SELECT 1 FROM payment_receipts verified_receipt WHERE verified_receipt.order_id=orders.id AND verified_receipt.payment_id=p.id AND verified_receipt.r2_object_key<>'' AND verified_receipt.sha256<>''))`).bind(to.data, now, c.req.param("id"), from.data);
   const result = await c.env.DB.batch([
     update,
     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "ORDER_STATE_TRANSITIONED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ from: from.data, to: to.data, orderNumber: current.order_number }), now)

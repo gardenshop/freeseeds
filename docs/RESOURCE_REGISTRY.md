@@ -1,5 +1,12 @@
 # Resource Registry
 
+## GFS-ORDERFLOW-PENDING-001 local source resources (2026-11-26)
+
+- Local code/test resources: `apps/admin/src/order-reconciliation.ts`, the authenticated read-only Admin Orders Reconciliation view/count query and fulfillment compare-and-set guards in `apps/admin/src/index.ts`; synthetic coverage in `tests/order-reconciliation.test.ts`, `tests/admin-orders.test.ts`, `tests/admin-fulfillment.test.ts`, `tests/cod-admin.test.ts`, and `tests/guided-lead-only.test.ts`.
+- No schema/table/index, migration, environment binding, endpoint that sends, or export was added. Existing INTENT-030 is read only. Missing `order_confirmation_intents` is reported unavailable rather than as zero; all sends remain on the normal per-contact free-only path.
+- No live Admin/Cloudflare/Meta/D1 read was made for current order counts because the supported authenticated browser connector is unavailable here. The 2026-11-25 aggregate remains historical and does not represent this task's current row-level classification. No customer row, ID, phone, receipt, TID, message or WAMID is included in the report/tests.
+- Protected Label Printer baseline was rehashed against the existing 923-entry manifest: 923 identical,0 changed,0 missing. Its manifest remains local/untracked and is not an in-scope commit file. No external resource was mutated.
+
 ## GFS-ORDERFLOW-INTENT-030 local source resources (2026-11-26)
 
 - Local code/test resources: `apps/api/src/order-intent.ts`, API/core/Admin outbound guard and locale pinning changes, migration candidate `0051_order_confirmation_intent_state_guards.sql`, and synthetic tests `tests/order-intent.test.ts` / `tests/free-messaging.test.ts`.

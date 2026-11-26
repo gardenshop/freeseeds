@@ -1,3 +1,5 @@
+import { FEP_OPENING_POLICY_VERSION } from "./free-messaging";
+
 export type WebhookRecord = {
   providerEventId: string;
   eventType: string;
@@ -5,7 +7,14 @@ export type WebhookRecord = {
 };
 
 type WebhookMessage = { id?: string; type?: string; image?: unknown; document?: unknown };
-type WebhookStatus = { id?: string; status?: string; timestamp?: string | number; recipient_id?: string };
+type WebhookStatus = {
+  id?: string;
+  status?: string;
+  timestamp?: string | number;
+  recipient_id?: string;
+  conversation?: { expiration_timestamp?: string | number; origin?: { type?: string } };
+  pricing?: { billable?: boolean; pricing_model?: string; type?: string; category?: string; subtype?: string };
+};
 type WebhookValue = { messages?: WebhookMessage[]; statuses?: WebhookStatus[] };
 type WebhookPayload = { entry?: Array<{ changes?: Array<{ value?: WebhookValue }> }> };
 
@@ -41,6 +50,84 @@ export function parseWhatsAppDeliveryReceipts(payload: unknown): WhatsAppDeliver
   return receipts;
 }
 
+export type WhatsAppFreeWindowStatus = {
+  providerMessageId: string;
+  recipientId?: string;
+  status: "SENT" | "DELIVERED" | "READ" | "FAILED";
+  providerTimestamp: string;
+  conversationExpiresAt?: string;
+  conversationOriginType?: string;
+  pricing?: { billable?: boolean; pricingModel?: string; type?: string; category?: string; subtype?: string };
+};
+
+export function parseWhatsAppFreeWindowStatuses(payload: unknown): WhatsAppFreeWindowStatus[] {
+  const root=payload&&typeof payload==="object"?payload as WebhookPayload:{};
+  const result:WhatsAppFreeWindowStatus[]=[];
+  for(const entry of root.entry??[])for(const change of entry.changes??[])for(const status of change.value?.statuses??[]){
+    if(!status.id||!["sent","delivered","read","failed"].includes(status.status??""))continue;
+    const seconds=typeof status.timestamp==="string"||typeof status.timestamp==="number"?Number(status.timestamp):Number.NaN;
+    const millis=seconds*1000;
+    if(!Number.isSafeInteger(seconds)||seconds<=0||!Number.isSafeInteger(millis)||millis>8_640_000_000_000_000)continue;
+    const expiry=typeof status.conversation?.expiration_timestamp==="string"||typeof status.conversation?.expiration_timestamp==="number"?Number(status.conversation.expiration_timestamp):Number.NaN;
+    result.push({
+      providerMessageId:status.id,
+      ...(typeof status.recipient_id==="string"?{recipientId:status.recipient_id}:{}),
+      status:status.status==="sent"?"SENT":status.status==="delivered"?"DELIVERED":status.status==="read"?"READ":"FAILED",
+      providerTimestamp:new Date(millis).toISOString(),
+      ...(Number.isSafeInteger(expiry)&&expiry>0&&Number.isSafeInteger(expiry*1000)?{conversationExpiresAt:new Date(expiry*1000).toISOString()}:{}),
+      ...(typeof status.conversation?.origin?.type==="string"?{conversationOriginType:status.conversation.origin.type}:{}),
+      ...(status.pricing?{pricing:{...(typeof status.pricing.billable==="boolean"?{billable:status.pricing.billable}:{}),...(typeof status.pricing.pricing_model==="string"?{pricingModel:status.pricing.pricing_model}:{}),...(typeof status.pricing.type==="string"?{type:status.pricing.type}:{}),...(typeof status.pricing.category==="string"?{category:status.pricing.category}:{}),...(typeof status.pricing.subtype==="string"?{subtype:status.pricing.subtype}:{})}}:{})
+    });
+  }
+  return result;
+}
+
+async function persistFirstResponseFreeWindowEvidence(db:D1Database,statuses:WhatsAppFreeWindowStatus[],payloadHash:string,receivedAt:string):Promise<void>{
+  for(const status of statuses){
+    if(!status.recipientId)continue;
+    const waId=status.recipientId.startsWith("+")?status.recipientId.slice(1):status.recipientId;
+    const conversation=await db.prepare("SELECT id,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(waId).first<{id:string;state_data:string|null}>();
+    if(!conversation?.state_data)continue;
+    let state:{freeMessagingEvidence?:{openingResponse?:Record<string,unknown>;fep?:unknown;pricing?:unknown}};
+    try{state=JSON.parse(conversation.state_data) as typeof state;}catch{continue;}
+    const opening=state.freeMessagingEvidence?.openingResponse;
+    if(!opening||opening.sourceType!=="CTWA_AD"||!(["ANDROID","IOS"] as unknown[]).includes(opening.platform)||opening.policyVerified!==true||opening.policyRef!==FEP_OPENING_POLICY_VERSION||typeof opening.firstResponseMessageIdHash!=="string")continue;
+    const providerIdHashBytes=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(status.providerMessageId)));
+    const providerIdHash=[...providerIdHashBytes].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
+    if(providerIdHash!==opening.firstResponseMessageIdHash)continue;
+    if(status.status==="FAILED"){
+      if(opening.fepPending){delete opening.fepPending;opening.firstResponseFailedAt=receivedAt;await db.prepare("UPDATE whatsapp_conversations SET state_data=?,updated_at=? WHERE id=? AND state_data=?").bind(JSON.stringify(state),receivedAt,conversation.id,conversation.state_data).run();}
+      continue;
+    }
+    const providerPricing=status.pricing;
+    const candidate=providerPricing?.billable===false&&providerPricing.pricingModel==="PMP"&&providerPricing.type==="free_entry_point"&&providerPricing.category==="referral_conversion"&&status.conversationOriginType==="referral_conversion"&&status.conversationExpiresAt
+      ? {expiresAt:status.conversationExpiresAt,responseAt:typeof opening.firstBusinessResponseAt==="string"?opening.firstBusinessResponseAt:status.providerTimestamp,pricingObservedAt:status.providerTimestamp,evidenceRef:payloadHash}
+      : status.status==="DELIVERED"||status.status==="READ"?opening.fepPending as {expiresAt?:string;responseAt?:string;pricingObservedAt?:string;evidenceRef?:string}|undefined:undefined;
+    if(candidate&&status.status==="SENT"){
+      opening.fepPending=candidate;
+      await db.prepare("UPDATE whatsapp_conversations SET state_data=?,updated_at=? WHERE id=? AND state_data=?").bind(JSON.stringify(state),receivedAt,conversation.id,conversation.state_data).run();
+      continue;
+    }
+    if(!candidate||!(status.status==="DELIVERED"||status.status==="READ"))continue;
+    const expiry=Date.parse(candidate.expiresAt??"");
+    const responseAt=Date.parse(candidate.responseAt??"");
+    const referralAt=Date.parse(String(opening.referralAt??""));
+    if(!Number.isFinite(expiry)||!Number.isFinite(responseAt)||!Number.isFinite(referralAt)||referralAt>responseAt||responseAt>expiry)continue;
+    state.freeMessagingEvidence??={};
+    state.freeMessagingEvidence.fep={
+      sourceType:"CTWA_AD",platform:opening.platform,clickIdHash:opening.clickIdHash,referralAt:opening.referralAt,
+      firstBusinessResponseAt:candidate.responseAt,expiryVerified:true,verifiedAt:receivedAt,verifiedExpiresAt:candidate.expiresAt,
+      expiryEvidenceRef:candidate.evidenceRef??payloadHash
+    };
+    state.freeMessagingEvidence.pricing={
+      verified:true,billable:false,basis:"FEP",type:"free_entry_point",category:"REFERRAL_CONVERSION",messageCategory:"SERVICE",pricingModel:"PMP",form:"FREEFORM",
+      evidenceRef:candidate.evidenceRef??payloadHash,observedAt:candidate.pricingObservedAt??candidate.responseAt,verifiedAt:receivedAt,validUntil:candidate.expiresAt
+    };
+    delete opening.fepPending;
+    await db.prepare("UPDATE whatsapp_conversations SET state_data=?,updated_at=? WHERE id=? AND state_data=?").bind(JSON.stringify(state),receivedAt,conversation.id,conversation.state_data).run();
+  }
+}
+
 export async function webhookPayloadHash(value: ArrayBuffer): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", value);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -62,19 +149,46 @@ export async function persistWebhookRecords(db: D1Database, payload: unknown, ra
        OR (?<>'' AND EXISTS(SELECT 1 FROM order_confirmation_intents i JOIN whatsapp_conversations c ON c.id=i.conversation_id
          WHERE c.wa_id IN (?,?) AND i.workflow_version='GFS-ORDERFLOW-INTENT-030-V1' AND i.state='PRESENTATION_PENDING' AND i.presentation_message_id IS NULL))`).bind(receipt.providerMessageId, receipt.status, receipt.providerTimestamp, now, receipt.providerMessageId, receipt.recipientId ?? "", receipt.recipientId ?? "", receipt.recipientId?.startsWith("+") ? receipt.recipientId.slice(1) : receipt.recipientId ?? "")) : [];
   await db.batch([...records.map((record) => db.prepare("INSERT OR IGNORE INTO whatsapp_events (id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.providerEventId, record.eventType, payloadHash, record.status, correlationId, now)), ...statusUpdates, ...receiptStatements]);
+  await persistFirstResponseFreeWindowEvidence(db,parseWhatsAppFreeWindowStatuses(payload),payloadHash,now);
   return records.length;
 }
 
-export async function persistInboundConversationActivity(db: D1Database, events: Array<{ id: string; from: string }>): Promise<void> {
+export async function persistInboundConversationActivity(db: D1Database, events: Array<{ id: string; from: string; providerTimestamp?: string; referral?: {ctwaClid?:string;sourceType?:string;platform?:string} }>): Promise<void> {
   if (!events.length) return;
-  await db.batch(events.map((event) => db.prepare(`INSERT INTO whatsapp_conversations
-    (id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at)
-    SELECT ?,?,'NEW','{}',?,created_at,created_at,created_at
-    FROM whatsapp_events WHERE provider_event_id=?
-    ON CONFLICT(wa_id) DO UPDATE SET
-      last_inbound_message_id=excluded.last_inbound_message_id,
-      last_inbound_at=excluded.last_inbound_at,
-      updated_at=CASE WHEN excluded.last_inbound_at>COALESCE(whatsapp_conversations.last_inbound_at,'') THEN excluded.updated_at ELSE whatsapp_conversations.updated_at END
-    WHERE whatsapp_conversations.last_inbound_at IS NULL OR excluded.last_inbound_at>=whatsapp_conversations.last_inbound_at`)
-    .bind(crypto.randomUUID(), event.from, event.id, `message:${event.id}`)));
+  const statements=[];
+  for(const event of events){
+    const sourceType=event.referral?.sourceType?.toLowerCase();
+    const platform=event.referral?.platform?.toUpperCase();
+    const referralAt=event.providerTimestamp&&Number.isFinite(Date.parse(event.providerTimestamp))?event.providerTimestamp:undefined;
+    const providerTimestamp=event.providerTimestamp&&Number.isFinite(Date.parse(event.providerTimestamp))?event.providerTimestamp:null;
+    const ctwaClid=event.referral?.ctwaClid?.trim();
+    let openingResponse:Record<string,unknown>|undefined;
+    if(sourceType==="ad"&&ctwaClid&&referralAt&&(platform==="ANDROID"||platform==="IOS")){
+      const source=await db.prepare("SELECT payload_hash FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${event.id}`).first<{payload_hash:string}>();
+      if(source?.payload_hash){
+        const clickDigest=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(ctwaClid)));
+        const clickIdHash=[...clickDigest].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
+        openingResponse={sourceType:"CTWA_AD",platform,clickIdHash,referralAt,policyVerified:true,policyRef:FEP_OPENING_POLICY_VERSION,sourceEvidenceRef:source.payload_hash};
+      }
+    }
+    const initialState=openingResponse?JSON.stringify({freeMessagingEvidence:{openingResponse}}):"{}";
+    const openingJson=openingResponse?JSON.stringify(openingResponse):null;
+    const normalizedReferralAt=referralAt??null;
+    statements.push(db.prepare(`INSERT INTO whatsapp_conversations
+      (id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at)
+      SELECT ?,?,'NEW',?,?,?,created_at,created_at
+      FROM whatsapp_events WHERE provider_event_id=?
+      ON CONFLICT(wa_id) DO UPDATE SET
+        last_inbound_message_id=CASE WHEN excluded.last_inbound_at IS NULL OR whatsapp_conversations.last_inbound_at IS NULL OR excluded.last_inbound_at>=whatsapp_conversations.last_inbound_at THEN excluded.last_inbound_message_id ELSE whatsapp_conversations.last_inbound_message_id END,
+        last_inbound_at=CASE WHEN excluded.last_inbound_at IS NULL THEN NULL WHEN whatsapp_conversations.last_inbound_at IS NULL OR excluded.last_inbound_at>=whatsapp_conversations.last_inbound_at THEN excluded.last_inbound_at ELSE whatsapp_conversations.last_inbound_at END,
+        state_data=CASE
+          WHEN ? IS NULL OR json_valid(whatsapp_conversations.state_data)=0 THEN whatsapp_conversations.state_data
+          WHEN excluded.last_inbound_at IS NULL OR excluded.last_inbound_at<COALESCE(whatsapp_conversations.last_inbound_at,'') THEN whatsapp_conversations.state_data
+          WHEN json_extract(whatsapp_conversations.state_data,'$.freeMessagingEvidence.fep.verifiedExpiresAt')>? THEN whatsapp_conversations.state_data
+          WHEN json_extract(whatsapp_conversations.state_data,'$.freeMessagingEvidence.openingResponse.referralAt')>=? THEN whatsapp_conversations.state_data
+          ELSE json_set(COALESCE(whatsapp_conversations.state_data,'{}'),'$.freeMessagingEvidence.openingResponse',json(?)) END,
+        updated_at=excluded.updated_at`)
+      .bind(crypto.randomUUID(),event.from,initialState,event.id,providerTimestamp,`message:${event.id}`,openingJson,normalizedReferralAt,normalizedReferralAt,openingJson));
+  }
+  await db.batch(statements);
 }

@@ -992,6 +992,27 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(page).not.toContain("evidence reference");
   });
 
+  it("blocks advance fulfillment until the approved amount, stored receipt and settlement audit agree", async () => {
+    const now = new Date().toISOString();
+    sqlite.prepare("INSERT INTO orders(id,order_number,state,payment_status,total_payable,updated_at) VALUES('advance-order','FS-SYNTHETIC-ADVANCE','PAID','PAID',1000,?)").run(now);
+    sqlite.prepare("INSERT INTO payments(id,order_id,method,expected_amount,review_state,approved_amount,approved_by,approved_at,customer_transaction_reference,updated_at) VALUES('advance-payment','advance-order','JAZZCASH',1000,'APPROVED',999,'admin@example.test',?,'SYNTHETIC-TID-0001',?)").run(now, now);
+    const session = await csrf();
+    const transition = () => app.fetch(new Request("https://admin.example.test/api/orders/advance-order/transition", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: "FS-SYNTHETIC-ADVANCE", from: "PAID", to: "PACKING" }) }), env());
+
+    const incomplete = await transition();
+    expect(incomplete.status).toBe(409);
+    expect(await incomplete.json()).toMatchObject({ error: "FULFILLMENT_PAYMENT_NOT_APPROVED" });
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id='advance-order'").get()).toEqual({ state: "PAID" });
+
+    sqlite.prepare("UPDATE payments SET approved_amount=1000 WHERE id='advance-payment'").run();
+    sqlite.prepare("INSERT INTO payment_receipts(id,order_id,payment_id,r2_object_key,sha256) VALUES('advance-receipt','advance-order','advance-payment','synthetic/receipt','synthetic-sha256')").run();
+    sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,metadata_json,created_at) VALUES('advance-approval','PAYMENT_APPROVED','ADMIN','PAYMENT','advance-payment',?,?)").run(JSON.stringify({ orderId: "advance-order", amountPkr: 1000, settlementEvidenceRef: "synthetic-settlement-evidence", transactionReferenceHash: "synthetic-reference-hash" }), now);
+
+    const accepted = await transition();
+    expect(accepted.status).toBe(200);
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id='advance-order'").get()).toEqual({ state: "PACKING" });
+  });
+
   it("guards advance settlement, enforces COD fulfillment, and reaches COD_PAID only after exact collection and remittance", async () => {
     const collectionPolicyHash = await codReferenceHmac("SYNTHETIC-COURIER-POLICY", hmacKey);
     const remittancePolicyHash = await codReferenceHmac("SYNTHETIC-REMITTANCE-POLICY", hmacKey);
@@ -1007,6 +1028,12 @@ describe("COD Admin configuration and reconciliation", () => {
     const session = await csrf();
     const reconcile = (kind: string, amountPkr: number, evidenceReference: string) => app.fetch(new Request(`https://admin.example.test/api/orders/order-1/cod-${kind}`, { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: "FS-SYNTHETIC-1", amountPkr, evidenceReference }) }), env());
     const transition = (from: string, to: string) => app.fetch(new Request("https://admin.example.test/api/orders/order-1/transition", { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: "FS-SYNTHETIC-1", from, to }) }), env());
+
+    const missingCustomerConfirmation = await transition("COD_PENDING", "PACKING");
+    expect(missingCustomerConfirmation.status).toBe(409);
+    expect(await missingCustomerConfirmation.json()).toMatchObject({ error: "COD_CUSTOMER_CONFIRMATION_REQUIRED" });
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id='order-1'").get()).toEqual({ state: "COD_PENDING" });
+    sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES('synthetic-cod-consent','COD_ORDER_CONFIRMED','CUSTOMER','ORDER','order-1','synthetic-correlation',?,?)").run(JSON.stringify({ totalPkr: 325, admission: "PUBLIC", testHold: 0 }), now);
 
     const packing = await transition("COD_PENDING", "PACKING");
     expect(packing.status, JSON.stringify(await packing.json())).toBe(200);

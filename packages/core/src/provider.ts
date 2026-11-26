@@ -1,4 +1,4 @@
-export type InboundEvent = { id: string; from: string; kind: "text" | "interactive" | "flow" | "media"; payload: unknown; referral?: { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string } };
+export type InboundEvent = { id: string; from: string; kind: "text" | "interactive" | "flow" | "media"; payload: unknown; providerTimestamp?: string; referral?: { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string; sourceType?: string; platform?: string } };
 export type MediaResult = { mimeType: string; size: number; body: ArrayBuffer; mediaId: string };
 export type OutboundImage = { body: ArrayBuffer; mimeType: "image/jpeg" | "image/png"; filename?: string };
 export type InteractiveButton = { id: string; title: string };
@@ -62,13 +62,21 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   }
 
   parseInboundEvent(payload: unknown): InboundEvent[] {
-    const root = payload as { entry?: Array<{ changes?: Array<{ value?: { messages?: Array<{ id?: string; from?: string; type?: string; image?: { id?: string; mime_type?: string }; document?: { id?: string; mime_type?: string }; context?: { id?: string }; interactive?: { nfm_reply?: unknown }; referral?: Record<string, string> }> } }> }> };
+    const root = payload as { entry?: Array<{ changes?: Array<{ value?: { messages?: Array<{ id?: string; from?: string; type?: string; timestamp?: string | number; image?: { id?: string; mime_type?: string }; document?: { id?: string; mime_type?: string }; context?: { id?: string }; interactive?: { nfm_reply?: unknown }; referral?: Record<string, string> }> } }> }> };
     const result: InboundEvent[] = [];
     for (const entry of root.entry ?? []) for (const change of entry.changes ?? []) for (const message of change.value?.messages ?? []) {
       if (!message.id || !message.from) continue;
       const kind = message.image || message.document ? "media" : message.interactive?.nfm_reply ? "flow" : message.type === "interactive" ? "interactive" : "text";
-      const referral = message.referral ? { ctwaClid: message.referral.ctwa_clid, campaignId: message.referral.campaign_id, adSetId: message.referral.adset_id, adId: message.referral.ad_id } : undefined;
-      result.push({ id: message.id, from: message.from, kind, payload: message, ...(referral ? { referral } : {}) });
+      const referral = message.referral ? {
+        ctwaClid: message.referral.ctwa_clid,
+        campaignId: message.referral.campaign_id,
+        adSetId: message.referral.adset_id,
+        adId: message.referral.ad_id,
+        sourceType: message.referral.source_type,
+        platform: message.referral.platform ?? message.referral.source_platform
+      } : undefined;
+      const providerTimestamp=normalizeMetaTimestamp(message.timestamp);
+      result.push({ id: message.id, from: message.from, kind, payload: message, ...(providerTimestamp?{providerTimestamp}:{}), ...(referral ? { referral } : {}) });
     }
     return result;
   }
@@ -165,6 +173,13 @@ function constantTimeEqual(left: string, right: string): boolean {
   let difference = 0;
   for (let index = 0; index < left.length; index += 1) difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
   return difference === 0;
+}
+
+function normalizeMetaTimestamp(value:unknown):string|undefined{
+  const seconds=typeof value==="string"||typeof value==="number"?Number(value):Number.NaN;
+  const milliseconds=seconds*1000;
+  if(!Number.isSafeInteger(seconds)||seconds<=0||!Number.isSafeInteger(milliseconds)||milliseconds>Date.now()+300_000||milliseconds>8_640_000_000_000_000)return undefined;
+  return new Date(milliseconds).toISOString();
 }
 
 export function createWhatsAppProvider(kind: string | undefined, config?: Partial<MetaWhatsAppConfig>): WhatsAppProvider {

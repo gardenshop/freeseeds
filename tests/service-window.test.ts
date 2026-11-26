@@ -40,7 +40,7 @@ describe("WhatsApp service-window timestamps", () => {
     expect(isInsideWhatsAppServiceWindow("invalid", now)).toBe(false);
   });
 
-  it("uses first trusted receipt time, does not backfill, and duplicate callbacks cannot extend the window", async () => {
+  it("uses provider inbound time, does not backfill, and duplicate/status callbacks cannot extend the window", async () => {
     sqlite = new DatabaseSync(":memory:");
     sqlite.exec(`
       CREATE TABLE whatsapp_events(id TEXT PRIMARY KEY,provider_event_id TEXT UNIQUE,event_type TEXT,payload_hash TEXT,status TEXT,correlation_id TEXT,created_at TEXT);
@@ -50,26 +50,26 @@ describe("WhatsApp service-window timestamps", () => {
     sqlite.exec(readFileSync("migrations/0026_whatsapp_last_inbound_at.sql", "utf8"));
     expect(sqlite.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id='923001234567'").get()).toEqual({ last_inbound_at: null });
     const db = makeDb();
-    const payload = { entry: [{ changes: [{ value: { messages: [{ id: "synthetic-inbound-1", from: "923001234567", type: "text", text: { body: "START" } }] } }] }] };
-    const raw = new TextEncoder().encode("synthetic-signed-body").buffer as ArrayBuffer;
     const start = Date.parse("2026-10-21T08:00:00.000Z");
+    const payload = { entry: [{ changes: [{ value: { messages: [{ id: "synthetic-inbound-1", from: "923001234567", timestamp:String(start/1000), type: "text", text: { body: "START" } }] } }] }] };
+    const raw = new TextEncoder().encode("synthetic-signed-body").buffer as ArrayBuffer;
     vi.useFakeTimers();
     vi.setSystemTime(start);
     await persistWebhookRecords(db, payload, raw, "synthetic-correlation-1");
-    await persistInboundConversationActivity(db, [{ id: "synthetic-inbound-1", from: "923001234567" }]);
+    await persistInboundConversationActivity(db, [{ id: "synthetic-inbound-1", from: "923001234567", providerTimestamp:new Date(start).toISOString() }]);
     const acceptedAt = sqlite.prepare("SELECT last_inbound_at,last_inbound_message_id FROM whatsapp_conversations WHERE wa_id='923001234567'").get() as { last_inbound_at: string; last_inbound_message_id: string };
     expect(acceptedAt).toEqual({ last_inbound_at: "2026-10-21T08:00:00.000Z", last_inbound_message_id: "synthetic-inbound-1" });
 
     vi.setSystemTime(start + 25 * 60 * 60 * 1000);
     await persistWebhookRecords(db, payload, raw, "synthetic-correlation-duplicate");
-    await persistInboundConversationActivity(db, [{ id: "synthetic-inbound-1", from: "923001234567" }]);
+    await persistInboundConversationActivity(db, [{ id: "synthetic-inbound-1", from: "923001234567", providerTimestamp:new Date(start).toISOString() }]);
     expect(sqlite.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id='923001234567'").get()).toEqual({ last_inbound_at: acceptedAt.last_inbound_at });
     await persistInboundConversationActivity(db, []); // Status-only webhook records do not update the session window.
     expect(sqlite.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id='923001234567'").get()).toEqual({ last_inbound_at: acceptedAt.last_inbound_at });
 
-    const nextPayload = { entry: [{ changes: [{ value: { messages: [{ id: "synthetic-inbound-2", from: "923001234567", type: "text", text: { body: "START" } }] } }] }] };
+    const nextPayload = { entry: [{ changes: [{ value: { messages: [{ id: "synthetic-inbound-2", from: "923001234567", timestamp:String((start+25*60*60*1000)/1000), type: "text", text: { body: "START" } }] } }] }] };
     await persistWebhookRecords(db, nextPayload, raw, "synthetic-correlation-2");
-    await persistInboundConversationActivity(db, [{ id: "synthetic-inbound-2", from: "923001234567" }]);
+    await persistInboundConversationActivity(db, [{ id: "synthetic-inbound-2", from: "923001234567", providerTimestamp:new Date(start+25*60*60*1000).toISOString() }]);
     expect(sqlite.prepare("SELECT last_inbound_at,last_inbound_message_id FROM whatsapp_conversations WHERE wa_id='923001234567'").get()).toEqual({ last_inbound_at: "2026-10-22T09:00:00.000Z", last_inbound_message_id: "synthetic-inbound-2" });
   });
 });

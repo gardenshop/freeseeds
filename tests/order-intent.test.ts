@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { anchorOrderIntentOnDelivery, cancelOrderIntent, expireDueOrderIntents, expireOrderIntent, formatIntentRemainingTime, orderIntentCodConfirmationText, orderIntentNewOrderButton, orderIntentOptionRows, orderIntentOptionsText, orderIntentReminderText, queueDueOrderIntentReminders, switchIntentAdvanceToCod, ORDER_INTENT_DURATION_MS, ORDER_INTENT_VERSION } from "../apps/api/src/order-intent.js";
 import worker, { finalizeCodOrder } from "../apps/api/src/index.js";
 import { enqueueDuePaymentChoiceRecoveryStages } from "../apps/api/src/payment-choice-recovery.js";
-import { parseWhatsAppDeliveryReceipts } from "../packages/core/src/webhook.js";
+import { parseWhatsAppDeliveryReceipts, persistInboundConversationActivity, persistWebhookRecords } from "../packages/core/src/webhook.js";
 import { evaluateStoredFreeWhatsAppOutbound } from "../packages/core/src/free-messaging.js";
 
 let sqlite: DatabaseSync;
@@ -108,7 +108,7 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     sqlite.exec("PRAGMA foreign_keys=ON");
     sqlite.exec(`
       CREATE TABLE customers(id TEXT PRIMARY KEY,wa_id TEXT,normalized_address_hash TEXT);
-      CREATE TABLE whatsapp_conversations(id TEXT PRIMARY KEY,wa_id TEXT,state TEXT,state_data TEXT,last_inbound_message_id TEXT,last_inbound_at TEXT,created_at TEXT,updated_at TEXT);
+      CREATE TABLE whatsapp_conversations(id TEXT PRIMARY KEY,wa_id TEXT UNIQUE,state TEXT,state_data TEXT,last_inbound_message_id TEXT,last_inbound_at TEXT,created_at TEXT,updated_at TEXT);
       CREATE TABLE orders(id TEXT PRIMARY KEY,order_number TEXT,customer_id TEXT,state TEXT,payment_status TEXT,total_payable INTEGER,province TEXT,archived_at TEXT,created_at TEXT,updated_at TEXT);
       CREATE TABLE payments(id TEXT PRIMARY KEY,order_id TEXT,method TEXT,review_state TEXT,approved_amount INTEGER,approved_by TEXT,approved_at TEXT,submitted_at TEXT,customer_transaction_reference TEXT,expected_amount INTEGER,updated_at TEXT);
       CREATE TABLE payment_receipts(id TEXT PRIMARY KEY,payment_id TEXT,order_id TEXT,provider_media_id TEXT,r2_object_key TEXT,sha256 TEXT,mime_type TEXT,size_bytes INTEGER,submitted_at TEXT,created_at TEXT);
@@ -118,7 +118,7 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
       CREATE TABLE order_eligibility_locks(household_key TEXT PRIMARY KEY,order_id TEXT,order_number TEXT,last_order_at TEXT);
       CREATE TABLE cod_mo_receipts(mo_reference_hmac TEXT PRIMARY KEY,order_id TEXT NOT NULL,received_at TEXT NOT NULL);
       CREATE TABLE cod_historical_mo_receipts(mo_reference_hmac TEXT PRIMARY KEY,order_id TEXT NOT NULL,received_at TEXT NOT NULL);
-      CREATE TABLE whatsapp_events(provider_event_id TEXT PRIMARY KEY,created_at TEXT NOT NULL);
+      CREATE TABLE whatsapp_events(id TEXT,provider_event_id TEXT PRIMARY KEY,event_type TEXT,payload_hash TEXT,status TEXT,correlation_id TEXT,created_at TEXT NOT NULL);
       CREATE TABLE outbound_messages(id TEXT PRIMARY KEY,idempotency_key TEXT UNIQUE,order_id TEXT,customer_id TEXT,kind TEXT,status TEXT,attempt_count INTEGER DEFAULT 0,last_error TEXT,provider_message_id TEXT,created_at TEXT,updated_at TEXT);
       CREATE TABLE payment_reminder_v2_opt_outs(customer_id TEXT,wa_id TEXT);
       CREATE TABLE payment_choice_recovery_stages(order_id TEXT,stage_minutes INTEGER,status TEXT,due_at TEXT,locale TEXT,inbound_message_id TEXT,inbound_at TEXT,outbound_idempotency_key TEXT,last_error TEXT,created_at TEXT,updated_at TEXT,PRIMARY KEY(order_id,stage_minutes));
@@ -207,7 +207,7 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     const start = Date.parse("2026-11-25T10:00:00.000Z");
     const freeMessagingEvidence = {
       fep: { sourceType: "CTWA_AD", platform: "IOS", clickIdHash: "c".repeat(64), referralAt: new Date(start - 5 * 60_000).toISOString(), firstBusinessResponseAt: new Date(start - 4 * 60_000).toISOString(), expiryVerified: true, verifiedAt: new Date(start - 3 * 60_000).toISOString(), verifiedExpiresAt: new Date(start + 6 * 24 * 60 * 60_000).toISOString(), expiryEvidenceRef: "synthetic-verified-expiry" },
-      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", subtype: "free_entry_point", evidenceRef: "synthetic-verified-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 60 * 60_000).toISOString(), form: "FREEFORM", category: "SERVICE" }
+      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", category: "REFERRAL_CONVERSION", messageCategory: "SERVICE", pricingModel: "PMP", evidenceRef: "synthetic-verified-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 60 * 60_000).toISOString(), form: "FREEFORM" }
     };
     seedIntent(new Date(start).toISOString(), "ur");
     sqlite.prepare("UPDATE whatsapp_conversations SET state_data=? WHERE id='conversation-synthetic'").run(JSON.stringify({ language: "ur", freeMessagingEvidence }));
@@ -215,6 +215,46 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     expect(await evaluateStoredFreeWhatsAppOutbound(db, "synthetic-wa-id", undefined, new Date(start + 5 * 60_000))).toMatchObject({ eligible: true, basis: "FEP", locale: "ur" });
     sqlite.prepare("INSERT INTO payment_reminder_v2_opt_outs(customer_id,wa_id) VALUES('customer-synthetic','synthetic-wa-id')").run();
     expect(await evaluateStoredFreeWhatsAppOutbound(db, "synthetic-wa-id", undefined, new Date(start + 5 * 60_000))).toMatchObject({ eligible: false, reason: "CUSTOMER_OPTED_OUT" });
+  });
+
+  it("allows the first response to a signed, explicitly mobile CTWA referral without pre-existing FEP expiry or delivery pricing", async () => {
+    const start=Date.parse("2026-11-25T10:00:00.000Z");
+    seedIntent(new Date(start).toISOString(),"ur");
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES('ref-event','message:inbound-synthetic','MESSAGE','synthetic-signed-webhook-hash','RECEIVED','synthetic-correlation',?)").run(new Date(start).toISOString());
+    const db=makeDb();
+    const referralEvent={id:"inbound-synthetic",from:"synthetic-wa-id",providerTimestamp:new Date(start).toISOString(),referral:{ctwaClid:"synthetic-click-id-never-persisted",sourceType:"ad",platform:"android"}};
+    await persistInboundConversationActivity(db,[referralEvent]);
+    await persistInboundConversationActivity(db,[referralEvent]);
+    sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES('old-ref-event','message:inbound-old','MESSAGE','synthetic-old-signed-webhook-hash','RECEIVED','synthetic-correlation',?)").run(new Date(start).toISOString());
+    await persistInboundConversationActivity(db,[{id:"inbound-old",from:"synthetic-wa-id",providerTimestamp:new Date(start-60_000).toISOString(),referral:{ctwaClid:"synthetic-old-click-id",sourceType:"ad",platform:"ios"}}]);
+    const state=JSON.parse(String(sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()?.state_data)) as {freeMessagingEvidence:{openingResponse:Record<string,unknown>;fep?:unknown;pricing?:unknown}};
+    expect(state.freeMessagingEvidence.openingResponse).toMatchObject({sourceType:"CTWA_AD",platform:"ANDROID",referralAt:new Date(start).toISOString(),policyVerified:true,sourceEvidenceRef:"synthetic-signed-webhook-hash"});
+    expect(sqlite.prepare("SELECT last_inbound_message_id,last_inbound_at FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()).toEqual({last_inbound_message_id:"inbound-synthetic",last_inbound_at:new Date(start).toISOString()});
+    expect(state.freeMessagingEvidence.openingResponse).not.toHaveProperty("ctwaClid");
+    expect(state.freeMessagingEvidence).not.toHaveProperty("fep");
+    expect(state.freeMessagingEvidence).not.toHaveProperty("pricing");
+    expect(await evaluateStoredFreeWhatsAppOutbound(db,"synthetic-wa-id","ur",new Date(start+60_000),{allowFepOpeningResponse:true})).toMatchObject({eligible:true,basis:"FEP_OPENING_RESPONSE",locale:"ur"});
+  });
+
+  it("activates later FEP only from matched Meta referral-conversion pricing and provider expiry webhooks", async () => {
+    const start=Date.parse("2026-11-25T10:00:00.000Z");
+    const expiresAt=new Date(start+72*60*60_000).toISOString();
+    const providerMessageId="wamid-synthetic-language-picker";
+    const providerHashBytes=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(providerMessageId)));
+    const providerMessageIdHash=[...providerHashBytes].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
+    seedIntent(new Date(start).toISOString(),"en");
+    const opening={sourceType:"CTWA_AD",platform:"ANDROID",clickIdHash:"9".repeat(64),referralAt:new Date(start-60_000).toISOString(),policyVerified:true,policyRef:"META-PMP-CTWA-FEP-2026-10-01",sourceEvidenceRef:"synthetic-referral-proof",firstResponseAttemptedAt:new Date(start).toISOString(),firstResponseKeyHash:"synthetic-attempt-key-hash",firstBusinessResponseAt:new Date(start).toISOString(),firstResponseMessageIdHash:providerMessageIdHash};
+    sqlite.prepare("UPDATE whatsapp_conversations SET state_data=? WHERE id='conversation-synthetic'").run(JSON.stringify({language:"en",freeMessagingEvidence:{openingResponse:opening}}));
+    sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,customer_id,kind,status,attempt_count,provider_message_id,created_at,updated_at) VALUES('outbound-language','conversation_reply:inbound-synthetic',NULL,NULL,'LANGUAGE_SELECTION','SENT',1,?,?,?)").run(providerMessageId,new Date(start).toISOString(),new Date(start).toISOString());
+    const payload={entry:[{changes:[{value:{statuses:[{id:providerMessageId,recipient_id:"synthetic-wa-id",status:"delivered",timestamp:String(Math.floor((start+30_000)/1000)),conversation:{expiration_timestamp:String(Math.floor(Date.parse(expiresAt)/1000)),origin:{type:"referral_conversion"}},pricing:{billable:false,pricing_model:"PMP",type:"free_entry_point",category:"referral_conversion"}}]}}]}]};
+    const raw=new TextEncoder().encode(JSON.stringify(payload)).buffer as ArrayBuffer;
+    vi.useFakeTimers();
+    vi.setSystemTime(start+40_000);
+    expect(await persistWebhookRecords(makeDb(),payload,raw,"synthetic-status-correlation",false)).toBe(1);
+    const stored=JSON.parse(String(sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()?.state_data)) as {freeMessagingEvidence:{fep:{verifiedExpiresAt:string;expiryEvidenceRef:string};pricing:{type:string;category:string;pricingModel:string}}};
+    expect(stored.freeMessagingEvidence.fep).toMatchObject({verifiedExpiresAt:expiresAt});
+    expect(stored.freeMessagingEvidence.pricing).toMatchObject({type:"free_entry_point",category:"REFERRAL_CONVERSION",pricingModel:"PMP"});
+    expect(await evaluateStoredFreeWhatsAppOutbound(makeDb(),"synthetic-wa-id","en",new Date(start+60_000))).toMatchObject({eligible:true,basis:"FEP",locale:"en"});
   });
 
   it("applies 0049 then unchanged 0050 then 0051 without backfilling legacy orders or adding inventory tables", async () => {
@@ -400,7 +440,7 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     const start = Date.parse("2026-11-25T10:00:00.000Z");
     const verifiedFreeEvidence = {
       fep: { sourceType: "CTWA_AD", platform: "ANDROID", clickIdHash: "b".repeat(64), referralAt: new Date(start - 5 * 60_000).toISOString(), firstBusinessResponseAt: new Date(start - 4 * 60_000).toISOString(), expiryVerified: true, verifiedAt: new Date(start - 3 * 60_000).toISOString(), verifiedExpiresAt: new Date(start + 12 * 60_000).toISOString(), expiryEvidenceRef: "synthetic-meta-expiry" },
-      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", subtype: "free_entry_point", evidenceRef: "synthetic-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 20 * 60_000).toISOString(), form: "FREEFORM", category: "SERVICE" }
+      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", category: "REFERRAL_CONVERSION", messageCategory: "SERVICE", pricingModel: "PMP", evidenceRef: "synthetic-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 20 * 60_000).toISOString(), form: "FREEFORM" }
     };
     seedIntent(new Date(start).toISOString());
     const { deadline } = presentIntent(start);
@@ -439,7 +479,7 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     const deadline = new Date(start + ORDER_INTENT_DURATION_MS).toISOString();
     const freeMessagingEvidence = {
       fep: { sourceType: "CTWA_AD", platform: "IOS", clickIdHash: "e".repeat(64), referralAt: new Date(start - 5 * 60_000).toISOString(), firstBusinessResponseAt: new Date(start - 4 * 60_000).toISOString(), expiryVerified: true, verifiedAt: new Date(start - 3 * 60_000).toISOString(), verifiedExpiresAt: new Date(start + 6 * 24 * 60 * 60_000).toISOString(), expiryEvidenceRef: "synthetic-delayed-expiry" },
-      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", subtype: "free_entry_point", category: "SERVICE", form: "FREEFORM", evidenceRef: "synthetic-delayed-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 60 * 60_000).toISOString() }
+      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", category: "REFERRAL_CONVERSION", messageCategory: "SERVICE", pricingModel: "PMP", form: "FREEFORM", evidenceRef: "synthetic-delayed-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 60 * 60_000).toISOString() }
     };
     seedIntent(new Date(start).toISOString(), "ur");
     presentIntent(start);
@@ -475,7 +515,7 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     const approvedAt = new Date(start + 4 * 60_000).toISOString();
     const freeMessagingEvidence = {
       fep: { sourceType: "CTWA_AD", platform: "ANDROID", clickIdHash: "f".repeat(64), referralAt: new Date(start - 5 * 60_000).toISOString(), firstBusinessResponseAt: new Date(start - 4 * 60_000).toISOString(), expiryVerified: true, verifiedAt: new Date(start - 3 * 60_000).toISOString(), verifiedExpiresAt: new Date(start + 6 * 24 * 60 * 60_000).toISOString(), expiryEvidenceRef: "synthetic-payment-confirm-expiry" },
-      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", subtype: "free_entry_point", category: "SERVICE", form: "FREEFORM", evidenceRef: "synthetic-payment-confirm-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 60 * 60_000).toISOString() }
+      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", category: "REFERRAL_CONVERSION", messageCategory: "SERVICE", pricingModel: "PMP", form: "FREEFORM", evidenceRef: "synthetic-payment-confirm-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 60 * 60_000).toISOString() }
     };
     seedIntent(new Date(start).toISOString(), "ur");
     const { presentedAt, deadline } = presentIntent(start);

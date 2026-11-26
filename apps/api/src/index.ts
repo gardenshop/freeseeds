@@ -303,8 +303,13 @@ async function linkOrderIntentPresentation(db: D1Database, intentId: string, pro
   await db.prepare("DELETE FROM whatsapp_delivery_receipts WHERE provider_message_id=? AND EXISTS(SELECT 1 FROM order_confirmation_intents WHERE intent_id=? AND presented_at IS NOT NULL)").bind(providerMessageId,intentId).run();
 }
 
-async function evaluateConversationFreeMessage(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date()): Promise<FreeMessagingDecision> {
-  return evaluateStoredFreeWhatsAppOutbound(db,waId,localeHint,now);
+async function evaluateConversationFreeMessage(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date(), allowFepOpeningResponse = false): Promise<FreeMessagingDecision> {
+  return evaluateStoredFreeWhatsAppOutbound(db,waId,localeHint,now,{allowFepOpeningResponse});
+}
+
+async function hashSourceEvidence(value:string):Promise<string>{
+  const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value)));
+  return [...digest].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
 }
 
 async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string, options: ConversationReplyOptions = {}, idempotencyKey = `conversation_reply:${inboundId}`, association: ConversationOutboundAssociation = {}): Promise<{ sent: boolean; messageId?: string }> {
@@ -318,15 +323,16 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
   if (existing && isTerminalOutboxStatus(existing.status)) return { sent: false };
   const outboundId = existing?.id ?? crypto.randomUUID();
   if (!existing) await db.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,order_id,customer_id,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboundId, key, association.orderId ?? null, association.customerId ?? null, association.kind ?? "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
-  const inboundEvent = await db.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${inboundId}`).first<{ created_at: string }>();
-  if (!isInsideWhatsAppServiceWindow(inboundEvent?.created_at)) {
+  const inboundContext=await db.prepare("SELECT last_inbound_message_id,last_inbound_at FROM whatsapp_conversations WHERE wa_id=?").bind(to).first<{last_inbound_message_id:string|null;last_inbound_at:string|null}>();
+  const serviceWindowInboundAt=inboundContext?.last_inbound_message_id===inboundId?inboundContext.last_inbound_at:null;
+  if (!serviceWindowInboundAt||!isInsideWhatsAppServiceWindow(serviceWindowInboundAt)) {
     await db.batch([
-      db.prepare("UPDATE outbound_messages SET status='PERMANENT_FAILURE',last_error='WHATSAPP_SERVICE_WINDOW_CLOSED',updated_at=? WHERE id=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY','SENDING')").bind(now, outboundId),
-      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "OUTBOUND_MESSAGE", outboundId, crypto.randomUUID(), JSON.stringify({ reason: "WHATSAPP_SERVICE_WINDOW_CLOSED" }), now)
+      db.prepare("UPDATE outbound_messages SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE id=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY','SENDING')").bind(serviceWindowInboundAt?"WHATSAPP_SERVICE_WINDOW_CLOSED":"WHATSAPP_INBOUND_MESSAGE_STALE",now, outboundId),
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "OUTBOUND_MESSAGE", outboundId, crypto.randomUUID(), JSON.stringify({ reason: serviceWindowInboundAt?"WHATSAPP_SERVICE_WINDOW_CLOSED":"WHATSAPP_INBOUND_MESSAGE_STALE" }), now)
     ]);
     return { sent: false };
   }
-  const freeDecision = await evaluateConversationFreeMessage(db, to, association.locale, new Date());
+  const freeDecision = await evaluateConversationFreeMessage(db, to, association.locale, new Date(), association.kind === "LANGUAGE_SELECTION" || association.kind === "WELCOME_REPLY");
   if (!freeDecision.eligible) {
     const reason = `FREE_MESSAGE_BLOCKED:${freeDecision.reason}`;
     await db.batch([
@@ -347,8 +353,22 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
   }
   const claim = await db.prepare("UPDATE outbound_messages SET status='SENDING',attempt_count=attempt_count+1,updated_at=? WHERE idempotency_key=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY')").bind(now, key).run();
   if (!claim.meta.changes) return { sent: false };
+  const openingResponseClaimHash=freeDecision.basis==="FEP_OPENING_RESPONSE"?await hashSourceEvidence(key):undefined;
+  if(openingResponseClaimHash){
+    const openingClaim=await db.prepare(`UPDATE whatsapp_conversations SET state_data=json_set(state_data,'$.freeMessagingEvidence.openingResponse.firstResponseAttemptedAt',?,'$.freeMessagingEvidence.openingResponse.firstResponseKeyHash',?),updated_at=?
+      WHERE wa_id=? AND json_extract(state_data,'$.freeMessagingEvidence.openingResponse.sourceEvidenceRef')=? AND json_extract(state_data,'$.freeMessagingEvidence.openingResponse.firstResponseAttemptedAt') IS NULL`).bind(new Date().toISOString(),openingResponseClaimHash,new Date().toISOString(),to,freeDecision.evidenceRef).run();
+    if(Number(openingClaim.meta?.changes??0)!==1){
+      const reason="FEP_OPENING_RESPONSE_ALREADY_CLAIMED";
+      await db.batch([
+        db.prepare("UPDATE outbound_messages SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE idempotency_key=? AND provider_message_id IS NULL").bind(reason,new Date().toISOString(),key),
+        db.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE idempotency_key=? AND status IN ('PENDING','RETRY','QUEUED')").bind(reason,new Date().toISOString(),key),
+        db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"FEP_OPENING_RESPONSE_SUPPRESSED","SYSTEM","OUTBOUND_MESSAGE",outboundId,crypto.randomUUID(),JSON.stringify({reason}),new Date().toISOString())
+      ]);
+      return {sent:false};
+    }
+  }
   let sent: { providerMessageId: string };
-  const formattedBody=formatWhatsAppText(body,freeDecision.locale);
+  const formattedBody=association.kind==="LANGUAGE_SELECTION"?formatNeutralLanguagePrompt():formatWhatsAppText(body,freeDecision.locale);
   try {
     sent = options.list ? await provider.sendList(to, formattedBody, options.list.buttonText, options.list.rows, options.image) : options.buttons?.length ? await provider.sendInteractive(to, formattedBody, options.buttons, options.image) : options.image ? await provider.sendImage(to, formattedBody, options.image) : await provider.sendText(to, formattedBody);
   } catch (error) {
@@ -362,6 +382,11 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
     try {
       const now = new Date().toISOString();
       const statements = [db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, now, key)];
+      if(openingResponseClaimHash){
+        const providerMessageIdHash=await hashSourceEvidence(sent.providerMessageId);
+        statements.push(db.prepare(`UPDATE whatsapp_conversations SET state_data=json_set(state_data,'$.freeMessagingEvidence.openingResponse.firstBusinessResponseAt',?,'$.freeMessagingEvidence.openingResponse.firstResponseMessageIdHash',?),updated_at=?
+          WHERE wa_id=? AND json_extract(state_data,'$.freeMessagingEvidence.openingResponse.firstResponseKeyHash')=?`).bind(now,providerMessageIdHash,now,to,openingResponseClaimHash));
+      }
       if (association.intentId) statements.push(db.prepare(`UPDATE order_confirmation_intents SET presentation_message_id=COALESCE(presentation_message_id,?),updated_at=?
         WHERE intent_id=? AND workflow_version=? AND presentation_message_id IS NULL AND state NOT IN ('EXPIRED','CANCELLED','PRESENTATION_FAILED')`).bind(sent.providerMessageId, now, association.intentId, ORDER_INTENT_VERSION));
       const saved = await db.batch(statements);
@@ -1372,41 +1397,10 @@ app.post("/webhooks/whatsapp", async (c) => {
       if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_ROLLOUT_MODE, c.env.COD_TESTER_WA_ID, c.env.PAYMENT_REMINDERS_V2_ENABLED === "true", c.env.PAYMENT_AUTOMATION_V2_ENABLED === "true", orderIntentAutomationEnabled)) { handledEvents += 1; continue; }
     const activeConversation = c.env.DB ? await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>() : null;
     if (activeConversation) continue;
-    const idempotencyKey = `welcome_reply:${event.id}`;
-    const existing = c.env.DB ? await c.env.DB.prepare("SELECT status FROM outbound_messages WHERE idempotency_key=?").bind(idempotencyKey).first<{ status: string }>() : null;
-    if (existing) continue;
-    const now = new Date().toISOString();
-     if (c.env.DB) {
-       const inboundEvent = await c.env.DB.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${event.id}`).first<{ created_at: string }>();
-  if (!isInsideWhatsAppServiceWindow(inboundEvent?.created_at)) {
-        await c.env.DB.batch([
-          c.env.DB.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,last_error,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PERMANENT_FAILURE", 0, "WHATSAPP_SERVICE_WINDOW_CLOSED", now, now),
-          c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "OUTBOUND_MESSAGE", idempotencyKey, crypto.randomUUID(), JSON.stringify({ reason: "WHATSAPP_SERVICE_WINDOW_CLOSED" }), now)
-        ]);
-         continue;
-       }
-     }
-     if (c.env.DB) {
-       const freeDecision = await evaluateConversationFreeMessage(c.env.DB, event.from, "en", new Date());
-       if (!freeDecision.eligible) {
-         const reason = `FREE_MESSAGE_BLOCKED:${freeDecision.reason}`;
-         await c.env.DB.batch([
-           c.env.DB.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,last_error,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PERMANENT_FAILURE", 0, reason, now, now),
-           c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_FREE_MESSAGE_SUPPRESSED", "SYSTEM", "OUTBOUND_MESSAGE", idempotencyKey, crypto.randomUUID(), JSON.stringify({ reason, kind: "LANGUAGE_SELECTION" }), now)
-         ]);
-         continue;
-       }
-     }
-     if (c.env.DB) await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PENDING", 0, now, now).run();
-     try {
-       const sent = await provider.sendInteractive(event.from, formatNeutralLanguagePrompt(), [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }]);
-      if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), idempotencyKey).run();
-      autoReplies += 1;
-      handledEvents += 1;
-    } catch (error) {
-      const safeError = error instanceof Error ? error.message.slice(0, 160) : "META_AUTO_REPLY_FAILED";
-      if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safeError, new Date().toISOString(), idempotencyKey).run();
-    }
+    if(!c.env.DB)continue;
+    const sent=await sendConversationReply(c.env.DB,provider,event.from,event.id,formatNeutralLanguagePrompt(),{buttons:[{id:"LANG_EN",title:"English"},{id:"LANG_UR",title:"اردو"}]},`welcome_reply:${event.id}`,{kind:"LANGUAGE_SELECTION",locale:"en"});
+    if(sent.sent)autoReplies+=1;
+    handledEvents+=1;
   }
   await recordWebhookRuntimeObservation(c.env.DB, c.env.CF_VERSION_METADATA, correlationId, eventCount, handledEvents, autoReplies);
   return c.json({ accepted: true, eventCount, autoReplies });

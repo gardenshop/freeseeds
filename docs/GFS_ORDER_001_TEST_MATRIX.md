@@ -56,6 +56,23 @@ INT01-21 local acceptance is **complete**. Live per-contact FEP expiry/pricing e
 | Bilingual direction | `tests/payment-confirmation.test.ts`, `tests/whatsapp-formatting.test.ts` | PASS: paragraph order, blank lines, LTR/RTL isolation, Total Payable, TID/order/tracking IDs, phone and URLs; no HTML/CSS. Live-client visual confirmation remains a release gate. |
 | Migration compatibility/protected trees | Synthetic 0049→unchanged0050→0051 + full guided migration harness;923 Label Printer hashes | PASS locally only;0050 unchanged; no remote apply;923/923 hashes unchanged. |
 
+## PENDING-001 closeout acceptance (2026-11-26)
+
+| Gate | Actual command/evidence | Result |
+|---|---|---|
+| Focused PENDING/Admin/fulfillment | `npm.cmd test -- --run tests/order-reconciliation.test.ts tests/admin-orders.test.ts tests/cod-admin.test.ts tests/admin-fulfillment.test.ts tests/admin-payment.test.ts tests/guided-lead-only.test.ts tests/admin-controls.test.ts tests/admin-layout.test.ts` | PASS218/1 skipped across8 files. |
+| Focused FEP/intent/service-window regression | `npm.cmd test -- --run tests/free-messaging.test.ts tests/order-intent.test.ts tests/guided-lead-only.test.ts tests/service-window.test.ts` | PASS136/1 skipped across4 files. |
+| Final full regression | `npm.cmd test -- --run` | PASS465/1 skipped across39 files. |
+| TypeScript/lint | `npm.cmd run build`; `npm.cmd run lint` | PASS. |
+| Node safety scripts | Explicit eight-script `node --test` command above | PASS52/52. |
+| Production dependency audit | `npm.cmd audit --omit=dev` | PASS0 production vulnerabilities; six existing moderate dev-tool findings remain. |
+| Real Admin/D1 route semantics | `guided-lead-only.test.ts`, `cod-admin.test.ts`; test SQLite only | PASS: per-order/audit query, active+archived reconciliation counts, intent schema unavailable handling, exact COD consent and Advance proof enforced in state update. No live provider/account/customer data. |
+| Reporting side effects | `admin-orders.test.ts`, `guided-lead-only.test.ts` | PASS: report has no DML, no message enqueue, no historical intent creation/backfill, and reconciliation CSV export returns409 before row reads. |
+| Migrations and protected source | `0050` SHA check; existing923-entry Label Printer hash manifest | PASS local: `0050` unchanged;923 identical,0 changed,0 missing; no migration apply. |
+| Live data/release | No authenticated browser/Admin connector available in this execution | NOT REFRESHED: no current historical row decisions/denominators claimed; WhatsApp remains NO-GO. |
+
+PENDING-001 local implementation/test acceptance is complete; S2's operational exit remains partial until an authorized read-only live Admin refresh and evidence-backed A-G review. Do not use these overlapping local counts as customer conversion or bank settlement metrics. LAUNCH-001 is not started.
+
 ## Required staged acceptance
 
 Rows below S2-S9 are **not yet accepted in full for REV.2**. INT01-21/S1 acceptance evidence is recorded above. Existing related tests are reusable, not proof of remaining stages. Per stage: baseline -> focused failing reproduction -> minimal change -> focused/full regression -> repair/retest -> document -> scoped commit. Use synthetic real SQLite for transaction semantics, fake clocks and mocked providers.
@@ -91,10 +108,10 @@ Rows below S2-S9 are **not yet accepted in full for REV.2**. INT01-21/S1 accepta
 
 Verified advisory set: GHSA-h7mg-cq63-vhpq/CVE-2026-126358 (RegExpRouter wildcard middleware), GHSA-4m76-xfj5-7975/CVE-2026-126357 (mount), GHSA-46wx-v44x-9hh2/CVE-2026-126355 (CSRF helper), GHSA-4h7h-rv7c-7m2v/CVE-2026-126356 (form validator), GHSA-3gg2-335m-rxc6/CVE-2026-126359 (CSS helper). Hono is exactly4.13.16 in package/lock; the five no longer appear in audit. Before-fix wildcard bypass failed tests reproduced two200 responses; after-fix security file9/9 pass, full Vitest395/1 skipped, documented Node52/52, TypeScript/lint pass, production dependency audit0. Full audit retains6 moderate development-tool dependency findings via minimatch GHSA-g3hv-75wg-m249; no unrelated upgrades were made under the bounded scope. Exact routes, edge cases, Git/production boundaries and security invariants are in [SEC-HONO report](GFS_ORDERFLOW_SEC_HONO_001.md).
 
-Hono SEC-HONO-001, FIN-ATOMIC-001, INTENT-030 and TID-001 are complete locally. Actual Admin route tests cover financial/TID races; migrations0049/0050/0051 remain unapplied. FIN-MO-002 remains a hard prerequisite before postal settlement. Next task **FEP-001**.
+Hono SEC-HONO-001, FIN-ATOMIC-001, INTENT-030, TID-001 and FEP-001 are complete locally. PENDING-001 report/guards pass synthetic acceptance but live row classification remains unrefreshed and S2 remains partial. Actual Admin route tests cover financial/TID/COD dispatch races; migrations0049/0050/0051 remain unapplied. FIN-MO-002 remains a hard prerequisite before postal settlement. Next task **LAUNCH-001** only after live read-only evidence and independent release gates; do not deploy from this matrix.
 
 ## Open release gates
 
 Account identity, sender, Page, WABA, ad account and aggregate pricing are read-only verified. Per-contact FEP origin/response/expiry remains unavailable; do not automate free-only sends until captured and tested. Display name remains In Review; two utility templates Active - Quality pending; no transactional shipment templates. Pakistan Post API/permission and self-issued VPL/RGL acceptance are absent; registered official IDs/direct link/authorized manual status entry are the only present fallback. COD gross export625 while MO handler requires gross rather than principal550; correction planned, no history changed. No tariff or physical PDF verified. Full release rollback parity remains unproven. These gates keep lead launch/release NO-GO.
 
-S0 accepted units8/10=80%,20% remaining; A06 per-contact FEP evidence and A10 release-specific rollback readiness remain partial. Original23 and notification-number crosswalk are resolved/documented. INTENT-030/S1 and TID-001/S3 are complete locally without production migration; next task FEP-001. FIN-MO-002 is required before postal settlement activation. Skipped, blocked, inspected or unsupported runner results are not PASS.
+S0 accepted units8/10=80%,20% remaining; A06 per-contact FEP evidence and A10 release-specific rollback readiness remain partial. Original23 and notification-number crosswalk are resolved/documented. INTENT-030/S1 and TID-001/S3 are complete locally without production migration; PENDING-001 local acceptance is complete but S2 live reconciliation is not. LAUNCH-001 is the next task; it is not authorized to perform live side effects until its gates pass. FIN-MO-002 is required before postal settlement activation. Skipped, blocked, inspected or unsupported runner results are not PASS.
