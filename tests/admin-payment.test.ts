@@ -20,18 +20,20 @@ describe("admin payment configuration", () => {
     });
   });
 
-  it("renders transaction-reference, reference-request and settlement-confirmation controls", async () => {
+  it("renders one guarded TID-to-confirm action with loaded settlement safeguards", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders", { headers: access }), env);
     const html = await response.text();
     expect(response.status).toBe(200);
-    expect(html).toContain("Save Reference");
+    expect(html).toContain("Confirm Payment");
+    expect(html).not.toContain("Save Reference");
     expect(html).toContain("Request Reference");
     expect(html).toContain("Receiving-account settlement evidence reference");
     expect(html).toContain("I verified the actual credit in the authorized Garden Shop receiving account");
-    expect(html).toContain("Confirm PAID");
-    expect(html).toContain("Use the settlement-confirmation panel; direct approval is disabled.");
-    expect(html).toContain("settlementEvidenceRef:evidenceRef(),settlementConfirmed:true");
-    expect(html).not.toContain("Approve after verified settlement");
+    expect(html).toContain("settlementEvidenceRef:evidence,settlementConfirmed:true");
+    expect(html).toContain("crossMethodConfirmed:Boolean(warning)");
+    expect(html).not.toContain("Confirm PAID");
+    expect(html).toContain("panel.dataset.expectedAmount=String(order.expectedAmountPkr)");
+    expect(html).toContain("panel.dataset.methodVerified=String(Boolean(order.paymentMethodVerified))");
     expect(html).toContain("data.message==='string'");
   });
 

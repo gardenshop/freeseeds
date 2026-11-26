@@ -32,16 +32,29 @@ Skipped test is not passed. Legacy rollback script requires a separately authori
 | Gate | Actual command/evidence | Result |
 |---|---|---|
 | Focused lifecycle/free gate/activation | `npm.cmd test -- --run tests/order-intent.test.ts tests/free-messaging.test.ts tests/meta-activation.test.ts` | 36 synthetic tests covering bilingual stages/buttons, immutable locale in delayed worker, dynamic remaining time, duplicate/delayed/missing status callbacks, no invented T0, 0049→0050→0051, COD/expiry/cancel/payment/receipt/TID races, late-TID non-reopen, duplicate jobs/retry-after-FEP-expiry, old schedule isolation, unconfirmed-dispatch exclusion, opt-out, free pricing, service-window, CTWA/mobile/expiry and template gates. |
-| Full suite after local source change | `npm.cmd test -- --reporter=dot --maxWorkers=2` | PASS436 passed,1 skipped. |
+| Full suite after INTENT-030 | `npm.cmd test -- --reporter=dot --maxWorkers=2` | PASS436 passed,1 skipped. |
 | Full API journey fixture | `npm.cmd test -- --run tests/guided-lead-only.test.ts` | PASS104,1 skipped with synthetic verified CTWA/pricing evidence in the D1 fixture; no live provider. |
 | Documented Node suites | Explicit eight-script `node --test` command in the closeout | PASS52/52. |
 | Types/lint | `npm.cmd run build`; `npm.cmd run lint` | PASS. |
-| Production dependency audit | `npm.cmd audit --omit=dev` | PASS0 production vulnerabilities. Full dev-tree audit was not rerun; preserve the existing six moderate dev-tool findings. |
+| Production dependency audit | `npm.cmd audit --omit=dev` | PASS0 production vulnerabilities. Full dev audit later confirms the existing six moderate dev-tool findings; no unrelated upgrade. |
 | Migration compatibility | Synthetic SQLite executes migration0049, unchanged `0050_order_confirmation_intents.sql`, then local `0051_order_confirmation_intent_state_guards.sql`; full guided harness also executes sorted migrations | PASS for local schema/state/lock paths only. None applied remotely. `0050` SHA-256 recorded in the report. |
 | Protected checkout | 923-file Label Printer before-manifest compared SHA-256 against current files | PASS923/923 unchanged; no protected workspace edits. |
 | External/release boundary | Scoped local source/test changes only; browser `list_pages` used first | No account mutation, hosted D1 write, migration apply, message, payment/order update, deployment or traffic action. No page navigation/identity assertion. New-number WhatsApp lock and Hoja Seeds zero-connection preserved. |
 
 INT01-21 local acceptance is **complete**. Live per-contact FEP expiry/pricing evidence, sender display/template quality, A10 rollback rehearsal and production parity remain release gates, not local-development blockers. Physical stock management/reservation is not required; the household eligibility lock is only a cooldown. No inventory table/counter/warehouse dependency exists. All live customer sends fail closed until authoritative free evidence is supplied; no paid fallback.
+
+## TID-001 closeout acceptance (2026-11-26)
+
+| Gate | Actual command/evidence | Result |
+|---|---|---|
+| Focused TID/Admin/formatting | `npm.cmd test -- --run tests/admin-payment.test.ts tests/cod-admin.test.ts tests/payment-confirmation.test.ts tests/whatsapp-formatting.test.ts tests/order-intent.test.ts tests/meta-activation.test.ts` | PASS101/101. |
+| Full Vitest after TID-001 | `npm.cmd test -- --reporter=dot --maxWorkers=2` | PASS447/1 skipped across38 files. |
+| Node / build / lint / audit | Eight documented `node --test` scripts; `npm.cmd run build`; `npm.cmd run lint`; `npm.cmd audit --omit=dev` | Node52/52; build/lint pass; production audit0. Full audit has six moderate dev-tool findings; no unrelated upgrade. |
+| One-action Admin approval | `tests/admin-payment.test.ts`; actual Hono Admin routes in `tests/cod-admin.test.ts` | PASS: typed TID/leading zeros; order/method/Total Payable auto-loaded; receipt, exact amount, verified QR/method, actual-credit evidence, Access/CSRF/HMAC and atomic APPROVED/PAID required. No TID-only approval. |
+| Provider-scoped duplicates | Synthetic SQLite/Admin concurrency | PASS: same-method duplicates reject with conflicting order and audit; same-order replay is idempotent; cross-method references warn with order/method and require explicit operator acknowledgement. Provider-specific uniqueness preserved. |
+| Reminder stop/notification | Admin approval + actual API Queue | PASS: pending reminder jobs become terminal; locale-pinned Payment Received outbox is queued; unknown free eligibility suppresses notice but preserves PAID state. No CAPI or parcel dispatch. |
+| Bilingual direction | `tests/payment-confirmation.test.ts`, `tests/whatsapp-formatting.test.ts` | PASS: paragraph order, blank lines, LTR/RTL isolation, Total Payable, TID/order/tracking IDs, phone and URLs; no HTML/CSS. Live-client visual confirmation remains a release gate. |
+| Migration compatibility/protected trees | Synthetic 0049→unchanged0050→0051 + full guided migration harness;923 Label Printer hashes | PASS locally only;0050 unchanged; no remote apply;923/923 hashes unchanged. |
 
 ## Required staged acceptance
 
@@ -56,8 +69,8 @@ Rows below S2-S9 are **not yet accepted in full for REV.2**. INT01-21/S1 accepta
 | INT19-21/S1 | Expiry/cancellation release only the matching household cooldown lock; no physical stock claim/dependency; no historic-order mutation | PASS local; no inventory/stock/warehouse schema or service |
 | HIST01-06/S2 | DisjointA-G with evidence/precedence; F/conflict protection; only eligibleA/B; C review; D one authorized sequence; E excluded/no bulk rewrite | cod-admin history tests |
 | HIST07-08/S2 | Event-denominated abandonment/confirmation; verifiedRTO/failure rates or UNKNOWN | outcome history absent |
-| PAY01-05/S3 | All advance methods; textualTID/leadingzeros; provider scope; authorized duplicate warning/conflicting order; rejection audit | payment-reference.test.ts; migrations0027/0029 |
-| PAY06-10/S3 | Same-order replay; concurrent duplicate/approval; verifiedfunds; exact amounts/receipt;Access/CSRF/HMAC | admin-payment/guided tests |
+| PAY01-05/S3 | All advance methods; textual TID/leading zeros; provider scope; authorized duplicate warning/conflicting order; rejection audit | payment-reference.test.ts; migrations0027/0029; TID synthetic Admin tests |
+| PAY06-10/S3 | Same-order replay; concurrent duplicate/approval; verified funds; exact amounts/receipt; Access/CSRF/HMAC; one-action UI | admin-payment/cod-admin tests |
 | PAY11-14/S3 | Later zero-row write rolls back approval/MO; normal/historical cross-ledger race; stalehold/receipt checks; existingMO Received | cod-admin real SQLite transaction adapter |
 | FIN01-08/FIN-ATOMIC | Advance stale order/payment races; COD amount-state race; concurrent approval/TID/MO; audit/outbox rollback; same-order replay; protected history | `tests/cod-admin.test.ts` actual Admin routes; migration0049 synthetic preflight/triggers |
 | FEP01-05/S4 | Qualifying mobile referral/first response; guided attribution; noad/unknown suppression; no artificialrenewal; duplicate/reordered timestamps | provider/webhook/window tests |
@@ -70,7 +83,7 @@ Rows below S2-S9 are **not yet accepted in full for REV.2**. INT01-21/S1 accepta
 | LABEL01-06/S6 | IndividualPDF/image/fields/barcode;privateR2/auth/ownership;no cross-customer/batch/publicURL;prepared/booked distinct;physical/visualprint | admin-fulfillment HTML tests |
 | POST01-07/S7 | Authorizedaccess;4-6h capacity/lease/backoff;unknownfailures;mappings;dedupe/reorder;freshness;terminalstop | mocked provider until external gate |
 | MSG01-07/S8 | ElevenEN/UR variants;ownlabel utilitymedia;coalesceevents;norepetition;opt-out/blocked;grossCOD/advance no payable;expiry/internaltracking | MESSAGE_SEQUENCE;Queue/outbox |
-| ADM01-05/S1-S8 | ExistingUI intent/time/expiry/review/COD/ready,TIDwarnings,verifiedtracking/label/notification/FEP;noordinarycommission;grossexport;auth | existingAdmin tests |
+| ADM01-05/S1-S8 | Existing UI intent/time/expiry/review/COD/ready, TID warnings/approval, verified tracking/label/notification/FEP; no ordinary commission; Total Payable; auth | existing Admin tests + TID-001 |
 | SEC01-06/S9 | Hoja/newnumber;Access/API/Queue/DLQ/privateR2;noCAPI;historyIDs/MO;zeroLabelPrinterdiff/dependency;accounts/rollback | sourcediff/freshreadbacks/regression |
 | REL01-04/S9 | Source/build/liveparity;approvedstagingvisual/integration;authorizedcontrolledtests;boundedrollback/no failinggate release | NOT RUN; old approvals not reusable |
 
@@ -78,10 +91,10 @@ Rows below S2-S9 are **not yet accepted in full for REV.2**. INT01-21/S1 accepta
 
 Verified advisory set: GHSA-h7mg-cq63-vhpq/CVE-2026-126358 (RegExpRouter wildcard middleware), GHSA-4m76-xfj5-7975/CVE-2026-126357 (mount), GHSA-46wx-v44x-9hh2/CVE-2026-126355 (CSRF helper), GHSA-4h7h-rv7c-7m2v/CVE-2026-126356 (form validator), GHSA-3gg2-335m-rxc6/CVE-2026-126359 (CSS helper). Hono is exactly4.13.16 in package/lock; the five no longer appear in audit. Before-fix wildcard bypass failed tests reproduced two200 responses; after-fix security file9/9 pass, full Vitest395/1 skipped, documented Node52/52, TypeScript/lint pass, production dependency audit0. Full audit retains6 moderate development-tool dependency findings via minimatch GHSA-g3hv-75wg-m249; no unrelated upgrades were made under the bounded scope. Exact routes, edge cases, Git/production boundaries and security invariants are in [SEC-HONO report](GFS_ORDERFLOW_SEC_HONO_001.md).
 
-Hono SEC-HONO-001 and financial atomicity FIN-ATOMIC-001 are complete locally. Actual Admin route tests cover financial state races and migration0049 preparation; no production migration was applied. FIN-MO-002 remains a hard prerequisite before postal settlement. Next product task **GFS-ORDERFLOW-INTENT-030**.
+Hono SEC-HONO-001, FIN-ATOMIC-001, INTENT-030 and TID-001 are complete locally. Actual Admin route tests cover financial/TID races; migrations0049/0050/0051 remain unapplied. FIN-MO-002 remains a hard prerequisite before postal settlement. Next task **FEP-001**.
 
 ## Open release gates
 
 Account identity, sender, Page, WABA, ad account and aggregate pricing are read-only verified. Per-contact FEP origin/response/expiry remains unavailable; do not automate free-only sends until captured and tested. Display name remains In Review; two utility templates Active - Quality pending; no transactional shipment templates. Pakistan Post API/permission and self-issued VPL/RGL acceptance are absent; registered official IDs/direct link/authorized manual status entry are the only present fallback. COD gross export625 while MO handler requires gross rather than principal550; correction planned, no history changed. No tariff or physical PDF verified. Full release rollback parity remains unproven. These gates keep lead launch/release NO-GO.
 
-S0 accepted units8/10=80%,20% remaining; A06 per-contact FEP evidence and A10 release-specific rollback readiness remain partial. Original23 and notification-number crosswalk are resolved/documented. FIN-ATOMIC is complete locally without production migration; next task GFS-ORDERFLOW-INTENT-030. FIN-MO-002 is required before postal settlement activation. Skipped, blocked, inspected or unsupported runner results are not PASS.
+S0 accepted units8/10=80%,20% remaining; A06 per-contact FEP evidence and A10 release-specific rollback readiness remain partial. Original23 and notification-number crosswalk are resolved/documented. INTENT-030/S1 and TID-001/S3 are complete locally without production migration; next task FEP-001. FIN-MO-002 is required before postal settlement activation. Skipped, blocked, inspected or unsupported runner results are not PASS.

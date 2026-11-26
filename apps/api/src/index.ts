@@ -1,11 +1,12 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, parseWhatsAppDeliveryReceipts, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage, type FreeMessagingDecision, type OrderIntentPersistence } from "@gfs/core";
+import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatNeutralLanguagePrompt, formatPaymentMessage, formatWhatsAppText, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, parseWhatsAppDeliveryReceipts, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage, type FreeMessagingDecision, type OrderIntentPersistence } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 import { createPaymentV2Schedule, enqueueDuePaymentV2Stages, isPaymentReminderV2ServiceWindowOpen, resolvePaymentReminderCodFallback, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
 import { enqueueDuePaymentChoiceRecoveryStages, paymentChoiceRecoveryCopy } from "./payment-choice-recovery";
 import { anchorOrderIntentOnDelivery, cancelOrderIntent, expireDueOrderIntents, expireOrderIntent, formatIntentRemainingTime, ORDER_INTENT_VERSION, orderIntentCodConfirmationText, orderIntentNewOrderButton, orderIntentOptionRows, orderIntentOptionsText, orderIntentReminderText, queueDueOrderIntentReminders, setOrderIntentChoiceState, switchIntentAdvanceToCod } from "./order-intent";
+import { paymentReceivedText } from "./payment-confirmation";
 
 type Env = {
   Bindings: {
@@ -335,11 +336,21 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
     ]);
     return { sent: false };
   }
+  if(options.flow){
+    const reason="WHATSAPP_FLOW_LOCALE_VARIANT_UNVERIFIED";
+    await db.batch([
+      db.prepare("UPDATE outbound_messages SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE id=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY','SENDING')").bind(reason,new Date().toISOString(),outboundId),
+      db.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE idempotency_key=? AND status IN ('PENDING','RETRY','QUEUED')").bind(reason,new Date().toISOString(),key),
+      db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"WHATSAPP_FLOW_SUPPRESSED","SYSTEM","OUTBOUND_MESSAGE",outboundId,crypto.randomUUID(),JSON.stringify({reason,kind:association.kind??"FLOW"}),new Date().toISOString())
+    ]);
+    return { sent:false };
+  }
   const claim = await db.prepare("UPDATE outbound_messages SET status='SENDING',attempt_count=attempt_count+1,updated_at=? WHERE idempotency_key=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY')").bind(now, key).run();
   if (!claim.meta.changes) return { sent: false };
   let sent: { providerMessageId: string };
+  const formattedBody=formatWhatsAppText(body,freeDecision.locale);
   try {
-    sent = options.flow ? await provider.sendFlow(to, options.flow.id, options.flow.token) : options.list ? await provider.sendList(to, body, options.list.buttonText, options.list.rows, options.image) : options.buttons?.length ? await provider.sendInteractive(to, body, options.buttons, options.image) : options.image ? await provider.sendImage(to, body, options.image) : await provider.sendText(to, body);
+    sent = options.list ? await provider.sendList(to, formattedBody, options.list.buttonText, options.list.rows, options.image) : options.buttons?.length ? await provider.sendInteractive(to, formattedBody, options.buttons, options.image) : options.image ? await provider.sendImage(to, formattedBody, options.image) : await provider.sendText(to, formattedBody);
   } catch (error) {
     const safe = error instanceof Error ? error.message.slice(0, 160) : "META_CONVERSATION_REPLY_FAILED";
     try { await db.prepare("UPDATE outbound_messages SET status='FAILED',last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run(); } catch { /* The provider failure remains safe to retry from the prior conversation state. */ }
@@ -392,7 +403,7 @@ async function saveCustomerTransactionReference(db: D1Database, waId: string, or
 type PaymentPartStatus = "SENT" | "SKIPPED" | "FAILED" | "BLOCKED";
 type PaymentDeliveryResult = { textSent: boolean; qrStatus: PaymentPartStatus };
 
-async function sendPaymentPart(db: D1Database, to: string, orderId: string, key: string, kind: string, send: () => Promise<{ providerMessageId: string }>, locale: "en" | "ur"): Promise<PaymentPartStatus> {
+async function sendPaymentPart(db: D1Database, to: string, orderId: string, key: string, kind: string, send: (formattedText?: string) => Promise<{ providerMessageId: string }>, locale: "en" | "ur", messageText?: string): Promise<PaymentPartStatus> {
   const existing = await db.prepare("SELECT id,status,provider_message_id,updated_at FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ id: string; status: string; provider_message_id: string | null; updated_at?: string }>();
   if (existing?.provider_message_id || (existing && ["SENT", "DELIVERED", "READ"].includes(existing.status))) return "SENT";
   if (existing?.status === "SKIPPED") return "SKIPPED";
@@ -411,7 +422,7 @@ async function sendPaymentPart(db: D1Database, to: string, orderId: string, key:
   const claim = await db.prepare("UPDATE outbound_messages SET status='SENDING',attempt_count=attempt_count+1,updated_at=? WHERE id=? AND provider_message_id IS NULL AND (status IN ('PENDING','FAILED','RETRY') OR (status='SENDING' AND updated_at<?))").bind(now, row.id, new Date(Date.now() - 5 * 60 * 1000).toISOString()).run();
   if (!claim.meta.changes) return "FAILED";
   try {
-    const sent = await send();
+    const sent = await send(messageText === undefined ? undefined : formatWhatsAppText(messageText, locale));
     await db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',last_error=NULL,updated_at=? WHERE id=?").bind(sent.providerMessageId, new Date().toISOString(), row.id).run();
     return "SENT";
   } catch (error) {
@@ -481,7 +492,7 @@ async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, prov
     await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", "PAYMENT_METHOD_NO_LONGER_ELIGIBLE");
     return { textSent: false, qrStatus: "SKIPPED" };
   }
-  const textStatus = await sendPaymentPart(db, to, orderId, textKey, "WHATSAPP_PAYMENT_TEXT", () => provider.sendText(to, currentMessage), locale);
+  const textStatus = await sendPaymentPart(db, to, orderId, textKey, "WHATSAPP_PAYMENT_TEXT", (text) => provider.sendText(to, text ?? ""), locale, currentMessage);
   const completedQr = await db.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(qrKey).first<{ status: string; provider_message_id: string | null }>();
   let qrStatus: PaymentPartStatus;
   if (completedQr?.provider_message_id || (completedQr && ["SENT", "DELIVERED", "READ"].includes(completedQr.status))) {
@@ -549,8 +560,8 @@ function checkoutReviewLines(summary: { items: Array<{ type: string; code: strin
 }
 
 function codConfirmationLines(baseAmountPkr: number, feePkr: number, totalPkr: number, locale: "en" | "ur"): string[] {
-  if (locale === "ur") return [`ڈیلیوری سمیت آرڈر کی رقم: PKR ${baseAmountPkr}`, `COD وصولی فیس: PKR ${feePkr}`, `ڈیلیوری پر کل: PKR ${totalPkr}`, "مکمل رقم سے اتفاق ہو تو صرف ایک بار تصدیق کریں۔"];
-  return [`Order amount including delivery: PKR ${baseAmountPkr}`, `COD collection fee: PKR ${feePkr}`, `TOTAL ON DELIVERY: PKR ${totalPkr}`, "Confirm only if you agree to pay this full amount on delivery."];
+  if (locale === "ur") return [`آرڈر کی بنیادی رقم: PKR ${baseAmountPkr}`, `COD وصولی فیس: PKR ${feePkr}`, `کل واجب الادا رقم: PKR ${totalPkr}`, "مکمل رقم سے اتفاق ہو تو صرف ایک بار تصدیق کریں۔"];
+  return [`Order base amount: PKR ${baseAmountPkr}`, `COD collection fee: PKR ${feePkr}`, `Total Payable: PKR ${totalPkr}`, "Confirm only if you agree to pay this full amount on delivery."];
 }
 
 export async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuoteSnapshot | undefined, correlationId: string, waId: string, stateData: string, testHold: 0 | 1 | undefined, intentId?: string): Promise<"CREATED" | "NOT_ELIGIBLE"> {
@@ -636,7 +647,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     if (origin?.kind === "CONVERSATION_OFFER") callbackOrigin = "OFFER";
     if (origin?.kind === "CONVERSATION_REVIEW") callbackOrigin = "REVIEW";
   }
-  const codConfirmationReply = (orderNumber: string, total: number) => data.language === "ur" ? `آرڈر ${orderNumber} وصولی پر ادائیگی کے لیے تصدیق ہو گیا۔ ڈیلیوری پر PKR ${total} ادا کریں۔` : `Order ${orderNumber} is confirmed for Cash on Delivery. Pay PKR ${total} on delivery.`;
+  const codConfirmationReply = (orderNumber: string, total: number) => data.language === "ur" ? `آرڈر ${orderNumber} کی کیش آن ڈیلیوری کے لیے تصدیق ہو گئی ہے۔ کل واجب الادا رقم: Rs. ${total}۔ پارسل وصول کرتے وقت یہی رقم ڈیلیوری رائیڈر یا پاکستان پوسٹ کے ڈاکیے کو ادا کریں۔` : `Order ${orderNumber} is confirmed for Cash on Delivery. Total Payable: Rs. ${total}. Pay this exact amount to the delivery rider or Pakistan Post postman when you receive the parcel.`;
   if (state === "COD_PENDING" && normalized === "CONFIRM_COD_ORDER" && data.orderId) {
     // Only the winning event can recover its reply; this never reopens COD intake or changes the winning state.
     const confirmed = await db.prepare(`SELECT o.order_number,cod.quoted_total_pkr FROM orders o
@@ -1388,7 +1399,7 @@ app.post("/webhooks/whatsapp", async (c) => {
      }
      if (c.env.DB) await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PENDING", 0, now, now).run();
      try {
-       const sent = await provider.sendInteractive(event.from, "Choose your language / اپنی زبان منتخب کریں", [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }]);
+       const sent = await provider.sendInteractive(event.from, formatNeutralLanguagePrompt(), [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }]);
       if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), idempotencyKey).run();
       autoReplies += 1;
       handledEvents += 1;
@@ -1680,7 +1691,51 @@ async function handleOrderIntentStageMessage(message: Message<{kind:string;idemp
     env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(attempt,nowIso,message.body.idempotencyKey),
     env.DB.prepare("UPDATE order_confirmation_intent_stages SET status='SENT',last_error=NULL,updated_at=? WHERE intent_id=? AND stage_minutes=? AND status='QUEUED'").bind(nowIso,intentId,stageMinutes)
   ]);
-  message.ack();
+   message.ack();
+}
+
+async function handlePaymentConfirmedMessage(message: Message<{kind:string;idempotencyKey:string;entityId:string;schemaVersion:1}>, env: Env["Bindings"], attempt: number): Promise<void> {
+  const now=new Date();
+  const nowIso=now.toISOString();
+  const suppress=async(reason:string)=>{
+    await env.DB.batch([
+      env.DB.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(attempt,reason,nowIso,message.body.idempotencyKey),
+      env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"PAYMENT_CONFIRMATION_SUPPRESSED","SYSTEM","PAYMENT",message.body.entityId,crypto.randomUUID(),JSON.stringify({reason}),nowIso)
+    ]);
+    message.ack();
+  };
+  try{
+    const stored=await env.DB.prepare("SELECT payload_json,status FROM outbox_jobs WHERE idempotency_key=? AND kind='WHATSAPP_PAYMENT_CONFIRMED'").bind(message.body.idempotencyKey).first<{payload_json:string;status:string}>();
+    if(!stored||isTerminalOutboxStatus(stored.status)){message.ack();return;}
+    let payload:{paymentId?:string;orderId?:string;orderNumber?:string;amountPkr?:number;locale?:string};
+    try{payload=JSON.parse(stored.payload_json) as typeof payload;}catch{await suppress("PAYMENT_CONFIRMATION_PAYLOAD_INVALID");return;}
+    if(payload.orderId!==message.body.entityId||!payload.paymentId||!payload.orderNumber||!Number.isSafeInteger(payload.amountPkr)||!(payload.locale==="en"||payload.locale==="ur")) {await suppress("PAYMENT_CONFIRMATION_PAYLOAD_INVALID");return;}
+    const current=await env.DB.prepare(`SELECT o.id AS order_id,o.order_number,o.state,o.payment_status,o.total_payable,o.archived_at,
+        p.id AS payment_id,p.method,p.review_state,p.expected_amount,p.approved_amount,p.approved_at,
+        c.id AS customer_id,c.wa_id,wc.last_inbound_message_id,wc.last_inbound_at,
+        EXISTS(SELECT 1 FROM payment_receipts r WHERE r.payment_id=p.id AND r.order_id=o.id AND r.r2_object_key<>'' AND r.sha256<>'') AS has_receipt,
+        EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id) AS has_cod,
+        EXISTS(SELECT 1 FROM audit_log a WHERE a.action='PAYMENT_APPROVED' AND a.entity_type='PAYMENT' AND a.entity_id=p.id) AS has_approval_audit
+      FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id LEFT JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
+      WHERE o.id=? AND p.id=?`).bind(payload.orderId,payload.paymentId).first<{order_id:string;order_number:string;state:string;payment_status:string;total_payable:number;archived_at:string|null;payment_id:string;method:string|null;review_state:string;expected_amount:number;approved_amount:number|null;approved_at:string|null;customer_id:string;wa_id:string|null;last_inbound_message_id:string|null;last_inbound_at:string|null;has_receipt:number;has_cod:number;has_approval_audit:number}>();
+    if(!current||current.archived_at||current.order_number!==payload.orderNumber||current.state!=="PAID"||current.payment_status!=="PAID"||current.review_state!=="APPROVED"||current.approved_amount!==current.expected_amount||current.expected_amount!==current.total_payable||current.approved_amount!==payload.amountPkr||!current.approved_at||!current.has_receipt||current.has_cod||!current.has_approval_audit){await suppress("PAYMENT_CONFIRMATION_STATE_NOT_VERIFIED");return;}
+    if(!current.wa_id||!/^\d{7,20}$/.test(current.wa_id)||!current.last_inbound_message_id){await suppress("PAYMENT_CONFIRMATION_RECIPIENT_UNVERIFIED");return;}
+    const text=paymentReceivedText(Number(current.approved_amount),current.order_number,payload.locale);
+    const buttons=[{id:"CHECK_ORDER",title:payload.locale==="ur"?"آرڈر دیکھیں":"View Order"}];
+    const provider=createWhatsAppProvider("meta",{enabled:env.META_PROVIDER_ENABLED==="true",graphVersion:env.META_GRAPH_VERSION??"v26.0",accessToken:env.META_ACCESS_TOKEN,phoneNumberId:env.META_PHONE_NUMBER_ID,verifyToken:env.WEBHOOK_VERIFY_TOKEN,appSecret:env.META_APP_SECRET});
+    const sent=await sendConversationReply(env.DB,provider,current.wa_id,current.last_inbound_message_id,text,{buttons},message.body.idempotencyKey,{orderId:current.order_id,customerId:current.customer_id,kind:"PAYMENT_RECEIVED",locale:payload.locale});
+    if(sent.sent){await env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(attempt,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();return;}
+    const outbound=await env.DB.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{status:string;last_error:string|null}>();
+    if(!outbound||isTerminalOutboxStatus(outbound.status)||outbound.last_error==="WHATSAPP_SERVICE_WINDOW_CLOSED"){await suppress(outbound?.last_error??"PAYMENT_CONFIRMATION_SUPPRESSED");return;}
+    if(attempt>=5){await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER',attempts=?,last_error='PAYMENT_CONFIRMATION_RETRIES_EXHAUSTED',updated_at=? WHERE idempotency_key=?").bind(attempt,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();return;}
+    await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error='PAYMENT_CONFIRMATION_RETRY',available_at=?,updated_at=? WHERE idempotency_key=? AND status IN ('PENDING','QUEUED','RETRY')").bind(attempt,new Date(Date.now()+retryDelaySeconds(attempt)*1000).toISOString(),new Date().toISOString(),message.body.idempotencyKey).run();
+    message.retry({delaySeconds:retryDelaySeconds(attempt)});
+  }catch(error){
+    const safe=error instanceof Error?error.message.slice(0,120):"PAYMENT_CONFIRMATION_FAILED";
+    if(attempt>=5){await env.DB.prepare("UPDATE outbox_jobs SET status='DEAD_LETTER',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=?").bind(attempt,safe,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();return;}
+    await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error=?,available_at=?,updated_at=? WHERE idempotency_key=? AND status IN ('PENDING','QUEUED','RETRY')").bind(attempt,safe,new Date(Date.now()+retryDelaySeconds(attempt)*1000).toISOString(),new Date().toISOString(),message.body.idempotencyKey).run();
+    message.retry({delaySeconds:retryDelaySeconds(attempt)});
+  }
 }
 
 app.all("*", (c) => c.json({ error: "NOT_FOUND" }, 404));
@@ -1707,7 +1762,16 @@ export default {
         catch{await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',last_error='QUEUE_DISPATCH_FAILED',available_at=?,updated_at=? WHERE idempotency_key=? AND status='QUEUED'").bind(new Date(Date.parse(now)+60_000).toISOString(),now,job.idempotency_key).run();}
       }
       }
-    // The five-stage reminder ledger is disabled in the current release. Do not
+      const paymentConfirmationJobs=await env.DB.prepare(`SELECT idempotency_key,entity_id FROM outbox_jobs WHERE kind='WHATSAPP_PAYMENT_CONFIRMED'
+        AND ((status IN ('PENDING','RETRY') AND available_at<=?) OR (status='QUEUED' AND updated_at<=?)) ORDER BY available_at,id LIMIT 100`).bind(now,stale).all<{idempotency_key:string;entity_id:string}>();
+      for(const job of paymentConfirmationJobs.results??[]){
+        const claimed=await env.DB.prepare(`UPDATE outbox_jobs SET status='QUEUED',updated_at=? WHERE idempotency_key=?
+          AND ((status IN ('PENDING','RETRY') AND available_at<=?) OR (status='QUEUED' AND updated_at<=?))`).bind(now,job.idempotency_key,now,stale).run();
+        if(Number(claimed.meta.changes)!==1)continue;
+        try{await env.EVENTS.send({kind:"WHATSAPP_PAYMENT_CONFIRMED",idempotencyKey:job.idempotency_key,entityId:job.entity_id,schemaVersion:1});}
+        catch{await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',last_error='QUEUE_DISPATCH_FAILED',available_at=?,updated_at=? WHERE idempotency_key=? AND status='QUEUED'").bind(new Date(Date.parse(now)+60_000).toISOString(),now,job.idempotency_key).run();}
+      }
+     // The five-stage reminder ledger is disabled in the current release. Do not
     // rescan its outbound history on every minute tick; recovery reconciliation
     // remains independent and is still run when its flag is enabled.
     if (remindersEnabled || recoveryEnabled) await syncPaymentReminderDeliveryStatuses(env.DB, { reminders: remindersEnabled, recovery: recoveryEnabled });
@@ -1754,6 +1818,10 @@ export default {
         }
         if (message.body.kind === "WHATSAPP_ORDER_INTENT_STAGE") {
           await handleOrderIntentStageMessage(message, env, nextAttempt);
+          continue;
+        }
+        if(message.body.kind==="WHATSAPP_PAYMENT_CONFIRMED"){
+          await handlePaymentConfirmedMessage(message,env,nextAttempt);
           continue;
         }
         if (message.body.kind === "META_INSTANT_FORM_LEAD") {
@@ -1830,8 +1898,8 @@ export default {
             const values: Record<string,string> = { orderNumber: current.order_number, amount: String(current.total_payable), items, delivery: String((await env.DB.prepare("SELECT delivery_fee FROM orders WHERE id=?").bind(payload.orderId).first<{ delivery_fee:number }>())?.delivery_fee ?? 0), codFee: "125", codTotal: String(Number(current.total_payable) + 125) };
             const rendered = template.body.replace(/\{(orderNumber|amount|items|delivery|codFee|codTotal)\}/g, (_match, name: string) => values[name] ?? "");
             const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
-            const send = Number(payload.stageMinutes) === 240 ? () => provider.sendInteractive(current.wa_id!, rendered, [{ id:"CONFIRM_COD", title: locale === "ur" ? "COD کی تصدیق" : "Confirm COD" }, { id:"KEEP_ADVANCE", title: locale === "ur" ? "ایڈوانس برقرار" : "Keep Advance" }, { id:"CANCEL_ORDER", title: locale === "ur" ? "آرڈر منسوخ" : "Cancel Order" }]) : () => provider.sendText(current.wa_id!, rendered);
-             const delivered = await sendPaymentPart(env.DB, current.wa_id, payload.orderId!, message.body.idempotencyKey, "WHATSAPP_PAYMENT_REMINDER", send, locale);
+             const send = Number(payload.stageMinutes) === 240 ? (text?:string) => provider.sendInteractive(current.wa_id!, text ?? "", [{ id:"CONFIRM_COD", title: locale === "ur" ? "COD کی تصدیق" : "Confirm COD" }, { id:"KEEP_ADVANCE", title: locale === "ur" ? "ایڈوانس برقرار" : "Keep Advance" }, { id:"CANCEL_ORDER", title: locale === "ur" ? "آرڈر منسوخ" : "Cancel Order" }]) : (text?:string) => provider.sendText(current.wa_id!, text ?? "");
+             const delivered = await sendPaymentPart(env.DB, current.wa_id, payload.orderId!, message.body.idempotencyKey, "WHATSAPP_PAYMENT_REMINDER", send, locale, rendered);
              if (delivered === "BLOCKED") { await blockReminder("FREE_MESSAGE_BLOCKED", "SKIPPED"); continue; }
              if (delivered !== "SENT") throw new Error("PAYMENT_REMINDER_SEND_FAILED");
             const sentAt = new Date().toISOString();

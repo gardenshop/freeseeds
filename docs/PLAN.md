@@ -4,7 +4,11 @@ Permanent master reference: **GFS ORDERFLOW**. All GFS-ORDER-001 REV.2 stages S0
 
 ## GFS-ORDER-001 REV.2 S0 (2026-11-25)
 
-Current lifecycle checkout: `D:\free seeds\gfs-order-001-rev2`, branch `codex/gfs-order-001-rev2`. See [master plan](GFS_ORDER_001_MASTER_PLAN.md), [audit](GFS_ORDER_001_CURRENT_AUDIT.md), [task register](GFS_ORDER_001_TASK_REGISTER.md), and [INTENT-030 closeout](GFS_ORDERFLOW_INTENT_030.md). S0 remains partial with Meta/original-spec/notification-identity/provenance gates. INTENT-030 local acceptance is complete; live per-contact FEP evidence and release-specific rollback remain production gates. The deadline governs customer confirmation only; stock management is not required, and existing eligibility locks are not stock reservations. No external runtime/release change occurred. Preserve historical MO and protected Label Printer/Hoja boundaries below.
+Current lifecycle checkout: `D:\free seeds\gfs-order-001-rev2`, branch `codex/gfs-order-001-rev2`. See [master plan](GFS_ORDER_001_MASTER_PLAN.md), [audit](GFS_ORDER_001_CURRENT_AUDIT.md), [task register](GFS_ORDER_001_TASK_REGISTER.md), [INTENT-030 closeout](GFS_ORDERFLOW_INTENT_030.md) and [TID-001 closeout](GFS_ORDERFLOW_TID_001.md). S0 remains partial with Meta/original-spec/notification-identity/provenance gates. INTENT-030 and TID-001 local acceptance are complete; live per-contact FEP evidence and release-specific rollback remain production gates. The deadline governs customer confirmation only; stock management is not required, and existing eligibility locks are not stock reservations. No external runtime/release change occurred. Preserve historical MO and protected Label Printer/Hoja boundaries below.
+
+## TID-001 local acceptance (2026-11-26)
+
+One Admin `Confirm Payment` action reuses the saved order/method/amount, submits a text TID, and only approves with bound receipt, independently verified payment method/destination, exact amount, actual receiving-credit evidence, CSRF/Access and atomic audit. Same-provider duplicates are rejected and identified; cross-provider matches warn, require explicit verification acknowledgement and remain method-scoped. Payment notification is localized/direction-formatted and passes the shared free-only guard; unknown eligibility suppresses notification without undoing approved financial state. No CAPI enablement or parcel dispatch. See [TID-001 closeout](GFS_ORDERFLOW_TID_001.md).
 
 ## GFS-COD-MO-109 canonicalization stages (2026-11-16 UTC)
 

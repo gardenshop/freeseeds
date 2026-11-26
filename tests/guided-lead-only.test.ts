@@ -54,9 +54,14 @@ function lastInboundAt() {
   return sqlite.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id=?").get(sender)?.last_inbound_at as string | null | undefined;
 }
 
+function visibleWhatsAppText(text: string): string {
+  return text.replace(/[\u200e\u200f\u2066\u2067\u2069]/g, "");
+}
+
 function body() {
   const sent = sends.at(-1)!;
-  return sent.type === "text" ? String((sent.text as { body: string }).body) : String((sent.interactive as { body: { text: string } }).body.text);
+  const text = sent.type === "text" ? String((sent.text as { body: string }).body) : String((sent.interactive as { body: { text: string } }).body.text);
+  return visibleWhatsAppText(text);
 }
 
 function buttons() {
@@ -485,9 +490,9 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     if (!intakeEnabled) codRuntimeHmacKey = "";
     expect((await callback([confirmation])).status).toBe(200);
     expect(sends).toHaveLength(sendsBeforeConfirmation + 1);
-    expect(body()).toContain(locale === "en" ? "confirmed for Cash on Delivery" : "وصولی پر ادائیگی کے لیے تصدیق ہو گیا");
+    expect(body()).toContain(locale === "en" ? "confirmed for Cash on Delivery" : "کیش آن ڈیلیوری کے لیے تصدیق ہو گئی ہے");
     expect(body()).toContain(orderNumber);
-    expect(body()).toContain("PKR 325");
+    expect(body()).toContain(locale === "en" ? "Total Payable: Rs. 325" : "کل واجب الادا رقم: Rs. 325");
     expect(body()).not.toContain("SYNTHETIC-STALE-DISPLAY");
     expect(buttons()).toEqual(["CHECK_ORDER"]);
     expect(conversation()).toEqual(winningConversation);
@@ -517,7 +522,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(sqlite.prepare("SELECT state FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED" });
     expect(body()).toContain("fresh quote");
     await inbound(tap("COD"));
-    expect(body()).toContain("TOTAL ON DELIVERY: PKR 325");
+    expect(body()).toContain("Total Payable: PKR 325");
     await inbound(tap("CONFIRM_COD_ORDER"));
     expect(sqlite.prepare("SELECT quoted_total_pkr FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ quoted_total_pkr: 325 });
   });
@@ -648,7 +653,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     await inbound(tap("CONFIRM_COD_ORDER"));
     codEnabled = false;
     await inbound(tap("CHECK_ORDER"));
-    expect(body()).toContain("Total Due on Delivery: PKR 250");
+    expect(body()).toContain("Total Payable: PKR 250");
     await inbound(tap("PAY_JAZZCASH"));
     await callback([{ from: sender, id: "synthetic-disabled-cod-receipt", type: "image", image: { id: "synthetic-media", mime_type: "image/png" } }]);
     expect(conversation()?.state).toBe("COD_PENDING");
@@ -687,9 +692,9 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     const orderData = conversation()?.data as { orderNumber?: string; amountPkr: number };
     expect(conversation()?.state).toBe("COD_CONFIRM");
     expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
-    expect(body()).toContain("Order amount including delivery: PKR 200");
+    expect(body()).toContain("Order base amount: PKR 200");
     expect(body()).toContain("COD collection fee: PKR 125");
-    expect(body()).toContain("TOTAL ON DELIVERY: PKR 325");
+    expect(body()).toContain("Total Payable: PKR 325");
     expect(buttons()).toEqual(["CONFIRM_COD_ORDER", "ADVANCE_PAYMENT"]);
     const sendCountBeforeConfirmation = sends.length;
 
@@ -731,7 +736,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(body()).toContain("Order Number:");
     expect(body()).toContain("Payment Method: COD");
     expect(body()).toContain("Order Status: COD Confirmed/Pending Dispatch");
-    expect(body()).toContain("Total Due on Delivery: PKR 325");
+    expect(body()).toContain("Total Payable: PKR 325");
 
     const image = { from: sender, id: "synthetic-cod-receipt-image", timestamp: "1792497600", type: "image", image: { id: "synthetic-cod-media-id", mime_type: "image/png" } };
     const sentBeforeImage = sends.length;
@@ -760,7 +765,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     codEnabled = true;
     await reachReview("en", true);
     await inbound(tap("PLACE_ORDER"));
-    expect(body()).toContain("TOTAL ON DELIVERY: PKR 325");
+    expect(body()).toContain("Total Payable: PKR 325");
     await inbound(tap("ADVANCE_PAYMENT"));
     const orderId = (conversation()?.data as { orderId: string }).orderId;
     expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderId)).toEqual({ state: "DETAILS_COMPLETED", payment_status: "PENDING", total_payable: 200 });
@@ -789,9 +794,9 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(body()).toContain("کیش آن ڈیلیوری پر اضافی PKR 125 کیش کلیکشن فیس لاگو ہوگی۔");
     expect((sends.at(-1)?.interactive as { action: { buttons: Array<{ reply: { title: string } }> } }).action.buttons.map((button) => button.reply.title)).toEqual(["ایڈوانس ادائیگی", "کیش آن ڈیلیوری"]);
     await inbound(tap("COD"));
-    expect(body()).toContain("ڈیلیوری سمیت آرڈر کی رقم: PKR 200");
+    expect(body()).toContain("آرڈر کی بنیادی رقم: PKR 200");
     expect(body()).toContain("COD وصولی فیس: PKR 125");
-    expect(body()).toContain("ڈیلیوری پر کل: PKR 325");
+    expect(body()).toContain("کل واجب الادا رقم: PKR 325");
     expect(body()).not.toContain("بیج (5 مفت پیکٹ)");
     expect(body()).not.toContain("مائیکرو نیوٹرینٹس کھاد (25 گرام)");
     expect(body().match(/COD وصولی فیس/g)).toHaveLength(1);
@@ -807,7 +812,7 @@ describe("GFS-221 additive V1-compatible COD path", () => {
     expect(body()).toContain("COD collection fee: PKR 125");
     await inbound(tap("CONFIRM_COD_ORDER"));
     const orderId = (conversation()?.data as { orderId: string }).orderId;
-    expect(body()).toContain("Pay PKR 325 on delivery");
+    expect(body()).toContain("Total Payable: Rs. 325");
     expect(sqlite.prepare("SELECT state,payment_status,total_payable FROM orders WHERE id=?").get(orderId)).toEqual({ state: "COD_PENDING", payment_status: "COD_PENDING", total_payable: 200 });
     expect(sqlite.prepare("SELECT cod_fee_pkr,quoted_total_pkr,test_hold,collection_policy_hash,remittance_policy_hash FROM cod_order_details WHERE order_id=?").get(orderId)).toEqual({ cod_fee_pkr: 125, quoted_total_pkr: 325, test_hold: 1, collection_policy_hash: null, remittance_policy_hash: null });
   });
@@ -991,7 +996,9 @@ describe("GFS-222 local advance and payment delivery repairs", () => {
     const message = await runPaymentJob(order.orderId, selected.idempotencyKey);
     expect(message.ack).toHaveBeenCalledOnce();
     expect(sends).toHaveLength(2);
-    expect(sends[0]).toMatchObject({ type: "text", text: { body: selected.message } });
+    const sentText=String((sends[0]?.text as {body:string}).body);
+    expect(visibleWhatsAppText(sentText)).toBe(visibleWhatsAppText(selected.message));
+    expect(sentText).toContain("\u200f\u2067");
     expect(sends[1]?.type).toBe("image");
     expect(selected.message).toContain("125");
     expect(selected.message).toContain(`NON-PAYABLE ${method}`);
@@ -1027,7 +1034,7 @@ describe("GFS-222 local advance and payment delivery repairs", () => {
     sqlite.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=125,approved_by='SYNTHETIC',approved_at='2026-01-01' WHERE order_id=?").run(order.orderId);
     await inbound(tap("CHECK_ORDER"));
     expect(body()).toContain("Payment approved");
-    expect(body()).toContain("Amount: PKR 125");
+    expect(body()).toContain("Total Payable: PKR 125");
     expect(buttons()).toEqual(["CHECK_ORDER"]);
     expect(conversation()?.state).toBe("PAYMENT_PENDING");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_METHOD_SELECTED'").get()).toEqual({ count: 1 });
@@ -1338,7 +1345,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
     await inbound(tap("PLACE_ORDER"), "synthetic-place-order-retry");
     expect(conversation()?.state).toBe("COD_CONFIRM");
-    expect(body()).toContain("TOTAL ON DELIVERY");
+    expect(body()).toContain("Total Payable");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM leads").get()).toEqual({ count: 0 });
   });

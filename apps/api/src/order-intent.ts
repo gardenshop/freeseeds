@@ -88,10 +88,10 @@ export function orderIntentReminderText(stage: 10 | 25 | 30, locale: OrderIntent
   return `Your request${order} has expired. No parcel will be dispatched against this request. You may place a new order.`;
 }
 
-export function orderIntentCodConfirmationText(orderNumber: string, grossPkr: number, locale: OrderIntentLocale): string {
+export function orderIntentCodConfirmationText(orderNumber: string, totalPayablePkr: number, locale: OrderIntentLocale): string {
   return locale === "ur"
-    ? `آپ کے COD آرڈر ${orderNumber} کی تصدیق ہو گئی ہے۔ پارسل وصول کرتے وقت ڈیلیوری رائیڈر یا پاکستان پوسٹ کے ڈاکیے کو مکمل مجموعی رقم PKR ${grossPkr} ادا کریں۔ پیشگی ادائیگی کی ضرورت نہیں۔ ٹریکنگ کی تفصیلات دستیاب ہونے پر بھیج دی جائیں گی۔`
-    : `Your COD order ${orderNumber} is confirmed. Please pay the full gross total of PKR ${grossPkr} to the delivery rider or Pakistan Post postman when you receive your parcel. No advance payment is required. Your tracking details will be shared once available.`;
+    ? `آپ کے COD آرڈر ${orderNumber} کی تصدیق ہو گئی ہے۔ کل واجب الادا رقم: Rs. ${totalPayablePkr}۔ پارسل وصول کرتے وقت ڈیلیوری رائیڈر یا پاکستان پوسٹ کے ڈاکیے کو یہی مکمل رقم ادا کریں۔ پیشگی ادائیگی کی ضرورت نہیں۔ ٹریکنگ کی تفصیلات دستیاب ہوتے ہی بھیج دی جائیں گی۔`
+    : `Your COD order ${orderNumber} is confirmed. Total Payable: Rs. ${totalPayablePkr}. Please pay this exact amount to the delivery rider or Pakistan Post postman when you receive your parcel. No advance payment is required. Your tracking details will be shared once available.`;
 }
 
 export async function anchorOrderIntentOnDelivery(db: D1Database, intentId: string, providerMessageId: string, now = new Date()): Promise<boolean> {

@@ -6,13 +6,29 @@
 |---|---|---|
 | Local INTENT-030 focused suite | PASS36/36 | `tests/order-intent.test.ts`, `tests/free-messaging.test.ts`, `tests/meta-activation.test.ts`; provider timestamps, localization, countdown, arbitration, retry, migration and free-only evidence cases use synthetic data. |
 | Full guided API journey | PASS104/SKIP1 | `tests/guided-lead-only.test.ts`; explicitly seeded synthetic CTWA/referral/pricing evidence in the test D1 fixture. |
-| Full Vitest | PASS436/SKIP1 | `npm.cmd test -- --reporter=dot --maxWorkers=2`; no live provider, DB or customer fixture. |
+| Full Vitest after INTENT-030 | PASS436/SKIP1 | `npm.cmd test -- --reporter=dot --maxWorkers=2`; no live provider, hosted DB or customer fixture. |
 | Node safety suites | PASS52/52 | Eight documented `node --test` scripts. |
 | Build/TypeScript/lint | PASS | `npm.cmd run build`; `npm.cmd run lint`. |
 | Production dependency audit | PASS0 | `npm.cmd audit --omit=dev`; six previously registered moderate development-tool findings remain untouched. |
 | Migration sequence | PASS / LOCAL ONLY | Synthetic SQLite runs0049→unchanged0050→local0051; full guided fixture also runs ordered migrations. No remote apply. |
 | Protected checkout | PASS923/923 | Label Printer manifest SHA-256 hashes match. Standalone MO Printing and Hoja Seeds remain separate. |
 | External safety | NO MUTATION | Chrome DevTools `list_pages` only; no page navigation, account mutation, live message, payment, hosted migration, deployment or traffic change. |
+
+## GFS ORDERFLOW TID-001 closeout (2026-11-26 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Focused TID/Admin/bidi/payment suite | PASS101/101 | `tests/admin-payment.test.ts`, `tests/cod-admin.test.ts`, `tests/payment-confirmation.test.ts`, `tests/whatsapp-formatting.test.ts`, `tests/order-intent.test.ts`. |
+| Full TID regression | PASS447/SKIP1 | `npm.cmd test -- --reporter=dot --maxWorkers=2`; 38 files, no live provider/hosted DB/customer fixture. |
+| Guided journey/Node suites | PASS104/SKIP1; PASS52/52 | Synthetic CTWA/free-pricing journey fixture and documented eight-script Node safety suite. |
+| Build/lint/production audit | PASS | `npm.cmd run build`; `npm.cmd run lint`; `npm.cmd audit --omit=dev` (0 production findings). |
+| TID approval | PASS local | One Confirm Payment action; receipt + verified method/QR + actual-credit reference + exact Total Payable + Access/CSRF/HMAC + atomic audit. TID preserves leading zeros; no TID-only PAID. |
+| Duplicate policy | PASS local | Same-method normalized duplicate identifies/audits conflict and rejects; cross-method duplicate warns with conflicting payment/order/method and requires acknowledgement; same-order replay is idempotent. |
+| Payment confirmation/reminder stop | PASS local | PAID approval cancels pending reminder jobs; locale snapshot feeds immutable Payment Received outbox; Queue revalidates financial state and shared free-only guard; unknown eligibility suppresses notice without changing PAID. No CAPI/parcel dispatch. |
+| Bidi formatter | PASS local | English LTR/left, Urdu RTL/right via Unicode LRM/RLM/LRI/RLI/PDI; paragraph order/blank lines preserved; amounts/TIDs/order/tracking IDs/phones/URLs isolated; no HTML/CSS. |
+| Full dev dependency audit | OPEN | `npm.cmd audit`: six moderate dev-tool findings retained; no unrelated upgrade. Production-only audit remains0. |
+
+TID-001 is local acceptance only. Meta/FEP, actual bank credit and WhatsApp client rendering were not tested live. Unknown free eligibility fails closed; no paid fallback. Total Payable is the only customer amount label.
 
 INT01-21/S1 local acceptance is complete. The timer is customer-confirmation policy only. No stock/warehouse schema or dependency; eligibility locks are cooldown-only. Per-contact live FEP expiry/pricing, display-name/template quality and release-specific rollback remain production gates; no paid fallback and no WhatsApp launch authorization.
 

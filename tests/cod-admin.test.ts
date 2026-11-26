@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { codReferenceHmac } from "@gfs/core";
+import apiWorker from "../apps/api/src/index.js";
 import app from "../apps/admin/src/index";
 
 const hmacKey = "synthetic-admin-cod-hmac-key-v1-2026-synthetic";
@@ -91,12 +92,16 @@ beforeEach(() => {
     CREATE TABLE orders(id TEXT PRIMARY KEY,order_number TEXT NOT NULL,customer_id TEXT,state TEXT NOT NULL,payment_status TEXT NOT NULL,total_payable INTEGER NOT NULL,archived_at TEXT,updated_at TEXT);
     CREATE TABLE payments(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,method TEXT,expected_amount INTEGER NOT NULL,review_state TEXT NOT NULL,approved_amount INTEGER,approved_by TEXT,approved_at TEXT,customer_transaction_reference TEXT,updated_at TEXT);
     CREATE TABLE payment_receipts(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,payment_id TEXT NOT NULL,r2_object_key TEXT,sha256 TEXT);
-    CREATE TABLE customers(id TEXT PRIMARY KEY);
+    CREATE TABLE customers(id TEXT PRIMARY KEY,wa_id TEXT);
+    CREATE TABLE whatsapp_conversations(id TEXT PRIMARY KEY,wa_id TEXT,state TEXT,state_data TEXT,last_inbound_message_id TEXT,last_inbound_at TEXT);
+    CREATE TABLE whatsapp_events(provider_event_id TEXT PRIMARY KEY,created_at TEXT NOT NULL);
+    CREATE TABLE outbound_messages(id TEXT PRIMARY KEY,idempotency_key TEXT UNIQUE,order_id TEXT,customer_id TEXT,kind TEXT,status TEXT,attempt_count INTEGER DEFAULT 0,last_error TEXT,provider_message_id TEXT,created_at TEXT,updated_at TEXT);
+    CREATE TABLE payment_reminder_v2_opt_outs(customer_id TEXT,wa_id TEXT);
     CREATE TABLE meta_attribution(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,ctwa_clid TEXT);
     CREATE TABLE payment_methods(method TEXT PRIMARY KEY,enabled INTEGER,qr_owner_verified INTEGER,qr_r2_key TEXT,qr_sha256 TEXT);
     CREATE TABLE payment_qr_assets(method TEXT,derivative_r2_key TEXT,derivative_sha256 TEXT,active INTEGER,decoder_agreement INTEGER,payload_match INTEGER,scan_pass INTEGER,independent_ownership_verified INTEGER,independent_evidence_ref TEXT);
     CREATE TABLE capi_events(id TEXT PRIMARY KEY,event_id TEXT NOT NULL UNIQUE,event_name TEXT NOT NULL,order_id TEXT NOT NULL,customer_id TEXT NOT NULL,send_status TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
-    CREATE TABLE outbox_jobs(id TEXT PRIMARY KEY,idempotency_key TEXT NOT NULL UNIQUE,kind TEXT NOT NULL,entity_id TEXT NOT NULL,payload_json TEXT NOT NULL,status TEXT NOT NULL,available_at TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+    CREATE TABLE outbox_jobs(id TEXT PRIMARY KEY,idempotency_key TEXT NOT NULL UNIQUE,kind TEXT NOT NULL,entity_id TEXT NOT NULL,payload_json TEXT NOT NULL,status TEXT NOT NULL,attempts INTEGER NOT NULL DEFAULT 0,last_error TEXT,available_at TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
     CREATE TABLE audit_log(id TEXT PRIMARY KEY,action TEXT,actor_type TEXT,actor_id TEXT,entity_type TEXT,entity_id TEXT,correlation_id TEXT,metadata_json TEXT,created_at TEXT);
   `);
   sqlite.exec(readFileSync("migrations/0030_cod_v1_compat.sql", "utf8"));
@@ -257,6 +262,9 @@ describe("actual Admin financial atomicity and duplicate races", () => {
 
   it("does not duplicate approval audit or settle twice when two Admin requests race", async () => {
     seedAdvanceApproval("approval-order-race", "approval-payment-race", "SIM-APPROVAL-RACE");
+    const now=new Date().toISOString();
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES('reminder-v2-outbox','reminder-v2-key','WHATSAPP_PAYMENT_REMINDER','approval-order-race','{}','QUEUED',?,?,?)").run(now,now,now);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,available_at,created_at,updated_at) VALUES('recovery-outbox','recovery-key','WHATSAPP_PAYMENT_CHOICE_RECOVERY','approval-order-race','{}','PENDING',?,?,?)").run(now,now,now);
     const session = await csrf();
     const events = { send: vi.fn(async () => undefined) };
     const runtime = env(hmacKey, "true", events);
@@ -275,6 +283,8 @@ describe("actual Admin financial atomicity and duplicate races", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_APPROVED' AND entity_id='approval-payment-race'").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events WHERE order_id='approval-order-race' AND event_name='Purchase'").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbox_jobs WHERE entity_id='approval-order-race' AND kind='CAPI_PURCHASE'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE id='reminder-v2-outbox'").get()).toEqual({status:"PERMANENT_FAILURE",last_error:"PAYMENT_APPROVED"});
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE id='recovery-outbox'").get()).toEqual({status:"PERMANENT_FAILURE",last_error:"PAYMENT_APPROVED"});
     expect(events.send).toHaveBeenCalledTimes(1);
   });
 
@@ -372,7 +382,7 @@ describe("actual Admin financial atomicity and duplicate races", () => {
     seedAdvanceApproval("tid-order-one", "tid-payment-one", "SIM-TID-ORDER-ONE", "BANK", null);
     seedAdvanceApproval("tid-order-two", "tid-payment-two", "SIM-TID-ORDER-TWO", "BANK", null);
     const session = await csrf();
-    synchronizeFirstQueries((sql) => sql.startsWith("SELECT id FROM payments WHERE id<>? AND method=?"));
+    synchronizeFirstQueries((sql) => sql.startsWith("SELECT p.id AS payment_id,o.id AS order_id,o.order_number,p.method FROM payments p JOIN orders o ON o.id=p.order_id") && sql.includes("p.method=?"));
     const request = (paymentId: string, orderId: string, orderNumber: string) => post(`/api/payments/${paymentId}/transaction-reference`, {
       orderId,
       confirmation: orderNumber,
@@ -386,6 +396,7 @@ describe("actual Admin financial atomicity and duplicate races", () => {
     expect(responses.map((response) => response.status).sort(), JSON.stringify(await Promise.all(responses.map((response) => response.clone().json())))).toEqual([200, 409]);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments WHERE customer_transaction_reference='SYNTHETIC-TID-RACE-001'").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_TRANSACTION_REFERENCE_SAVED'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_TRANSACTION_REFERENCE_DUPLICATE_REJECTED'").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders WHERE state<>'PAYMENT_REVIEW' OR payment_status<>'PENDING'").get()).toEqual({ count: 0 });
   });
 
@@ -400,8 +411,85 @@ describe("actual Admin financial atomicity and duplicate races", () => {
     }, session);
 
     expect((await request("tid-provider-payment-one", "tid-provider-order-one", "SIM-TID-PROVIDER-ONE")).status).toBe(200);
-    expect((await request("tid-provider-payment-two", "tid-provider-order-two", "SIM-TID-PROVIDER-TWO")).status).toBe(200);
+    const second=await request("tid-provider-payment-two", "tid-provider-order-two", "SIM-TID-PROVIDER-TWO");
+    expect(second.status).toBe(200);
+    expect(await second.json()).toMatchObject({crossMethodWarning:{code:"REFERENCE_REUSED_ACROSS_METHODS",conflictingOrderId:"tid-provider-order-one",conflictingMethod:"BANK"}});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_TRANSACTION_REFERENCE_CROSS_METHOD_WARNING'").get()).toEqual({count:1});
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments WHERE customer_transaction_reference='SYNTHETIC-PROVIDER-TID-001'").get()).toEqual({ count: 2 });
+  });
+
+  it("preserves leading-zero TIDs and makes same-order reference replay idempotent", async () => {
+    seedAdvanceApproval("tid-leading-order","tid-leading-payment","SIM-TID-LEADING", "BANK", null);
+    const session=await csrf();
+    const body={orderId:"tid-leading-order",confirmation:"SIM-TID-LEADING",reference:"000012345678"};
+    const first=await post("/api/payments/tid-leading-payment/transaction-reference",body,session);
+    const replay=await post("/api/payments/tid-leading-payment/transaction-reference",body,session);
+    expect(first.status).toBe(200);
+    expect(replay.status).toBe(200);
+    expect(await replay.json()).toMatchObject({alreadySaved:true,reference:"000012345678"});
+    expect(sqlite.prepare("SELECT customer_transaction_reference FROM payments WHERE id='tid-leading-payment'").get()).toEqual({customer_transaction_reference:"000012345678"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_TRANSACTION_REFERENCE_SAVED' AND entity_id='tid-leading-payment'").get()).toEqual({count:1});
+  });
+
+  it("does not reopen or approve an expired order from late TID evidence alone", async () => {
+    seedAdvanceApproval("tid-late-order","tid-late-payment","SIM-TID-LATE", "BANK", null);
+    sqlite.prepare("UPDATE payments SET review_state='EXPIRED' WHERE id='tid-late-payment'").run();
+    sqlite.prepare("UPDATE orders SET state='EXPIRED',payment_status='EXPIRED',updated_at='synthetic-expiry' WHERE id='tid-late-order'").run();
+    const session=await csrf();
+    const response=await post("/api/payments/tid-late-payment/transaction-reference",{orderId:"tid-late-order",confirmation:"SIM-TID-LATE",reference:"SYNTHETIC-LATE-TID-001"},session);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({error:"PAYMENT_NOT_IN_REVIEW"});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='tid-late-order'").get()).toEqual({state:"EXPIRED",payment_status:"EXPIRED"});
+    expect(sqlite.prepare("SELECT review_state,approved_amount,customer_transaction_reference FROM payments WHERE id='tid-late-payment'").get()).toEqual({review_state:"EXPIRED",approved_amount:null,customer_transaction_reference:null});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE order_id='tid-late-order'").get()).toEqual({count:0});
+  });
+
+  it("requires an explicit cross-method warning acknowledgement before an otherwise verified approval", async () => {
+    seedAdvanceApproval("tid-cross-order-one","tid-cross-payment-one","SIM-TID-CROSS-ONE","BANK","SYNTHETIC-CROSS-METHOD-001");
+    seedAdvanceApproval("tid-cross-order-two","tid-cross-payment-two","SIM-TID-CROSS-TWO","EASYPAISA",null);
+    const session=await csrf();
+    const save=await post("/api/payments/tid-cross-payment-two/transaction-reference",{orderId:"tid-cross-order-two",confirmation:"SIM-TID-CROSS-TWO",reference:"SYNTHETIC-CROSS-METHOD-001"},session);
+    expect(save.status).toBe(200);
+    const saveBody=await save.json() as {crossMethodWarning:{conflictingPaymentId:string;conflictingOrderId:string;conflictingOrderNumber:string;conflictingMethod:string}};
+    expect(saveBody).toMatchObject({crossMethodWarning:{conflictingPaymentId:"tid-cross-payment-one",conflictingOrderId:"tid-cross-order-one",conflictingOrderNumber:"SIM-TID-CROSS-ONE",conflictingMethod:"BANK"}});
+    const approval={orderId:"tid-cross-order-two",confirmation:"SIM-TID-CROSS-TWO",settlementEvidenceRef:"SYNTHETIC-RECEIVING-CREDIT",settlementConfirmed:true};
+    const blocked=await post("/api/payments/tid-cross-payment-two/approve",approval,session);
+    expect(blocked.status).toBe(409);
+    expect(await blocked.json()).toMatchObject({error:"CROSS_METHOD_REFERENCE_REVIEW_REQUIRED",conflictingOrderId:"tid-cross-order-one"});
+    expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='tid-cross-payment-two'").get()).toEqual({review_state:"REVIEW",approved_amount:null});
+    const approved=await post("/api/payments/tid-cross-payment-two/approve",{...approval,crossMethodConfirmed:true,crossMethodPaymentId:saveBody.crossMethodWarning.conflictingPaymentId,crossMethodMethod:saveBody.crossMethodWarning.conflictingMethod},session);
+    expect(approved.status).toBe(200);
+    expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='tid-cross-payment-two'").get()).toEqual({review_state:"APPROVED",approved_amount:625});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='tid-cross-order-two'").get()).toEqual({state:"PAID",payment_status:"PAID"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='PAYMENT_APPROVAL_CROSS_METHOD_REJECTED'").get()).toEqual({count:1});
+    const approvalAudit=sqlite.prepare("SELECT metadata_json FROM audit_log WHERE action='PAYMENT_APPROVED' AND entity_id='tid-cross-payment-two'").get() as {metadata_json:string};
+    expect(JSON.parse(approvalAudit.metadata_json)).toMatchObject({crossMethodConfirmed:true,crossMethodConflictOrderId:"tid-cross-order-one"});
+  });
+
+  it("queues localized payment confirmation after verified approval and suppresses it without free evidence", async () => {
+    seedAdvanceApproval("tid-notice-order","tid-notice-payment","SIM-TID-NOTICE","BANK","000012345678");
+    const waId="00000000000";
+    const now=new Date().toISOString();
+    sqlite.prepare("UPDATE customers SET wa_id=? WHERE id='customer-tid-notice-order'").run(waId);
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at) VALUES('tid-notice-conversation',?,'REVIEW',?,'inbound-tid-notice',?)").run(waId,JSON.stringify({language:"ur"}),now);
+    sqlite.prepare("INSERT INTO whatsapp_events(provider_event_id,created_at) VALUES('message:inbound-tid-notice',?)").run(now);
+    const events={send:vi.fn(async(_job:{kind:string;idempotencyKey:string;entityId:string;schemaVersion:1})=>undefined)};
+    const session=await csrf();
+    const approved=await post("/api/payments/tid-notice-payment/approve",{orderId:"tid-notice-order",confirmation:"SIM-TID-NOTICE",settlementEvidenceRef:"SYNTHETIC-CREDIT-RECEIPT",settlementConfirmed:true},session,env(hmacKey,"false",events));
+    expect(approved.status).toBe(200);
+    expect(await approved.json()).toMatchObject({paymentStatus:"PAID",paymentConfirmationQueue:"QUEUED"});
+    expect(events.send).toHaveBeenCalledOnce();
+    const job=events.send.mock.calls[0]?.[0] as {kind:string;idempotencyKey:string;entityId:string;schemaVersion:1};
+    expect(job).toMatchObject({kind:"WHATSAPP_PAYMENT_CONFIRMED",entityId:"tid-notice-order",schemaVersion:1});
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key=?").get(job.idempotencyKey)).toEqual({status:"QUEUED"});
+
+    const delivery={body:job,ack:vi.fn(),retry:vi.fn()};
+    await apiWorker.queue({messages:[delivery]} as never,{DB:db as unknown as D1Database,DEPLOYMENT_STATE:"READY",META_PROVIDER_ENABLED:"false",META_GRAPH_VERSION:"v26.0"} as never);
+    expect(delivery.ack).toHaveBeenCalledOnce();
+    expect(delivery.retry).not.toHaveBeenCalled();
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(job.idempotencyKey)).toMatchObject({status:"PERMANENT_FAILURE",last_error:"FREE_MESSAGE_BLOCKED:FREE_BILLING_UNKNOWN_OR_MISMATCHED"});
+    expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='tid-notice-payment'").get()).toEqual({review_state:"APPROVED",approved_amount:625});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='tid-notice-order'").get()).toEqual({state:"PAID",payment_status:"PAID"});
   });
 
   it("reproduces concurrent normal/historical MO reference reuse through both Admin handlers", async () => {

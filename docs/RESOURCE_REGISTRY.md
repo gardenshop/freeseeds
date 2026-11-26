@@ -6,6 +6,12 @@
 - Inherited migration `0050_order_confirmation_intents.sql` was preserved unchanged. Migration sequence0049/0050/0051 ran only against synthetic in-memory SQLite; none was applied remotely. No hosted Worker, D1, Queue, R2, Cron, Access, Meta, secret, payment, customer, or billing resource was read or changed.
 - Chrome DevTools `list_pages` was called first for read-only browser inventory; no page was selected, navigated, or mutated and no external identity is claimed from that listing. No live message, order/payment transition, migration, deployment, or traffic change occurred. No physical stock/inventory resources were added. New-number WhatsApp and Hoja Seeds isolation remain untouched.
 
+## GFS-ORDERFLOW-TID-001 local source resources (2026-11-26)
+
+- Local code/test resources: guarded Admin TID-reference/approval path, same/cross-method conflict handling, payment-confirmation outbox/Queue handler, and shared `packages/core/src/whatsapp-formatting.ts`; synthetic Admin/API tests use generated TIDs, receipts, referrals and pricing evidence only.
+- No hosted D1, Access, Queue, Meta, R2, billing, CAPI, customer or payment resource was mutated. Migrations0049/0050/0051 remain local/sequence-tested and unapplied. Payment notification jobs cannot send without the existing per-contact free-only evidence.
+- No CAPI flag, automatic COD flow or parcel dispatch was enabled. New-number lock, household cooldown, private label, standalone MO and Hoja Seeds boundaries are unchanged.
+
 ## GFS-ORDER-001 REV.2 S0 (2026-11-25)
 
 Fresh source checkout: [CURRENT_AUDIT](GFS_ORDER_001_CURRENT_AUDIT.md). Approved checkout `D:\free seeds\gfs-order-001-rev2`, branch `codex/gfs-order-001-rev2`, starting HEAD `dda2ddec93c22189d89cefa29f133e30a9c467d6`; no new hosted resources. Historical Cloudflare/Meta routing notes below were not refreshed for this source-only closeout. Label Printer923/923 baseline hashes verified unchanged; no runtime dependency. Older entries are historical unless explicitly refreshed.

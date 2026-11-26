@@ -4,6 +4,10 @@
 
 INTENT-030 local acceptance is complete. See [closeout report](GFS_ORDERFLOW_INTENT_030.md). Full Vitest436 passed/1 skipped, focused intent/free-gate/activation36 passed, guided journey104 passed/1 skipped, documented Node suites52/52; build/TypeScript/lint pass and production dependency audit0. Migration sequence0049/0050/0051 was exercised in synthetic local SQLite; remote migrations remain unapplied. Migration0050 is unchanged. Per-contact live FEP/expiry/pricing evidence and A10 release rollback remain production gates; WhatsApp launch is **NO-GO**. Physical stock is out of scope; eligibility locks are household cooldowns, not stock reservations. Chrome DevTools `list_pages` was called first; no page navigation, account assertion or mutation occurred. Label Printer923/923 SHA matches are verified. Commit/push outcome and SHAs are reported in the final closeout response.
 
+## TID-001 closeout update (2026-11-26)
+
+TID-001 local acceptance is complete. See [TID-001 report](GFS_ORDERFLOW_TID_001.md). Focused Admin/TID/bidi suite101/101; full Vitest447/1 skipped; guided API104/1 skipped; Node52/52; TypeScript/lint and production audit0. Admin's single Confirm Payment action uses the saved order/method/Total Payable, preserves TID text/leading zeros, receipt and independent receiving-account verification, and retains CSRF/Access/HMAC/atomic audit. Same-method duplicate references are rejected with the conflicting order identified; cross-method matches warn and require provider/account acknowledgement. Verified approval sets payment APPROVED/order PAID, suppresses queued reminders, and prepares a pinned-locale Payment Received outbox notification through the free-only guard. Unknown free evidence suppresses only the message. No CAPI or parcel dispatch was enabled. Urdu bidi/isolation tests preserve paragraph and ID order; live-client visual rendering remains a gate.
+
 Audit refreshed2026-11-25. Permanent project **GFS ORDERFLOW** covers REV.2 requirements, S0-S9, historical decisions and future subtasks. Existing filenames, task IDs and branch remain. **S0 is PARTIAL, 80% by full audit gates; WhatsApp leads launch NO-GO.** Hono was patched and locally verified; no production/runtime route, schema, payment, Meta, Cloudflare or customer-message mutation occurred. Git push/commit status is reported below.
 
 ## Owner account context
@@ -57,7 +61,7 @@ S0 acceptance:8/10 fully satisfied=80%,20% remaining. A06 needs a separately aut
 | S0 | 80% | 20% | Partial audit |
 | S1 | 100% local | 0% local | INTENT-030 accepted locally; no rollout |
 | S2 | 0% | 100% | Not started |
-| S3 | 0% | 100% | Not started |
+| S3 | 100% local | 0% local | TID-001 accepted locally; no rollout |
 | S4 | 0% exit gate | 100% | Local free-only guard is implemented/tested; live evidence writer, pricing reconciliation and metrics remain |
 | S5 | 0% | 100% | Blocked on postal registration compatibility |
 | S6 | 0% | 100% | Blocked on tariff and settlement model |
@@ -65,6 +69,6 @@ S0 acceptance:8/10 fully satisfied=80%,20% remaining. A06 needs a separately aut
 | S8 | 0% | 100% | Not started; templates/FEP evidence required |
 | S9 | 0% | 100% | Not started; release auth/rollback required |
 
-Percentages count acceptance gates, not effort. S0 is80% audited; S1 intent is100% locally accepted; S2-S9 have0% accepted exits, with partial local S4 guard work. One of ten stage gates is locally complete; nine remain. WhatsApp launch is **NO-GO** until S0-A06/A10, Meta display-name/template quality, per-contact FEP/CSW evidence and authorized release checks pass. No live free-window send or campaign activation was authorized.
+Percentages count acceptance gates, not effort. S0 is80% audited; S1 INTENT-030 and S3 TID-001 are100% locally accepted; S2/S4-S9 have0% accepted exits (S4 has partial local guard work). Two of ten stage gates are locally complete; eight remain. WhatsApp launch is **NO-GO** until S0-A06/A10, Meta display-name/template quality, per-contact FEP/CSW evidence and authorized release checks pass. No live free-window send or campaign activation was authorized.
 
-Next single task: **TID-001**. INTENT-030 local acceptance is complete. Keep A06 live FEP evidence, A10 rollback readiness, FIN-MO-002, the six moderate development-dependency findings and authorized Pakistan Post integration permanently registered. No live send/deploy. FIN-MO-002 remains a separate mandatory prerequisite before postal settlement activation.
+Next single task: **FEP-001**. INTENT-030 and TID-001 local acceptance are complete. Keep A06 live FEP evidence, A10 rollback readiness, PENDING-001, FIN-MO-002, the six moderate development-dependency findings and authorized Pakistan Post integration permanently registered. No live send/deploy. FIN-MO-002 remains a separate mandatory prerequisite before postal settlement activation.

@@ -54,6 +54,10 @@ function addReceipt(now: string) {
     VALUES('receipt-synthetic','payment-synthetic','order-synthetic','media-synthetic','private/synthetic','hash-synthetic','image/png',128,?,?)`).run(now, now);
 }
 
+function visibleWhatsAppText(text: string): string {
+  return text.replace(/[\u200e\u200f\u2066\u2067\u2069]/g, "");
+}
+
 function prepareCodConfirmation(now: string) {
   const quote = { baseAmountPkr: 250, feePkr: 125, totalPkr: 375, policyRevision: "synthetic-policy", collectionPolicyHash: "synthetic-collection", remittancePolicyHash: "synthetic-remittance" };
   const stateData = JSON.stringify({ language: "en", intentId: "intent-synthetic", orderId: "order-synthetic", orderNumber: "SYNTHETIC-ORDER", codQuote: quote });
@@ -166,8 +170,8 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     expect(orderIntentReminderText(30, "ur")).toContain("کوئی پارسل روانہ نہیں کیا جائے گا");
     expect(orderIntentNewOrderButton("en")).toEqual({ id: "START", title: "Place a new order" });
     expect(orderIntentNewOrderButton("ur")).toEqual({ id: "START", title: "نیا آرڈر دیں" });
-    expect(orderIntentCodConfirmationText("SYNTHETIC-ORDER", 375, "en")).toContain("full gross total of PKR 375 to the delivery rider or Pakistan Post postman");
-    expect(orderIntentCodConfirmationText("SYNTHETIC-ORDER", 375, "ur")).toContain("پاکستان پوسٹ کے ڈاکیے کو مکمل مجموعی رقم PKR 375");
+    expect(orderIntentCodConfirmationText("SYNTHETIC-ORDER", 375, "en")).toContain("Total Payable: Rs. 375. Please pay this exact amount to the delivery rider or Pakistan Post postman");
+    expect(orderIntentCodConfirmationText("SYNTHETIC-ORDER", 375, "ur")).toContain("کل واجب الادا رقم: Rs. 375۔");
   });
 
   it("does not invent T0 or expire an unpresented intent when delivery webhooks are missing", async () => {
@@ -460,10 +464,51 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     expect(sqlite.prepare("SELECT status,last_error FROM order_confirmation_intent_stages WHERE stage_minutes=10").get()).toEqual({ status: "SENT", last_error: null });
     expect(fetchMock).toHaveBeenCalledOnce();
     const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as { interactive: { body: { text: string }; action: { buttons: Array<{ reply: { title: string } }> } } };
-    expect(request.interactive.body.text).toContain("باقی 5 منٹ 30 سیکنڈ");
+    expect(visibleWhatsAppText(request.interactive.body.text)).toContain("باقی 5 منٹ 30 سیکنڈ");
     expect(request.interactive.action.buttons.map((button) => button.reply.title)).toEqual(["پیشگی ادائیگی", "کیش آن ڈیلیوری", "آرڈر منسوخ کریں"]);
     expect(sqlite.prepare("SELECT status FROM order_confirmation_intent_stages WHERE stage_minutes=10").get()).toEqual({ status: "SENT" });
     expect(sqlite.prepare("SELECT state,deadline_at FROM order_confirmation_intents WHERE intent_id='intent-synthetic'").get()).toEqual({ state: "AWAITING_DECISION", deadline_at: deadline });
+  });
+
+  it("queues the exact localized payment receipt only for an approved, receipt-backed PAID order through the free guard", async () => {
+    const start = Date.parse("2026-11-25T10:00:00.000Z");
+    const approvedAt = new Date(start + 4 * 60_000).toISOString();
+    const freeMessagingEvidence = {
+      fep: { sourceType: "CTWA_AD", platform: "ANDROID", clickIdHash: "f".repeat(64), referralAt: new Date(start - 5 * 60_000).toISOString(), firstBusinessResponseAt: new Date(start - 4 * 60_000).toISOString(), expiryVerified: true, verifiedAt: new Date(start - 3 * 60_000).toISOString(), verifiedExpiresAt: new Date(start + 6 * 24 * 60 * 60_000).toISOString(), expiryEvidenceRef: "synthetic-payment-confirm-expiry" },
+      pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", subtype: "free_entry_point", category: "SERVICE", form: "FREEFORM", evidenceRef: "synthetic-payment-confirm-pricing", observedAt: new Date(start - 4 * 60_000).toISOString(), verifiedAt: new Date(start - 3 * 60_000).toISOString(), validUntil: new Date(start + 60 * 60_000).toISOString() }
+    };
+    seedIntent(new Date(start).toISOString(), "ur");
+    const { presentedAt, deadline } = presentIntent(start);
+    sqlite.prepare("UPDATE order_confirmation_intents SET state='AWAITING_DECISION',presented_at=?,deadline_at=? WHERE intent_id='intent-synthetic'").run(presentedAt,deadline);
+    sqlite.prepare("UPDATE customers SET wa_id='00000000000' WHERE id='customer-synthetic'").run();
+    sqlite.prepare("UPDATE whatsapp_conversations SET wa_id='00000000000',last_inbound_at=?,state_data=? WHERE id='conversation-synthetic'").run(new Date(start).toISOString(),JSON.stringify({language:"en",freeMessagingEvidence}));
+    sqlite.prepare("INSERT INTO whatsapp_events(provider_event_id,created_at) VALUES('message:inbound-synthetic',?)").run(new Date(start).toISOString());
+    addReceipt(new Date(start + 3 * 60_000).toISOString());
+    sqlite.prepare("UPDATE payments SET review_state='APPROVED',approved_amount=250,approved_by='synthetic-admin',approved_at=?,submitted_at=?,updated_at=? WHERE id='payment-synthetic'").run(approvedAt,new Date(start+3*60_000).toISOString(),approvedAt);
+    sqlite.prepare("UPDATE orders SET state='PAID',payment_status='PAID',updated_at=? WHERE id='order-synthetic'").run(approvedAt);
+    sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,actor_id,entity_type,entity_id,metadata_json,created_at) VALUES('approved-audit','PAYMENT_APPROVED','ADMIN','synthetic-admin','PAYMENT','payment-synthetic','{}',?)").run(approvedAt);
+    sqlite.prepare(`INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,attempts,available_at,created_at,updated_at)
+      VALUES('payment-confirm-outbox','payment-confirmed:payment-synthetic:v1','WHATSAPP_PAYMENT_CONFIRMED','order-synthetic',?,'QUEUED',0,?,?,?)`)
+      .run(JSON.stringify({paymentId:"payment-synthetic",orderId:"order-synthetic",orderNumber:"SYNTHETIC-ORDER",amountPkr:250,locale:"ur"}),approvedAt,approvedAt,approvedAt);
+
+    const fetchMock=vi.fn<typeof fetch>(async()=>Response.json({messages:[{id:"wamid-synthetic-payment-confirmed"}]}));
+    vi.stubGlobal("fetch",fetchMock);
+    vi.useFakeTimers();
+    vi.setSystemTime(start+5*60_000);
+    const message={body:{kind:"WHATSAPP_PAYMENT_CONFIRMED",idempotencyKey:"payment-confirmed:payment-synthetic:v1",entityId:"order-synthetic",schemaVersion:1},ack:vi.fn(),retry:vi.fn()};
+    const env={DB:makeDb(),DEPLOYMENT_STATE:"READY",META_PROVIDER_ENABLED:"true",META_ACCESS_TOKEN:"synthetic-token",META_PHONE_NUMBER_ID:"synthetic-phone-id",META_GRAPH_VERSION:"v26.0"} as never;
+    await worker.queue({messages:[message]} as never,env);
+
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(message.retry).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const request=JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as {interactive:{body:{text:string};action:{buttons:Array<{reply:{title:string}}>}}};
+    expect(request.interactive.body.text).toContain("ادائیگی موصول ہو گئی");
+    expect(visibleWhatsAppText(request.interactive.body.text)).toContain("آپ کی 250 روپے کی پیشگی ادائیگی موصول ہو گئی ہے اور اس کی تصدیق کر دی گئی ہے۔");
+    expect(request.interactive.body.text).toContain("SYNTHETIC-ORDER");
+    expect(request.interactive.action.buttons.map((button)=>button.reply.title)).toEqual(["آرڈر دیکھیں"]);
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key='payment-confirmed:payment-synthetic:v1'").get()).toEqual({status:"SENT"});
+    expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='order-synthetic'").get()).toEqual({state:"PAID",payment_status:"PAID"});
   });
 
   it("arbitrates submitted receipt/TID against expiry and keeps only pre-deadline evidence in review", async () => {

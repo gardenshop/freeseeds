@@ -19,7 +19,7 @@ Owner decision2026-11-26: the30-minute timer is customer-confirmation policy onl
 | S0 | Isolation, fresh audit, original/revised mapping, identities, nine records | O01-O23 mapped. Numeric owner2/5 crosswalk unavailable; exact candidates/proposal documented. Meta account/analytics/templates verified; per-contact FEP evidence remains unknown. GitHub gardenshop author/private noreply identity and write permission verified. Full release-specific rollback remains unproven; S0 stays PARTIAL. |
 | S1 | Existing review/selection/recovery/Queue | **INTENT-030 local acceptance complete:** first exact-message delivered/read provider timestamp anchors fixed T0/+10/+25/+30; method switches preserve deadline; explicit COD and cancellation; timely receipt/TID/approval arbitration; stale-job suppression; no24/48h; no unconfirmed dispatch; no stock dependency. Suppress legacy schedules for new-version orders. |
 | S2 | Read-only A-G report and shared dispatch guard | Evidence-based non-overlap; conflicts/F protected; only finalized A/B eligible after other checks; C review, D one authorized sequence, E excluded. No retroactive bulk writes. Event-based rates with known denominators. |
-| S3 | Existing secure Admin reference/approval | Atomic approval and same-method concurrent TID guard corrections are implemented/tested locally in FIN-ATOMIC. Simple TID -> Confirm Payment UX, operator funds verification workflow and complete acceptance remain. Preserve existing provider/method uniqueness scope, leading zeros, receipts, audit and CSRF/HMAC/Access. |
+| S3 | Existing secure Admin reference/approval | **TID-001 local acceptance complete:** one TID→Confirm Payment action; operator verifies actual received funds and settlement evidence; exact amount, receipt, QR/method provenance, Access/CSRF/HMAC, atomic PAID transition, hashed audit, same-method uniqueness and cross-method warning/ack are tested. Leading zeros/text preserved; TID alone is not proof. |
 | S4 | Existing inbound/provider/window/outbox | **Partial local guard:** final free-only guard covers API/Admin automatic sends/retries and checks service window, mobile CTWA evidence, verified FEP expiry, message form/category, template approval, opt-out and matching free-pricing evidence; unknown fails closed. No duplicate FEP store/architecture or paid fallback. Per-contact evidence writer/reconciliation/metrics and live policy tests remain; no activation. |
 | S5 | Existing atomic D1 allocation pattern | Separate VPL/RGL prefix/month sequences1-9999; Karachi rollover; concurrency/collision/replay/exhaustion. Postal registration blocked; internal reference not advertised as official booking. |
 | S6 | Native private HTML renderer/R2 pipeline | Individual PDF/image, barcode/all fields, ownership/privacy; VPL principal+commission, RGL no amount; gross unchanged. Verified tariff/settlement design required. |
@@ -31,7 +31,7 @@ Prioritize S1-S4 after S0 closes. Postal blockers need not prevent a later prove
 
 ## Current local security/product gate progress (2026-11-26)
 
-Hono SEC-HONO-001 and Admin financial atomicity FIN-ATOMIC-001 remain locally tested and undeployed. INTENT-030's local S1 acceptance is complete: exact provider-time anchoring, immutable locale, delayed remaining-time prompts/buttons, independent internal expiry, review/COD/cancel/payment races, legacy reminder isolation and lock release all have synthetic coverage. The reusable free-only guard is local and fail-closed; no FEP persistence architecture or paid fallback was added. `0050` is unchanged; `0049/0050/0051` are only locally sequence-tested and unapplied remotely. Live per-contact FEP/pricing proof, S0-A06, S0-A10 and S4 evidence/metrics remain release gates. No physical stock work is needed. Preserve O01-O23, six dev-tool findings, and Pakistan Post restrictions. No production change is authorized. FIN-MO-002 remains required before S5/S6 postal settlement activation.
+Hono SEC-HONO-001 and Admin financial atomicity FIN-ATOMIC-001 remain locally tested and undeployed. INTENT-030 (S1) and TID-001 (S3) local acceptance are complete. TID approval preserves receipt/amount/method/credit evidence and produces a locale-pinned Payment Received outbox through the free-only guard. `packages/core/src/whatsapp-formatting.ts` applies LTR/RTL paragraph isolation and LTR token isolation while preserving paragraph order. `0050` is unchanged; `0049/0050/0051` are only locally sequence-tested and unapplied remotely. Live per-contact FEP/pricing proof, S0-A06, S0-A10 and S4 evidence/metrics remain release gates. No physical stock work is needed. Preserve O01-O23, six dev-tool findings and Pakistan Post restrictions. No production change is authorized. FIN-MO-002 remains required before S5/S6 postal settlement activation.
 
 ## Original owner register map
 
@@ -49,18 +49,18 @@ Each row maps its specified behaviors to contracts/test groups. Current classifi
 | 4 Thirty-minute choices/confirmation races/restart | MESSAGE_SEQUENCE; INT tests | VERIFIED local fixed timer/state arbitration; no stock-management scope |
 | 5 History A-G/recovery/rates | CURRENT_AUDIT reconciliation; HIST tests | PARTIAL candidates; final classes/rates blocked |
 | 6 FEP/referral/pricing/guard/metrics | FREE_WINDOW_POLICY; fresh WABA insight/template evidence; FEP tests | PARTIAL: local fail-closed guard/test complete; per-contact evidence source/reconciliation/metrics remain |
-| 7 TID/duplicates/approval/security/no CAPI | Admin2503-2601; PAY tests | PARTIAL existing secure reference/approval |
+| 7 TID/duplicates/approval/security/no CAPI | Admin TID approval; COD-ADMIN/TID tests; TID-001 report | VERIFIED local one-action guarded approval, same-provider duplicate rejection, cross-method warning/ack and no CAPI enablement |
 | 8 Tracking format/month/concurrency/postal proof | TRACKING_CONTRACT; ALLOC tests | MISSING allocator; registration BLOCKED |
 | 9 Gross/principal/commission/MO/history | AMOUNT_CONTRACT; AMT tests | PARTIAL gross preserved; split/settlement missing |
 | 10 Private native PDF/image/barcode | Admin97-135,2485-2501; LABEL tests | PARTIAL HTML exists; generated media missing |
 | 11 Postal access/status/history/dedupe | TRACKING_CONTRACT; POST tests | BLOCKED external method; sync missing |
-| 12 Eleven updates/templates/opt-out/expiry | MESSAGE_SEQUENCE/FREE_WINDOW_POLICY; MSG tests | MISSING automation; account approval blocked |
-| 13 Minimal Admin/time/review/TID/tracking/label/FEP/gross export | Existing Admin; ADM tests | PARTIAL existing auth/labels/tracking/review |
+| 12 Eleven updates/templates/opt-out/expiry | MESSAGE_SEQUENCE/FREE_WINDOW_POLICY; MSG tests | PARTIAL local direction-aware formatter/guard; approved template routing and live FEP evidence remain blocked |
+| 13 Minimal Admin/time/review/TID/tracking/label/FEP/Total Payable export | Existing Admin; ADM tests; TID-001 | VERIFIED local one-action TID approval; other Admin capabilities remain partial |
 | 14 Permanent docs/rules/README | Nine GFS_ORDER_001 records/entry points and INTENT-030 closeout | VERIFIED records and local INTENT acceptance; not production completion |
 | 15 Stages/S0 first/dependencies | Stage table/TASK_REGISTER | PARTIAL S0 with explicit A06/A10 holds; S1 local INTENT complete |
-| 16 Baseline/test/repair/protection/commit | TEST_MATRIX, SQLite/Hono reproductions and exact advisories | Hono4.13.16 correction/regressions passed locally; revised lifecycle acceptance remains NOT TESTED; production deployment not authorized |
+| 16 Baseline/test/repair/protection/commit | TEST_MATRIX, SQLite/Hono/TID tests and advisories | INTENT-030/TID-001 local suites pass; 923 Label Printer hashes match; production deployment not authorized |
 | 17 Pulses/identity/scoped push/rollback | rules/HANDOVER/current GitHub and rollout evidence | Verified author/account/write permission; no force push; full release rollback remains unproven |
-| 18 Final report/evidence/percentages/next | HANDOVER/TASK_REGISTER/INTENT-030 report | INTENT-030 local PASS, WhatsApp launch NO-GO |
+| 18 Final report/evidence/percentages/next | HANDOVER/TASK_REGISTER/INTENT-030 and TID-001 reports | TID-001 local PASS, WhatsApp launch NO-GO; FEP-001 next |
 
 ## Minimal source boundaries
 

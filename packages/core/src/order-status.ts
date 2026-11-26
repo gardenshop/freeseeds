@@ -64,14 +64,14 @@ export async function getLatestOrderForWaId(db: D1Database, trustedWaId: string,
 export function formatCustomerOrderStatus(order: CurrentOrderDetails, locale: "en" | "ur" = "en"): string {
   if (order.codQuotedTotalPkr != null && (order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "COD_PAID")) {
     return locale === "ur"
-      ? `آرڈر نمبر: ${order.orderNumber}\nادائیگی کا طریقہ: COD\nآرڈر کی حالت: COD ادا ہو گیا\nڈیلیوری پر کل واجب الادا: PKR ${order.codQuotedTotalPkr}`
-      : `Order Number: ${order.orderNumber}\nPayment Method: COD\nOrder Status: COD Paid\nTotal Due on Delivery: PKR ${order.codQuotedTotalPkr}`;
+      ? `آرڈر نمبر: ${order.orderNumber}\nادائیگی کا طریقہ: COD\nآرڈر کی حالت: COD ادا ہو گیا\nکل واجب الادا رقم: PKR ${order.codQuotedTotalPkr}`
+      : `Order Number: ${order.orderNumber}\nPayment Method: COD\nOrder Status: COD Paid\nTotal Payable: PKR ${order.codQuotedTotalPkr}`;
   }
   if (order.codQuotedTotalPkr != null && ["COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING"].includes(order.state)) {
     const status = order.state === "COD_PENDING" ? "COD Confirmed/Pending Dispatch" : order.state === "PACKING" ? "COD Confirmed/Packing" : order.state === "DISPATCHED" ? "COD Confirmed/Dispatched" : order.state === "DELIVERED" ? "COD Confirmed/Delivered" : "COD Confirmed/Collection Pending";
     return locale === "ur"
-      ? `آرڈر نمبر: ${order.orderNumber}\nادائیگی کا طریقہ: COD\nآرڈر کی حالت: ${order.state === "COD_PENDING" ? "COD کی تصدیق ہو گئی/روانگی زیر التوا" : status.replace("COD Confirmed/", "COD کی تصدیق/")}\nڈیلیوری پر کل واجب الادا: PKR ${order.codQuotedTotalPkr}`
-      : `Order Number: ${order.orderNumber}\nPayment Method: COD\nOrder Status: ${status}\nTotal Due on Delivery: PKR ${order.codQuotedTotalPkr}`;
+      ? `آرڈر نمبر: ${order.orderNumber}\nادائیگی کا طریقہ: COD\nآرڈر کی حالت: ${order.state === "COD_PENDING" ? "COD کی تصدیق ہو گئی/روانگی زیر التوا" : status.replace("COD Confirmed/", "COD کی تصدیق/")}\nکل واجب الادا رقم: PKR ${order.codQuotedTotalPkr}`
+      : `Order Number: ${order.orderNumber}\nPayment Method: COD\nOrder Status: ${status}\nTotal Payable: PKR ${order.codQuotedTotalPkr}`;
   }
   if (locale === "ur") {
     const payment = order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "APPROVED" ? "ادائیگی منظور ہو گئی ہے۔"
@@ -87,7 +87,7 @@ export function formatCustomerOrderStatus(order: CurrentOrderDetails, locale: "e
               : "شروع نہیں ہوا";
     const method = order.paymentMethod ? ` طریقہ: ${order.paymentMethod}۔` : "";
     const stateLabels: Record<string, string> = { DETAILS_COMPLETED: "تفصیلات مکمل", PAYMENT_PENDING: "ادائیگی زیر التوا", PAYMENT_REVIEW: "رسید کا جائزہ جاری", PAYMENT_REJECTED: "رسید مسترد", PAID: "ادائیگی منظور", PACKING: "پیکنگ جاری", DISPATCHED: "روانہ کر دیا گیا", DELIVERED: "ڈیلیور ہو گیا", CANCELLED: "منسوخ" };
-    return `آرڈر ${order.orderNumber}\nآرڈر کی حالت: ${stateLabels[order.state] ?? "آرڈر پر کارروائی جاری"}\n${payment}${method}\nرقم: PKR ${order.totalPayablePkr}\nتکمیل: ${fulfillment}۔`;
+    return `آرڈر ${order.orderNumber}\nآرڈر کی حالت: ${stateLabels[order.state] ?? "آرڈر پر کارروائی جاری"}\n${payment}${method}\nکل واجب الادا رقم: PKR ${order.totalPayablePkr}\nتکمیل: ${fulfillment}۔`;
   }
   let payment = "Payment has not been configured.";
   if (order.state === "PAID" || order.paymentStatus === "PAID" || order.paymentReviewState === "APPROVED") payment = "Payment approved.";
@@ -102,5 +102,5 @@ export function formatCustomerOrderStatus(order: CurrentOrderDetails, locale: "e
           : order.state === "PAID" ? "Paid; packing has not started"
             : "Not started";
   const method = order.paymentMethod ? ` Method: ${order.paymentMethod}.` : "";
-  return `Order ${order.orderNumber}\nOrder status: ${order.state}\n${payment}${method}\nAmount: PKR ${order.totalPayablePkr}\nFulfillment: ${fulfillment}.`;
+  return `Order ${order.orderNumber}\nOrder status: ${order.state}\n${payment}${method}\nTotal Payable: PKR ${order.totalPayablePkr}\nFulfillment: ${fulfillment}.`;
 }

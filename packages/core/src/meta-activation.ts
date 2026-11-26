@@ -1,3 +1,5 @@
+import { formatWhatsAppText } from "./whatsapp-formatting";
+
 export type MetaActivationConfig = {
   accessToken?: string;
   graphVersion?: string;
@@ -209,7 +211,7 @@ export function createMetaActivationService(config: MetaActivationConfig) {
          if (input.locale !== "en" && input.locale !== "ur") return { action, executed: false, reason: "CUSTOMER_LOCALE_UNKNOWN", status: await service.status() };
          path = `${encodeURIComponent(config.phoneNumberId)}/messages`;
          const message = input.locale === "ur" ? "یہ گارڈن شاپ کا واٹس ایپ آزمائشی پیغام ہے۔" : "This is a Garden Shop WhatsApp test message.";
-         body = { messaging_product: "whatsapp", recipient_type: "individual", to: META_SEND_TEST_RECIPIENT, type: "text", text: { preview_url: false, body: message } };
+         body = { messaging_product: "whatsapp", recipient_type: "individual", to: META_SEND_TEST_RECIPIENT, type: "text", text: { preview_url: false, body: formatWhatsAppText(message, input.locale) } };
        } else if (action === "flow-key") {
          if (!config.phoneNumberId || !config.flowPublicKey) return { action, executed: false, reason: "META_FLOW_PUBLIC_KEY_REQUIRED", status: await service.status() };
          path = `${encodeURIComponent(config.phoneNumberId)}/whatsapp_business_encryption`;

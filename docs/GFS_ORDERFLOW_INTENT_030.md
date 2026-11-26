@@ -17,7 +17,7 @@
 - T+10 and T+25 are queued once. Remaining time is computed at delivery time, including seconds, and buttons use the persisted locale. T+10 is suppressed once T+25 is due; either reminder is suppressed at/after its stale boundary or when order/evidence is resolved.
 - T+30 internal expiry is committed independently before notification delivery. It applies only to a still-unresolved unpaid order with no submitted receipt/TID/review, payment approval, COD confirmation or cancellation. A suppressed T+30 message does not block expiry or retain the matching cooldown lock.
 - Receipt/TID submission under review and approval arbitrate with expiry using conditional D1 state predicates. COD creation competes atomically with expiry/cancellation. A TID is evidence for review, never payment approval. A late TID cannot reopen an expired order or automatically dispatch it; preserve existing Admin verification for reconciliation.
-- COD confirmation states the exact gross total payable to the delivery rider or Pakistan Post postman. No advance payment is required after explicit COD confirmation.
+- COD confirmation states the exact **Total Payable** to the delivery rider or Pakistan Post postman. No advance payment is required after explicit COD confirmation.
 - New-version intents suppress both legacy recovery and V2 reminder schedules. Historical orders without an intent are unchanged.
 
 ## Customer Copy
@@ -38,9 +38,9 @@
 
 **T+30 Urdu:** “آپ کی درخواست کی میعاد ختم ہو گئی ہے۔ اس درخواست کے تحت کوئی پارسل روانہ نہیں کیا جائے گا۔ آپ نیا آرڈر دے سکتے ہیں۔”
 
-**Confirmed COD English:** “Your COD order [ORDER] is confirmed. Please pay the full gross total of PKR [GROSS_TOTAL] to the delivery rider or Pakistan Post postman when you receive your parcel. No advance payment is required. Your tracking details will be shared once available.”
+**Confirmed COD English:** “Your COD order [ORDER] is confirmed. Total Payable: Rs. [AMOUNT]. Please pay this exact amount to the delivery rider or Pakistan Post postman when you receive your parcel. No advance payment is required. Your tracking details will be shared once available.”
 
-**Confirmed COD Urdu:** “آپ کے COD آرڈر [ORDER] کی تصدیق ہو گئی ہے۔ پارسل وصول کرتے وقت ڈیلیوری رائیڈر یا پاکستان پوسٹ کے ڈاکیے کو مکمل مجموعی رقم PKR [GROSS_TOTAL] ادا کریں۔ پیشگی ادائیگی کی ضرورت نہیں۔ ٹریکنگ کی تفصیلات دستیاب ہونے پر بھیج دی جائیں گی۔”
+**Confirmed COD Urdu:** “آپ کے COD آرڈر [ORDER] کی تصدیق ہو گئی ہے۔ کل واجب الادا رقم: Rs. [AMOUNT]۔ پارسل وصول کرتے وقت ڈیلیوری رائیڈر یا پاکستان پوسٹ کے ڈاکیے کو یہی مکمل رقم ادا کریں۔ پیشگی ادائیگی کی ضرورت نہیں۔ ٹریکنگ کی تفصیلات دستیاب ہونے پر بھیج دی جائیں گی۔”
 
 Buttons use the same snapshot: `پیشگی ادائیگی` / `Advance Payment`, `کیش آن ڈیلیوری` / `Cash on Delivery`, `آرڈر منسوخ کریں` / `Cancel Order`, and `نیا آرڈر دیں` / `Place a new order`.
 

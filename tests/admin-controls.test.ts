@@ -177,9 +177,9 @@ describe("GFS-109 admin controls", () => {
   it("keeps the professional startup script parseable with all queues and auto-selection", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/orders?tab=confirmed&page=3&q=synthetic", { headers: auth }), env(new AdminMemoryDb()));
     const html = await response.text();
-    const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
-    expect(script).toBeDefined();
-    expect(() => new Script(script!)).not.toThrow();
+    const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
+    expect(scripts.length).toBeGreaterThan(0);
+    for (const script of scripts) expect(() => new Script(script!)).not.toThrow();
     for (const tab of ["all", "verify", "confirmed", "fulfillment"]) expect(html).toContain(`data-tab="${tab}"`);
     expect(html).toContain("setTabs(data.counts)");
     expect(html).toContain("selectedId=list[0].id");

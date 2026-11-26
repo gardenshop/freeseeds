@@ -31,9 +31,9 @@ English T+30: "Your request has expired. No parcel will be dispatched against th
 
 Urdu T+30: "آپ کی درخواست کی میعاد ختم ہو گئی ہے۔ اس درخواست کے تحت کوئی پارسل روانہ نہیں کیا جائے گا۔ آپ نیا آرڈر دے سکتے ہیں۔"
 
-Exact English COD confirmation after explicit confirmation: "Your COD order [ORDER] is confirmed. Please pay the full gross total of PKR [GROSS_TOTAL] to the delivery rider or Pakistan Post postman when you receive your parcel. No advance payment is required. Your tracking details will be shared once available."
+Exact English COD confirmation after explicit confirmation: "Your COD order [ORDER] is confirmed. Total Payable: Rs. [AMOUNT]. Please pay this exact amount to the delivery rider or Pakistan Post postman when you receive your parcel. No advance payment is required. Your tracking details will be shared once available."
 
-Urdu COD confirmation: "آپ کے COD آرڈر [ORDER] کی تصدیق ہو گئی ہے۔ پارسل وصول کرتے وقت ڈیلیوری رائیڈر یا پاکستان پوسٹ کے ڈاکیے کو مکمل مجموعی رقم PKR [GROSS_TOTAL] ادا کریں۔ پیشگی ادائیگی کی ضرورت نہیں۔ ٹریکنگ کی تفصیلات دستیاب ہونے پر بھیج دی جائیں گی۔"
+Urdu COD confirmation: "آپ کے COD آرڈر [ORDER] کی تصدیق ہو گئی ہے۔ کل واجب الادا رقم: Rs. [AMOUNT]۔ پارسل وصول کرتے وقت ڈیلیوری رائیڈر یا پاکستان پوسٹ کے ڈاکیے کو یہی مکمل رقم ادا کریں۔ پیشگی ادائیگی کی ضرورت نہیں۔ ٹریکنگ کی تفصیلات دستیاب ہونے پر بھیج دی جائیں گی۔"
 
 COD review example: free seeds0 + fertilizer250 + delivery250 + collection125 = gross625. No postal commission in ordinary text. Never instruct payment against an expired order.
 
@@ -43,8 +43,12 @@ Shipment utility IDs below remain draft specification IDs, **not existing approv
 
 | ID | English body specification | Urdu body specification | Parameters/media |
 |---|---|---|---|
-| U01 | Your COD order[ORDER] is confirmed. Pay Rs.[GROSS] on receipt. No advance payment is required. Tracking will follow once available. | آرڈر[ORDER] کی تصدیق ہو گئی ہے۔ پارسل وصول کرتے وقت[GROSS] روپے ادا کریں۔ پیشگی ادائیگی ضروری نہیں۔ ٹریکنگ دستیاب ہونے پر بھیجی جائے گی۔ | order/gross; runtime confirmation must use exact owner wording above |
-| U02 | Payment received for order[ORDER]. Your verified payment is Rs.[AMOUNT]. | آرڈر[ORDER] کی[AMOUNT] روپے ادائیگی وصول اور تصدیق ہو گئی ہے۔ | verified payment only, not receipt upload |
+| U01 | Your COD order[ORDER] is confirmed. Total Payable: Rs.[AMOUNT]. Pay this exact amount on receipt. No advance payment is required. Tracking will follow once available. | آرڈر[ORDER] کی تصدیق ہو گئی ہے۔ کل واجب الادا رقم Rs.[AMOUNT] ہے۔ پارسل وصول کرتے وقت یہی رقم ادا کریں۔ پیشگی ادائیگی ضروری نہیں۔ ٹریکنگ دستیاب ہونے پر بھیجی جائے گی۔ | order/Total Payable; runtime confirmation must use exact owner wording above |
+| U02 | Payment Received. Your advance payment of Rs. [AMOUNT] has been received and verified. Order Number: [ORDER]. Your order is confirmed. Your tracking details will be shared once available. | ادائیگی موصول ہو گئی۔ آپ کی [AMOUNT] روپے کی پیشگی ادائیگی موصول ہو گئی ہے اور اس کی تصدیق کر دی گئی ہے۔ آرڈر نمبر: [ORDER]۔ آپ کے آرڈر کی تصدیق ہو گئی ہے۔ ٹریکنگ کی تفصیلات دستیاب ہوتے ہی آپ کو بھیج دی جائیں گی۔ | verified payment only, not receipt upload; exact paragraph copy is in `payment-confirmation.ts` |
+
+## TID-001 directional formatting
+
+`formatWhatsAppText` uses Unicode LRM/LRI/PDI to keep English paragraphs LTR/left-aligned and RLM/RLI/PDI to keep Urdu paragraphs RTL/right-aligned. Urdu paragraphs preserve their logical order and isolate LTR amounts, order/TID/tracking IDs, phone numbers and URLs. Original blank lines/headings remain; no paragraph reversal or HTML/CSS is allowed. Payment Received is queued with the locale snapshot and dispatched only through the final free-only guard. Live WhatsApp-client visual rendering is still a release gate.
 | U03 | The shipping label for order[ORDER] is prepared. This is not confirmation of postal booking or dispatch. | آرڈر[ORDER] کا شپنگ لیبل تیار ہے۔ یہ پوسٹل بکنگ یا روانگی کی تصدیق نہیں ہے۔ | own private image/document; verify approved media header |
 | U04 | Order[ORDER] is[VERIFIED_BOOKED_OR_DISPATCHED]. Track:[URL]. | آرڈر[ORDER] کی[VERIFIED_BOOKED_OR_DISPATCHED] تصدیق ہو گئی ہے۔ ٹریکنگ:[URL]۔ | actual verified event and registered official URL |
 | U05 | Order[ORDER] has a new verified in-transit update:[EVENT]. Track:[URL]. | آرڈر[ORDER] کے سفر کی نئی تصدیق شدہ اطلاع:[EVENT]۔ ٹریکنگ:[URL]۔ | fresh significant event only |

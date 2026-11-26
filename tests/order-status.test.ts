@@ -59,7 +59,7 @@ describe("Check Order details", () => {
     expect(message).toContain("Order Number: FS-261012-999001");
     expect(message).toContain("Payment Method: COD");
     expect(message).toContain("Order Status: COD Confirmed/Pending Dispatch");
-    expect(message).toContain("Total Due on Delivery: PKR 375");
+    expect(message).toContain("Total Payable: PKR 375");
     expect(message).not.toContain("courier");
     expect(message).not.toContain("remittance");
   });

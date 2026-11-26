@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import admin from "../apps/admin/src/index";
-import { createMetaActivationService, META_SEND_TEST_RECIPIENT } from "@gfs/core";
+import { createMetaActivationService, formatWhatsAppText, META_SEND_TEST_RECIPIENT } from "@gfs/core";
 
 const accessHeaders = { "cf-access-authenticated-user-email": "admin@example.test" };
 
@@ -130,7 +130,7 @@ describe("Meta activation safety boundary", () => {
       recipient_type: "individual",
       to: META_SEND_TEST_RECIPIENT,
       type: "text",
-      text: { preview_url: false, body: "This is a Garden Shop WhatsApp test message." }
+      text: { preview_url: false, body: formatWhatsAppText("This is a Garden Shop WhatsApp test message.", "en") }
     });
     expect(JSON.stringify(result)).not.toContain(token);
   });

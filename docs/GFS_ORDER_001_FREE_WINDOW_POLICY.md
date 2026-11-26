@@ -46,7 +46,7 @@ The current account gives an aggregate historical free-delivery baseline above, 
 
 ## Central decision contract
 
-One shared final guard covers API/Admin automatic reply, reminder, payment instruction and media sends/retries. Local entry point: `evaluateFreeWhatsAppOutbound` plus `evaluateStoredFreeWhatsAppOutbound` in `packages/core/src/free-messaging.ts`; each attempt re-reads evidence and current customer state. No separate FEP persistence architecture is added: future FEP-001 must provide a verified evidence snapshot through the existing conversation context. Templates outside CSW can pass the pure guard only with exact approved locale/category/id and free-pricing evidence, but no paid/template fallback sender exists in this workflow.
+One shared final guard covers API/Admin automatic reply, payment instruction/media, recovery/V2 reminder and post-approval Payment Received sends/retries. Local entry point: `evaluateFreeWhatsAppOutbound` plus `evaluateStoredFreeWhatsAppOutbound` in `packages/core/src/free-messaging.ts`; each attempt re-reads evidence and current customer state. No separate FEP persistence architecture is added: future FEP-001 must provide a verified evidence snapshot through the existing conversation context. Templates outside CSW can pass the pure guard only with exact approved locale/category/id and free-pricing evidence, but no paid/template fallback sender exists in this workflow.
 
 | Condition | Decision |
 |---|---|
