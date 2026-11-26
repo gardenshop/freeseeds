@@ -1,6 +1,6 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Free Window Policy
 
-Status: official general policy and current WABA pricing insights VERIFIED2026-11-25; actual per-contact duration/referral evidence UNKNOWN; centralized implementation MISSING. No send, template submission, billing or campaign change occurred.
+Status: official general policy/current WABA aggregate evidence were read-only verified2026-11-25; actual per-contact referral, FEP expiry and free-pricing evidence remain UNKNOWN. A reusable local fail-closed guard now exists in `packages/core/src/free-messaging.ts` and is applied to API/Admin automatic sends/retries. It has synthetic tests only; no external evidence writer or live messaging test was added. No send, template submission, billing or campaign change occurred.
 
 ## Official evidence
 
@@ -38,15 +38,15 @@ Freshest selected WABA Message Pricing period, **Last7 days Nov19-Nov25,2026**, 
 
 Exactly two templates appear in the WABA template list: `gfs_payment_reminder_15m` (English Utility) and `gfs_payment_reminder_30m` (Urdu Utility), both **Active - Quality pending**,0 sent/0 opened in the displayed template-insight period, edited Oct28,2026. The Urdu body says amount pending and asks the customer to send a receipt if paid; the English body also offers an enabled advance method. Neither shows COD-confirm, cancellation, label media, shipment tracking or event content. No other template appears in this WABA list. Active status is recorded verbatim; quality-pending templates are not release-cleared for new message routing.
 
-Official pricing states FEP may last **up to7 days**, not that this WABA/customer necessarily receives168h. The current Manager insights do not expose a verified account-specific per-contact expiry nor historical qualifying mobile-origin/referral/first-response evidence. No normal authenticity challenge was present on this refreshed read, but no controlled live test is authorized. Account-level identity and historical billing insights are VERIFIED; per-contact duration/eligibility remains UNKNOWN and blocks automated free-only routing.
+Official pricing states FEP may last **up to7 days**, not that this WABA/customer necessarily receives168h. The recorded Manager insights do not expose verified account-specific per-contact expiry nor historical qualifying mobile-origin/referral/first-response evidence. No normal authenticity challenge was present on that 2026-11-25 read; no new browser identity was asserted and no controlled live test is authorized. Account-level identity and historical billing insights are historical read-only evidence; per-contact duration/eligibility remains UNKNOWN and the guard suppresses sends when it is absent.
 
-`packages/core/src/provider.ts` parses referral/ctwa_clid; `flow.ts` can retain attribution, but a guided API creation path omits it. `webhook.ts` persists message status/hash rather than structured FEP/pricing evidence. `service-window.ts` supplies only a24-hour check. Fresh schema has no authoritative account duration or per-contact FEP expiry. Existing delivered/read messages cannot be relabelled free from status alone.
+`packages/core/src/provider.ts` parses referral/ctwa_clid; `flow.ts` can retain attribution. `webhook.ts` persists delivery status/time/hash, not authoritative FEP or price eligibility. The new guard reads only an explicit `freeMessagingEvidence` snapshot already attached to the existing conversation state; no new FEP table/service is introduced and no production writer currently populates that snapshot. It requires mobile CTWA/referral hash, response time, independently verified expiry evidence, fresh matching free-pricing proof, service-window rules, locale, opt-out, and approved matching template data. It never derives expiry from a seven-day maximum and treats DELIVERED/READ alone as no billing proof.
 
 The current account gives an aggregate historical free-delivery baseline above, not implementation metrics. Per-contact FEP eligible/active/expired, referral-verified, first-response-verified, suppression, free/billable status per event/retry and unknown-FEP counts are **UNKNOWN / NOT INSTRUMENTED**, not zero. Existing ordinary delivery failures are separate in CURRENT_AUDIT.
 
 ## Central decision contract
 
-One shared final guard must cover automatic order replies/reminders/confirmations, payment instructions, labels/media and shipment updates, including every retry. Inputs: trusted inbound/referral and qualifying response evidence, account-specific verified duration/expiry, last inbound/CSW expiry, consent/opt-out/block state, actual message type/category/template status, asynchronous margin and job freshness. Use authoritative event times, not generic conversation updated_at or processing time. Field names/schema remain proposed.
+One shared final guard covers API/Admin automatic reply, reminder, payment instruction and media sends/retries. Local entry point: `evaluateFreeWhatsAppOutbound` plus `evaluateStoredFreeWhatsAppOutbound` in `packages/core/src/free-messaging.ts`; each attempt re-reads evidence and current customer state. No separate FEP persistence architecture is added: future FEP-001 must provide a verified evidence snapshot through the existing conversation context. Templates outside CSW can pass the pure guard only with exact approved locale/category/id and free-pricing evidence, but no paid/template fallback sender exists in this workflow.
 
 | Condition | Decision |
 |---|---|
@@ -60,7 +60,7 @@ One shared final guard must cover automatic order replies/reminders/confirmation
 
 Never hardcode168 hours from the maximum. Shorter verified account policy wins. Ordinary inbound/replies may reset CSW, not FEP. Preserve window history when a genuine new qualifying entry occurs; do not overwrite evidence or double-count pricing. Unknown device/platform eligibility remains unknown, not assumed mobile.
 
-Guard result: reason, basis, evaluated-at, effective expiry, permitted form/category/template and evidence reference. No unguarded automatic `sendTemplate` escape hatch. Reuse existing outbox/status infrastructure, not a new messaging service. Recheck eligibility before each separately sent text/QR/media part and retry.
+Guard result: suppression reason or verified-free basis/evidence reference/effective expiry and customer locale. The local caller logs only reason and message kind, not CTWA IDs, pricing proof or recipient details. No unguarded automatic `sendTemplate` escape hatch. Reuse existing outbox/status infrastructure, not a new messaging service. Recheck before every separately sent text/QR/media part and retry. Internal order expiry runs independently before outbound notification; a suppressed T+30 notification does not retain the cooldown lock or revive an expired request.
 
 ## Persistence and metrics
 

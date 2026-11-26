@@ -835,7 +835,22 @@ beforeEach(() => {
   db = { prepare: statement, batch: async (statements: Array<{ sql: string; run: () => Promise<unknown> }>) => {
     await beforeBatch?.(statements.map((item) => item.sql));
     sqlite.exec("BEGIN");
-    try { const results = []; for (const item of statements) results.push(await item.run()); sqlite.exec("COMMIT"); return results; }
+    try {
+      const results = []; for (const item of statements) results.push(await item.run()); sqlite.exec("COMMIT");
+      const checkedAt = Date.now();
+      const syntheticFreeEvidence = {
+        fep: { sourceType: "CTWA_AD", platform: "ANDROID", clickIdHash: "d".repeat(64), referralAt: new Date(checkedAt - 2 * 60_000).toISOString(), firstBusinessResponseAt: new Date(checkedAt - 60_000).toISOString(), expiryVerified: true, verifiedAt: new Date(checkedAt - 30_000).toISOString(), verifiedExpiresAt: new Date(checkedAt + 6 * 24 * 60 * 60_000).toISOString(), expiryEvidenceRef: "synthetic-meta-expiry-evidence" },
+        pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", subtype: "free_entry_point", category: "SERVICE", form: "FREEFORM", evidenceRef: "synthetic-meta-pricing-evidence", observedAt: new Date(checkedAt - 30_000).toISOString(), verifiedAt: new Date(checkedAt - 30_000).toISOString(), validUntil: new Date(checkedAt + 60 * 60_000).toISOString() }
+      };
+      for (const row of sqlite.prepare("SELECT id,state_data FROM whatsapp_conversations").all() as Array<{ id: string; state_data: string | null }>) {
+        try {
+          const state = JSON.parse(row.state_data ?? "{}") as Record<string, unknown>;
+          state.freeMessagingEvidence ??= syntheticFreeEvidence;
+          sqlite.prepare("UPDATE whatsapp_conversations SET state_data=? WHERE id=?").run(JSON.stringify(state), row.id);
+        } catch { /* Malformed fixture state remains fail-closed. */ }
+      }
+      return results;
+    }
     catch (error) { sqlite.exec("ROLLBACK"); throw error; }
   } } as unknown as D1Database;
   sequence = 0;

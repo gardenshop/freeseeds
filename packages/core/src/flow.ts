@@ -55,15 +55,16 @@ export function isAllowedInstantFormLead(input: { page_id?: unknown; form_id?: u
 }
 
 type Attribution = { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string };
-type PersistOptions = { source: LeadSource; attribution?: Attribution; providerLeadId?: string; formId?: string; pageId?: string; createdTime?: string; idempotencyKey?: string };
+export type OrderIntentPersistence = { intentId: string; conversationId: string; version: string; locale: "en" | "ur"; codFeePkr?: number; codTotalPkr?: number; codPolicyRevision?: string | null; collectionPolicyHash?: string | null; remittancePolicyHash?: string | null };
+type PersistOptions = { source: LeadSource; attribution?: Attribution; providerLeadId?: string; formId?: string; pageId?: string; createdTime?: string; idempotencyKey?: string; orderIntent?: OrderIntentPersistence };
 export type PersistLeadResult = { customerId: string; leadId: string; orderId: string; orderNumber: string; duplicate: boolean; quote?: OrderQuote };
 
 export class OrderCooldownError extends Error {
   constructor(readonly orderNumber: string, readonly nextEligibleAt: string) { super("ORDER_COOLDOWN_ACTIVE"); }
 }
 
-export async function persistFlowSubmission(db: D1Database, submission: FlowSubmission, attribution?: Attribution, idempotencyKey?: string, trustedWaId?: string): Promise<PersistLeadResult> {
-  return persistLeadSubmission(db, submission, { source: "WHATSAPP", attribution, idempotencyKey }, trustedWaId);
+export async function persistFlowSubmission(db: D1Database, submission: FlowSubmission, attribution?: Attribution, idempotencyKey?: string, trustedWaId?: string, orderIntent?: OrderIntentPersistence): Promise<PersistLeadResult> {
+  return persistLeadSubmission(db, submission, { source: "WHATSAPP", attribution, idempotencyKey, orderIntent }, trustedWaId);
 }
 
 export async function persistInstantFormSubmission(db: D1Database, submission: InstantFormSubmission): Promise<PersistLeadResult> {
@@ -79,6 +80,7 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
   const quote = hasDynamicOrder ? await quoteOrder(db, { productCode: submission.productCode as string, province: submission.province as string, fertilizerSelected: submission.fertilizerSelected ?? false }) : undefined;
   const paymentConfiguration = quote ? undefined : await db.prepare("SELECT advance_amount_pkr FROM payment_configuration WHERE id=1").first<{ advance_amount_pkr?: number | null }>();
   const paymentAmount = quote ? quote.totalPayablePkr : paymentConfiguration?.advance_amount_pkr == null ? 0 : requirePaymentAmount(paymentConfiguration.advance_amount_pkr);
+  if (options.orderIntent?.codFeePkr !== undefined && (!Number.isSafeInteger(options.orderIntent.codFeePkr) || options.orderIntent.codFeePkr < 0 || (options.orderIntent.codTotalPkr !== undefined && options.orderIntent.codTotalPkr !== paymentAmount + options.orderIntent.codFeePkr))) throw new Error("ORDER_INTENT_COD_QUOTE_MISMATCH");
   const productItem = quote?.items.find((item) => item.type === "PRODUCT");
   const fertilizerItem = quote?.items.find((item) => item.type === "FERTILIZER");
   const productRow = quote ? await db.prepare("SELECT id FROM products WHERE code=?").bind(quote.productCode).first<{ id: string }>() : undefined;
@@ -119,7 +121,9 @@ async function persistLeadSubmission(db: D1Database, submission: FlowSubmission,
     const leadEventId = leadEvent.eventId;
     return [
     db.prepare("INSERT INTO customers (id,wa_id,bsuid,bsuid_business_id,whatsapp_username,full_name,delivery_address,nearby_place,city,contact_number,normalized_phone,normalized_address_hash,created_at,updated_at,normalized_contact_number,whatsapp_number,normalized_whatsapp_number) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(customerId, snapshotWaId ?? null, submission.bsuid ?? null, submission.bsuidBusinessId ?? null, submission.whatsappUsername ?? null, submission.fullName, submission.deliveryAddress, submission.nearbyPlace, submission.city, storedContactNumber, normalizeContactNumber(storedContactNumber), addressHash, now, now, normalizeContactNumber(storedContactNumber), whatsappNumber ?? null, whatsappNumber ? normalizeContactNumber(whatsappNumber) : null),
-    db.prepare("INSERT INTO orders (id,order_number,internal_sequence,internal_sequence_date,customer_id,offer_code,pack_quantity,seed_price,delivery_fee,fertilizer_fee,total_payable,province,fertilizer_selected,state,payment_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(orderId, orderNumber, identity.internalSequence, identity.internalSequenceDate, customerId, quote?.productCode ?? "GET_FREE_SEEDS_5_PACKS", quote ? 1 : 5, productItem?.lineTotalPkr ?? 0, quote?.deliveryFeePkr ?? paymentAmount, fertilizerItem?.lineTotalPkr ?? 0, paymentAmount, quote?.province ?? null, quote?.fertilizerSelected ? 1 : 0, "DETAILS_COMPLETED", "PENDING", now, now),
+     db.prepare("INSERT INTO orders (id,order_number,internal_sequence,internal_sequence_date,customer_id,offer_code,pack_quantity,seed_price,delivery_fee,fertilizer_fee,total_payable,province,fertilizer_selected,state,payment_status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(orderId, orderNumber, identity.internalSequence, identity.internalSequenceDate, customerId, quote?.productCode ?? "GET_FREE_SEEDS_5_PACKS", quote ? 1 : 5, productItem?.lineTotalPkr ?? 0, quote?.deliveryFeePkr ?? paymentAmount, fertilizerItem?.lineTotalPkr ?? 0, paymentAmount, quote?.province ?? null, quote?.fertilizerSelected ? 1 : 0, "DETAILS_COMPLETED", "PENDING", now, now),
+      ...(options.orderIntent ? [db.prepare("INSERT INTO order_confirmation_intents(intent_id,workflow_version,order_id,conversation_id,state,advance_total_pkr,cod_enabled,cod_fee_pkr,cod_total_pkr,cod_policy_revision,collection_policy_hash,remittance_policy_hash,created_at,updated_at) VALUES(?,?,?,?,'PRESENTATION_PENDING',?,?,?,?,?,?,?,?,?)").bind(options.orderIntent.intentId, options.orderIntent.version, orderId, options.orderIntent.conversationId, paymentAmount, options.orderIntent.codFeePkr === undefined ? 0 : 1, options.orderIntent.codFeePkr ?? null, options.orderIntent.codFeePkr === undefined ? null : paymentAmount + options.orderIntent.codFeePkr, options.orderIntent.codPolicyRevision ?? null, options.orderIntent.collectionPolicyHash ?? null, options.orderIntent.remittancePolicyHash ?? null, now, now)] : []),
+      ...(options.orderIntent ? [db.prepare("INSERT INTO order_confirmation_intent_preferences(intent_id,locale,created_at) VALUES(?,?,?)").bind(options.orderIntent.intentId, options.orderIntent.locale, now)] : []),
     ...(quote ? quote.items.map((item) => db.prepare("INSERT INTO order_items (id,order_id,product_id,item_type,product_code,description,quantity,unit_price_pkr,line_total_pkr,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), orderId, item.type === "PRODUCT" ? productRow?.id ?? null : null, item.type, item.code, item.name, item.quantity, item.unitPricePkr, item.lineTotalPkr, now)) : []),
     db.prepare("INSERT INTO payments (id,order_id,expected_amount,review_state,created_at,updated_at) VALUES (?,?,?,?,?,?)").bind(paymentId, orderId, paymentAmount, "PENDING", now, now),
     db.prepare("INSERT INTO leads (id,customer_id,order_id,status,capi_event_id,created_at) VALUES (?,?,?,?,?,?)").bind(leadId, customerId, orderId, "CREATED", leadEventId, now),

@@ -1,5 +1,9 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Current Audit
 
+## Local INTENT-030 follow-up (2026-11-26)
+
+This section adds local source/test evidence after the 2026-11-25 read-only audit; it does not refresh external identity, routing, Meta, D1, customer or payment state. INTENT-030 local acceptance covers exact-message provider-time T0, immutable locale, dynamic T+10/T+25 countdown/buttons, conditional T+30 internal expiry, receipt/TID/approval/COD/cancel races, legacy schedule isolation, duplicate/retry suppression, and matching cooldown-lock release. The reusable free-only guard is integrated across API/Admin automatic sends/retries; unknown service-window, mobile-CTWA, account-verified FEP-expiry, pricing, template, locale or opt-out state fails closed. Synthetic SQLite/fake-clock tests validate these rules. Full Vitest436 passed/1 skipped; documented Node suites52/52; build/TypeScript/lint pass; production dependency audit0. Migrations0049/0050/0051 were tested in order only in local SQLite; no remote apply. Physical stock management is not required; locks are cooldowns, not stock reservations. S0-A06 live evidence and A10 rollback readiness remain release gates. No live message, payment/order write, migration, deployment or external mutation occurred. New-number WhatsApp and Hoja Seeds boundaries remain unchanged.
+
 Master reference: **GFS ORDERFLOW**, covering this REV.2 work, S0-S9, historical decisions and future subtasks. Audit refreshed2026-11-25. S0 PARTIAL. No runtime/schema/Meta/Cloudflare/production mutation, customer message, real payment test, push or deployment. VERIFIED means observed in authorized UI/aggregate or executed synthetic test; PARTIAL means only a subset/evidence is established; MISSING means absent in inspected source/schema; BLOCKED means a required external condition is unavailable; NOT TESTED means behavior not executed. Inspection is not a behavior PASS.
 
 ## Identity and provenance
@@ -7,7 +11,7 @@ Master reference: **GFS ORDERFLOW**, covering this REV.2 work, S0-S9, historical
 | Item | Fresh evidence | Disposition |
 |---|---|---|
 | Approved checkout | `D:\free seeds\gfs-order-001-rev2`; owner approved this existing checkout during session | VERIFIED |
-| Branch / HEAD | `codex/gfs-order-001-rev2`; `0b2c3b4d1871f4c7501fd2829b3e573720b75bcf` | VERIFIED |
+| Branch / starting HEAD for INTENT-030 closeout | `codex/gfs-order-001-rev2`; `dda2ddec93c22189d89cefa29f133e30a9c467d6` | VERIFIED at task start; working tree preserved |
 | Origin | `https://github.com/gardenshop/freeseeds.git` | VERIFIED |
 | Remote heads | isolated MO branch `ad956563f2187e6a5c830fbd3a64691192681802`; PR11 branch `5e4aa7530910368465942828bcd495fd0fbf3aab`; lifecycle branch absent | Read-only public ref query |
 | Lineage | Isolated MO source, not proven identical to complete PR11/current live API | PARTIAL; do not broadly merge/deploy |
@@ -151,17 +155,17 @@ The owner's numeric labels cannot be cross-referenced to Free Seeds source, sche
 
 API manifest `apps/api/wrangler.jsonc:9-17`: minuteCron, recovery flagtrue, V2flagsfalse, utility-template-approvedfalse, CAPIfalse. Activation boundary absent in manifest. D1 stage rows are historical outcomes, not current live flags or pricing. Meta shows only two active Utility reminder templates, both Quality pending; no COD confirmation, label or shipment-event template exists in that WABA list.
 
-**Proposed S1 replacement:** after separate authorization, one versioned workflow supersedes both legacy decision-reminder purposes for newly opted-in orders: T0 successful actionable presentation, +10, +25, guarded +30 expiry; no24/48h reminder or automatic COD conversion. Preserve historic stage rows. Prior to activation, obtain suitable approved English/Urdu utility templates for outside-CSW messages and final-send/retry/opt-out guards. Do not reinterpret the15m/30m template names or map owner numeric labels without the original owner screen/text.
+**Local INTENT-030 replacement:** one versioned workflow supersedes both legacy decision-reminder purposes for new-feature orders: exact provider-time T0, +10/+25, conditional +30 internal expiry; no24/48h reminders or automatic COD conversion. Locale is pinned. Legacy histories remain unchanged. The central free-only guard is integrated and synthetic-tested; outside-CSW templates require verified approval/evidence and are not used as fallback. Do not reinterpret the15m/30m template names or map owner numeric labels without the original owner screen/text. No production activation.
 
 ## Reuse and material gaps
 
 | Requirement / extension point | Source evidence | Status |
 |---|---|---|
-| Bilingual checkout/methods/province rates/explicitCOD | API505-581,751-849; core/payment-flow.ts; COD_ORDER_CONFIRMED audit | PARTIAL vs revised wording/timer |
-| Fixed30min/+10/+25/expiry/stock release | migrations0039/0042 constrain old ledgers; no stock/reservation schema found | MISSING |
-| Receipt protected review | API receipt association entersPAYMENT_REVIEW; reference alone currently needs receipt | PARTIAL standalone timelyTID/expiry arbitration absent |
+| Bilingual checkout/methods/province rates/explicitCOD | Existing journey and local INTENT-030 localized copy/buttons, immutable locale, explicit COD confirmation | VERIFIED local; release remains gated |
+| Fixed30min/+10/+25/expiry/cooldown lock | Migration0050 plus state/locale guard0051; synthetic status, timer, stale-job and exact-lock tests | VERIFIED local; no physical-stock logic |
+| Receipt protected review | API receipt association and synthetic receipt/TID-versus-expiry races; approval remains Admin-authorized | VERIFIED local controls; real funds remain manual |
 | Secure approval/reference/duplicates | Admin2503-2531,2567-2601; core/payment-reference.ts; migrations0027/0029 | PARTIAL textual leading zeros supported; replay/atomicity/scope work |
-| Central free-only/FEP/pricing | core/service-window.ts and distributed checks; core/provider.ts/webhook.ts lack structured FEP/pricing persistence | MISSING beyondCSW checks |
+| Central free-only/FEP/pricing | `core/free-messaging.ts` reusable guard integrated into API/Admin automatic send/retry paths; no authoritative per-contact evidence writer | PARTIAL: missing live evidence fails closed; production gate remains |
 | Native label | Admin97-135,2485-2501; private individual A6/4x6 HTML, auth/no-store | PARTIAL generatedPDF/image/barcode/postal issuance absent |
 | Tracking/provider history | Admin2464-2482 manual audit assignment; core/order-number.ts allocates unrelated orderIDs | MISSING postal sequences/status events |
 | Gross/MO | Admin795-905; migrations0030/0047/0048 | PARTIAL/conflict: normalMO expects gross, not principal |
@@ -252,8 +256,8 @@ The owner supplied the verbatim numbered register in the GFS ORDERFLOW instructi
 | O01 | Audit COD_PENDING, DETAILS_COMPLETED, PENDING and instruction NOT_SENT | Fresh all/24h/7d/30d order states and separate payment/outbox/notification states above; PENDING order state0 | VERIFIED audit; requirement implementation is audit-only |
 | O02 | Identify customers with neither confirmedCOD nor paid Advance | Aggregate1,153 explicit COD audit confirmations;2 approved Advance;974 candidate neither-confirmed-nor-paid (724 no-method+250 unpaid/rejected Advance). Not a dispatch list; 4 other COD-payment records separately flagged for reconciliation. | PARTIAL classification; do not bulk act |
 | O03 | Investigate pending orders/chat abandonment/potential returns | OFFER3960, COD_CONFIRM343, no-method724, advance pending191; lifetime/state denominators do not establish causal abandonment. Postal events absent; RTO/return rates UNKNOWN. | PARTIAL |
-| O04 | Send order-decision reminders within30 minutes | No new T0/+10/+25/+30 implementation. Existing systems at+15/+210 and+15/+30/+60/+210/+240. | MISSING REV.2 timer |
-| O05 | Within30 minutes allow advance pay, explicit COD confirmation, cancel | Existing bilingual payment selection/COD confirmation/cancel options in journey; no fixed deadline, switching retains no timer because none exists. | PARTIAL |
+| O04 | Send order-decision reminders within30 minutes | Local exact-message delivery-anchored T0, dynamic +10/+25 prompts, conditional T+30 expiry, locale snapshot and send/retry free-only guard have synthetic coverage. Per-contact live FEP/pricing proof is unavailable; sends fail closed. | VERIFIED local / launch gated |
+| O05 | Within30 minutes allow advance pay, explicit COD confirmation, cancel | Local bilingual choices/actions, unchanged deadline on switches, explicit COD gross confirmation, cancellation, review and expiry races have SQLite/fake-clock coverage. No automatic COD conversion/dispatch. | VERIFIED local / no rollout |
 | O06 | Safely resolve unclear historical orders and prevent unconfirmed dispatch | Read-only A-G candidate classes and no-bulk-mutation rule. COD requires confirmation/fulfillment guards; historical per-order evidence and conflicts incomplete. | PARTIAL |
 | O07 | Audit/revise notifications identified as2 and5 | Exact source-number crosswalk unavailable. Audited +15/+210 no-method recovery; separate Advance V2 five stages; explicit Meta templates and proposed one-system replacement above. No number mapping invented. | AUDIT/PROPOSAL COMPLETE; implementation NOT DONE |
 | O08 | Generate COD VPLYYMMXXXX monthly0001-9999 | Manual generic tracking only; no VPL allocator/schema/counter. | MISSING |
@@ -265,7 +269,7 @@ The owner supplied the verbatim numbered register in the GFS ORDERFLOW instructi
 | O14 | Send COD label with VPL and verified link | No VPL/registered-link issuance/send. Existing manual tracking field is not registration evidence. | MISSING |
 | O15 | Send Advance label with RGL and verified link | No RGL/registered-link issuance/send. | MISSING |
 | O16 | Inspect `ep.gov.pk/track.asp`, one-click result URL | Official manual tracker and candidate `ArticleIDz` parameter observed; site's current Terms prohibit automated querying and commercial reuse without written permission. It does not prove self-issued format registration. | PARTIAL; registered IDs only, no polling |
-| O17 | Send WhatsApp only within verified free eligibility | Actual WABA account aggregate pricing is available and currently all delivered in period is categorized free; per-contact referral/response/FEP evidence and centralized guard absent. | PARTIAL; no automation enable |
+| O17 | Send WhatsApp only within verified free eligibility | Reusable centralized fail-closed guard is implemented/tested for service window, mobile CTWA, verified expiry, form/template, opt-out and matching free-pricing proof. Live per-contact evidence remains unavailable; no paid fallback. | PARTIAL / launch gated |
 | O18 | Audit paid-order confirmation development | Secure Admin payment/MO approval, paid DB state and optional CAPI outbox exist. No distinct WhatsApp customer “payment received/Advance paid” confirmation handler found; CAPI is disabled and unchanged. | PARTIAL |
 | O19 | Simplify Admin approval to manual TID then confirm, after funds verified | Admin already stores textual reference and has gated settlement approval requiring evidence/reference/method/receipt; not the requested simple TID-only interaction. Real funds remain operator verified. | PARTIAL; reuse handler, no bypass |
 | O20 | Save TID; atomically reject same reference across different orders | Actual concurrent Admin save tests exercise the existing unique index; one same-method race winner, one rejection. Same text in different methods remains allowed by provider-specific method scope. | PARTIAL; simpler TID UX/account-specific scope decision remain |
@@ -277,10 +281,10 @@ The owner supplied the verbatim numbered register in the GFS ORDERFLOW instructi
 
 | ID | Addition beyond O01-O23 | Current evidence/status |
 |---|---|---|
-| R01 | T0 starts only after successful complete actionable options presentation | No persisted intent/deadline or definitive presentation evidence. **MISSING** |
-| R02 | +10/+25 reminders; guarded+30 expiry/release stock | Existing schedules incompatible; no stock inventory/reservation ledger. **MISSING** |
-| R03 | Explicit COD confirmation and exact gross due-on-delivery message | Existing explicit confirmation audited; exact required message and post-confirm send not implemented. **PARTIAL** |
-| R04 | No auto COD; receipt/TID protects review; late-money reconciliation | No auto-COD in V2; legacy explicit choice at+240. Timely standalone TID/expiry arbitration and late reconciliation absent. **PARTIAL** |
+| R01 | T0 starts only after successful complete actionable options presentation | Exact message ID/provider DELIVERED/READ parsing, provider-time ordering for delayed callbacks, duplicate idempotence and missing-callback no-T0 are covered synthetically. Live callback remains unverified. **VERIFIED local / live unknown** |
+| R02 | +10/+25 reminders; guarded+30 expiry/release | Delayed countdowns, stale suppression, separate internal expiry and exact matching cooldown-lock release are tested. Physical stock/reservation is not part of this requirement. **VERIFIED local** |
+| R03 | Explicit COD confirmation and exact gross due-on-delivery message | COD remains pending until explicit confirmation; exact gross PKR amount to rider/postman is bilingual. Concurrent confirmation/expiry and cancellation tests prove no unconfirmed dispatch. **VERIFIED local** |
+| R04 | No auto COD; receipt/TID protects review; late-money reconciliation | Receipt/TID and payment-approval races, late TID rejection after expiry, and no auto-paid/reopen/dispatch are covered synthetically. Real funds still require Admin evidence. **VERIFIED local controls** |
 | R05 | Historical orders not retroactively bulk converted/cancelled/dispatched | Audit-only candidate reconciliation and preservation rules recorded; no mutation. **VERIFIED protocol / NOT TESTED operations** |
 | R06 | CTWA FEP up to7d, per-contact evidence/conservative expiry/pricing | General Meta policy verified; actual account aggregate pricing read; per-contact referral/evidence/actual expiry absent. Do not hardcode168h. **PARTIAL / automation BLOCKED** |
 | R07 | Utility templates outside CSW only with verified free eligibility | Two active reminder utility templates, quality pending, zero historical sends; no shipment/COD utility templates and no central guard. **PARTIAL / no production routing** |

@@ -1,5 +1,115 @@
 # Resource Registry
 
+## GFS-ORDERFLOW-INTENT-030 local source resources (2026-11-26)
+
+- Local code/test resources: `apps/api/src/order-intent.ts`, API/core/Admin outbound guard and locale pinning changes, migration candidate `0051_order_confirmation_intent_state_guards.sql`, and synthetic tests `tests/order-intent.test.ts` / `tests/free-messaging.test.ts`.
+- Inherited migration `0050_order_confirmation_intents.sql` was preserved unchanged. Migration sequence0049/0050/0051 ran only against synthetic in-memory SQLite; none was applied remotely. No hosted Worker, D1, Queue, R2, Cron, Access, Meta, secret, payment, customer, or billing resource was read or changed.
+- Chrome DevTools `list_pages` was called first for read-only browser inventory; no page was selected, navigated, or mutated and no external identity is claimed from that listing. No live message, order/payment transition, migration, deployment, or traffic change occurred. No physical stock/inventory resources were added. New-number WhatsApp and Hoja Seeds isolation remain untouched.
+
+## GFS-ORDER-001 REV.2 S0 (2026-11-25)
+
+Fresh source checkout: [CURRENT_AUDIT](GFS_ORDER_001_CURRENT_AUDIT.md). Approved checkout `D:\free seeds\gfs-order-001-rev2`, branch `codex/gfs-order-001-rev2`, starting HEAD `dda2ddec93c22189d89cefa29f133e30a9c467d6`; no new hosted resources. Historical Cloudflare/Meta routing notes below were not refreshed for this source-only closeout. Label Printer923/923 baseline hashes verified unchanged; no runtime dependency. Older entries are historical unless explicitly refreshed.
+
+## GFS-COD-MO-109 canonical workspace and storage (2026-11-16 UTC)
+
+| Resource | Classification | Verified finding |
+|---|---|---|
+| Canonical source | AVAILABLE | D `D:\free seeds\gfs264-pr11`, isolated branch `codex/gfs88-admin-mo-isolated`, HEAD `0b2c3b4d1871f4c7501fd2829b3e573720b75bcf`. Four C-only MO commits fast-forwarded; nine C working-record files transferred. |
+| Former C project | AVAILABLE / INACTIVE | `C:\Free Seeds\freeseeds-mo` was not modified after audit backup. Kept as recovery copy; no deletion. |
+| D unique unreferenced Git commits | AVAILABLE | `beef29f0b54669a90cb2db40209495ce2281d78d` and `caa5a3400c839f5db1aaab6edb06d2fcc3821e98` intact in original and F raw `.git` copy. |
+| F complete original Git metadata | AVAILABLE | `F:\GFS-Backups\GFS-COD-MO-109-D-git`; all loose/packed object files SHA256-identical to D source; `fsck --full --no-reflogs` PASS. |
+| D history bundle | AVAILABLE | F `GFS-COD-MO-109-D-history.bundle`, SHA256 `67F1547770AAB0D4F9828DEE3F3F1DC0098E171FC95DFE15EB9FE3AF0B75CBB3`; duplicate at E `D-history.bundle`; verified/restored; both unique commit objects exist after restore. |
+| C MO history bundle | AVAILABLE | E `GFS-COD-MO-109\C-MO-history.bundle`, SHA256 `E364C4D90B5FE12ECE40248D2DE0325E950AE2E4D7FA0725E8FFD3BC3D2593C8`; duplicate at F; verification/restoration `fsck` PASS. |
+| C uncommitted record edits | AVAILABLE | E/F `C-uncommitted-preservation.patch`, SHA256 `E012A30BD11D068EAF86D6A44025D61F5C95282C823FFFA9CFEC9B8B052BDDD8`; exact base restore apply-check and D line-ending-tolerant apply both PASS. |
+| Backup destinations | AVAILABLE | New unique `F:\GFS-Backups` and `E:\DevTemp\GFS-COD-MO-109`; restored test clones retained for verification; never overwrite existing destination or live repo. |
+| C commits transferred | AVAILABLE | `d836e82...`, `56fc0e9...`, `b7adb4d...`, `0b2c3b4...`; all exact commit SHAs now ancestors of D HEAD. |
+| Active remote | DIFFERENT | Local D is ahead 4 of public remote `ad956563...`; no verified write identity, no commit/push. PR11 remains separate. |
+| Portable developer tools | AVAILABLE | E `DevTools\Git` (375 files), `DevTools\Node` (1,994 files), `DevCache\npm` (352 files) all SHA256-match C Temp originals. Git 2.56.1, Node 24.22.3, npm 11.19.1, Wrangler 4.149.0 execute from E. |
+| Process temporary storage | AVAILABLE | Tests/dry-runs used process-only `TEMP/TMP=E:\DevTemp`, npm cache `E:\DevCache\npm`; no global Windows variables changed. |
+| Reproduced local bundles | AVAILABLE | D-only Wrangler dry-runs emit to E, Admin bundle matches recorded size and full SHA. Outputs remain outside repo. |
+| VS Code app/profile/extensions | DIFFERENT / MIGRATION BLOCKED | C locations total about 4.68 GiB; E had about 3.8 GiB free. F has capacity for split extensions. Many VS Code processes are active; do not copy live mutable state or change startup flags before shutdown. Plan app + user-data on E and `--extensions-dir F:\VSCode\extensions`; original C state remains intact. |
+| Active VS Code workspace | MISSING | Process check found no D project nor former C project root attached. Current Kilo session must reopen canonical D before claiming editor migration. |
+| Chrome MCP config | AVAILABLE / CONSENT BLOCKED | Added D `.kilo/kilo.json` with official ChromeDevTools 1.13.0 pinned command, `--autoConnect`, input/network/JS/file tools and telemetry/update checks disabled, E temp/cache. Official npm integrity, package metadata and CLI help verified without server start. Global Kilo and project discovery had no prior server; no runtime handshake. Chrome 157; existing DevToolsActivePort file is stale (11/15), no live port identity asserted. |
+| Chrome authenticated tabs/account | UNVERIFIED | No `list_pages`, tab inspection or identity read. Owner must enable `chrome://inspect/#remote-debugging` and approve official connection dialog. No CDP data/content read. |
+| Current Cloudflare/Meta/protected baselines | UNVERIFIED | No live inventory/readback; preserve last-known guardrails only. Existing candidate remains expected at 0%; no deploy/promote/upload. |
+
+
+## GFS-COD-MO-108 forensic inventory (2026-11-16 UTC)
+
+Scope: only the two confirmed project roots, their own Git metadata (including C: worktree's referenced common Git directory), approved tool configuration and temporary build tooling. Existing recovery backups/data and referenced unrelated worktree contents were excluded. D: was never modified; existing backups were neither inspected nor overwritten.
+
+| Resource | Classification | Verified finding |
+|---|---|---|
+| Original D: Git/source | AVAILABLE | `D:\free seeds\gfs264-pr11`; clean detached HEAD `ad956563f2187e6a5c830fbd3a64691192681802`; integrity check exit 0. |
+| C: MO working source | AVAILABLE | `C:\Free Seeds\freeseeds-mo`; Git metadata `C:\Free Seeds\freeseeds\.git\worktrees\freeseeds-mo`; branch `codex/gfs88-admin-mo-isolated`, HEAD `0b2c3b4d1871f4c7501fd2829b3e573720b75bcf`; integrity check exit 0. |
+| Tracked paths/manifests/scripts/migrations/docs | AVAILABLE | 189 paths in each; no missing tracked file, no untracked nonignored source. Rules read in full in both projects. |
+| Checkout bytes | DIFFERENT | Before audit edits: 81 identical, 97 EOL-only, 11 content differences: seven records and `gfs-token-linkage-validation.ps1`, `test-admin-deployment-runner-validation.ps1`, `test-gfs-admin-token-linkage.ps1`, `verify-gfs-admin-token-linkage.ps1`. Admin/API/core content and dependency lock agree. |
+| Reachable history | DIFFERENT | D: 652 commits, C: 677 across refs; D:-unique reachable commits 0, C:-unique 25. Current isolated MO ancestry adds exactly the four commits below; other C: branch histories are not release inputs. |
+| Unreferenced original evidence | AVAILABLE | D: alone retains two commit objects, two unique blobs and four trees. Never prune, normalize, merge or silently discard them. |
+| Remote/source identity | AVAILABLE | Both origins `https://github.com/gardenshop/freeseeds.git`; live `ls-remote` isolated MO `ad956563f2187e6a5c830fbd3a64691192681802`; PR11 and its head branch `5e4aa7530910368465942828bcd495fd0fbf3aab`. |
+| Authorized Git writer | UNVERIFIED | Public repo reads do not return authenticated permissions. No GitHub credential target/env or `gh` executable available; no commit/push. |
+| Original compiled outputs | MISSING | Original root/Admin/API `.wrangler/tmp` empty; no original app dist/build/out/index.js/map/build manifest found. Existing configuration manifests are not deployed bundles. |
+| Historical source composite | AVAILABLE | Exact original D: seven-file digest `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`; mixed line endings reconcile the prior stop. |
+| Reproduced compiled module | AVAILABLE | Clean exact-commit and C: working-source official dry-runs both emit 1,323,158-byte `index.js`, SHA256 `6fd900138e8f8aeef51035bf58fa447fb064fa6e226cb4d4aee488f1be4ab49f`. |
+| Existing Cloudflare candidate | UNVERIFIED | Historical MO-106 authenticated evidence: `bd242216-e3fe-4adf-89a2-dd613aba2ea2`, version 122, created `2026-11-07T18:54:38.734586Z`, matching recorded full module SHA. Not fetched again today. |
+| Git/Node/npm initial host tools | MISSING | Not on PATH/standard C: locations. Safely restored portable temporary tools below; no global changes. |
+| Local Wrangler/dependencies | AVAILABLE | Installed and lockfile agree: Wrangler 4.149.0, esbuild 0.28.2, workerd 1.20261006.1, TypeScript 5.9.3, Vitest 5.0.5, Hono 4.13.13, Zod 4.6.7. Fresh isolated `npm ci --ignore-scripts` installs 183 packages. |
+| PowerShell integration execution | BROKEN | PowerShell 5.1.26100.9444 available, effective Restricted; normal `-File` test invocation is denied. Four-script AST parse passes. No policy bypass/change. |
+| Dependency security gate | OPEN SECURITY REVIEW | `npm audit --omit=dev`: one moderate package (Hono 4.13.13), five advisories, patched in 4.13.16. CVE-2026-126358 affects RegExpRouter wildcard middleware; Admin uses default Hono router and `app.use("*", authorizedForAdmin)`. Admin also has a catch-all 404 and dynamic receipt route; specific bypassability was not tested/proven. Other reviewed advisories cover mount, Hono CSRF, CSS and form-validator features not found in Admin/API. No lockfile change; release review required. |
+| Chrome/browser MCP | BROKEN | Existing Chrome processes present. Authoritative `kilo mcp list` reports only `chrome-devtools`, failed initialization after 20 seconds; configured command references an existing recovery-tool runtime, whose directories were not scanned. No browser MCP actions exposed in this session. |
+| Cloudflare/Meta/GitHub MCP | MISSING | No callable connector tools exposed; MCP listing contains no corresponding servers. Public GitHub Git/API reads only. |
+| Credential Manager read target | AVAILABLE | `GFS-MO-Version-Read-2026` by name only. No value, ID, expiry or authorization read. |
+| Deployment/metadata credential targets | MISSING | `GFS-Admin-Deploy-Scoped-2026`, `GFS-Cloudflare-Token-Metadata-Read-2026` absent in current credential context. Host is `DESKTOP-4R93ATK\nazim`, not approved deployment identity `bi\nazim`. No regeneration. |
+| Cloudflare account/live resources | UNVERIFIED | No current visible identity for account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`; Admin/API allocations/routes, Access, 0048, R2, Queue/DLQ, watchdog, health, token validity and monitoring were not queried. |
+| Meta/WABA/sender/webhooks/campaigns | UNVERIFIED | No authenticated read today. Keep canonical sender and second-number/Hoja isolation; no account switch or Meta edit. |
+| MO browser preview/zero regression | UNVERIFIED | No live page, eligible order, layout, locale, button/error or current protected-state readback. Local synthetic coverage is not visual/live acceptance. |
+| Existing backups | UNVERIFIED | Deliberately excluded from this audit, preserved without access or change; older recorded backup verification is historical only. |
+
+### Preserved commit differences
+
+C:-only commits on current MO ancestry, oldest first (remote is an ancestor; safe future sync is non-force fast-forward only after writer verification and review):
+
+- `d836e82ddd385af5b0c0cfb1915cadce6f3238d6` MO-92 token-linkage diagnostics/access repair.
+- `56fc0e91e88fd575d2eb553d57793259379d0998` MO-92 publication record.
+- `b7adb4d7603a959ee863f76c537839ee00730f56` MO-93 recovery/digest record.
+- `0b2c3b4d1871f4c7501fd2829b3e573720b75bcf` MO-94 provenance stop record.
+
+D:-only unreferenced commit objects, not proven unpublished feature work and not silently reconciled:
+
+- `beef29f0b54669a90cb2db40209495ce2281d78d`, parent `abe449299f5854e2f47e649a397686d4dcbb0744`: `feat: recover payment reminders with COD fallback`.
+- `caa5a3400c839f5db1aaab6edb06d2fcc3821e98`, parent `86632db1ff69a01a5cd14ef542697dae69e52e26`: `GFS-477 guard API recovery manifest`.
+
+Original local MO branch ref remains `ce6c398...`, behind its cached origin by two, while detached HEAD is `ad956563...`. Original reflogs record pushes of `ae4a5cb...` and `ad956563...`; fresh remote confirms the latter. Do not confuse the stale local branch ref with missing/unpushed source. Full object inventories: D: 7,472; C: 7,808. D:-only objects 8; C:-only objects 344 (218 blobs, 95 trees, 25 commits, 6 tags).
+
+### Source and compiled evidence
+
+The earlier seven-file table below remains correct for Git LF and C: CRLF. Original D: files `analytics.ts`, `attribution.ts`, `cancellations.ts`, `conversations-dashboard.ts`, and `conversations.ts` exactly match its Git-LF rows. The other two original inputs are:
+
+| Original relative path | Bytes | SHA256 | CRLF / bare LF |
+|---|---:|---|---|
+| `apps/admin/src/index.ts` | 426579 | `d737a10d4645f33345536996f4809a9617303d4b2416ea12f0fe892abf5e4b0a` | 1770 / 940 |
+| `apps/admin/wrangler.jsonc` | 1120 | `a2725c6496ab54b516b2379559c35ba8f75834280925189980133bfbb3794e99` | 11 / 2 |
+
+Hash sorted UTF-8 relative path + NUL + raw file bytes + NUL for all seven. D: raw yields historical `3d0d17a3...`; LF normalization yields `d70ff1c9...`; C: raw yields `8e60e57d...`. No original byte was modified. These composites are not compared directly with module/ETag hashes.
+
+Exact source: `ae4a5cb93fd4a26e396359bcefb31ae4518604c0`, exported with `git archive` from C: into the approved temporary directory; fresh dependencies restored from that commit's lockfile with `npm ci --ignore-scripts --no-audit --no-fund`. Official command in the exported root:
+
+```powershell
+node node_modules/wrangler/bin/wrangler.js versions upload --dry-run --config apps/admin/wrangler.jsonc --outdir "C:\Users\nazim\AppData\Local\Temp\kilo\gfs108-exact-dryrun" --keep-vars --strict
+```
+
+Output: `index.js` 1,323,158 bytes, SHA256 `6fd900138e8f8aeef51035bf58fa447fb064fa6e226cb4d4aee488f1be4ab49f`, exactly matching the recorded MO-106 Cloudflare module SHA. Independent C: working-source output matches too. `npm run build` is typecheck only, not this compilation. No controlled source repair was necessary and no new candidate proposal/upload is needed. Current live version/config/settings still require fresh authorized readback.
+
+Temporary artifacts only: `C:\Users\nazim\AppData\Local\Temp\kilo\gfs108-{admin-dryrun,exact-source,exact-dryrun,api-dryrun}` and source ZIP, npm cache, portable tools, Wrangler diagnostic logs. No hosted resources/cost or new tracked build artifacts. Retain until owner reviews evidence; these are disposable reproductions, not original recovered evidence/backups. No cloud billing/quotas were read and zero-cost operation is not claimed.
+
+Tool downloads from official publishers were SHA256-checked before extraction: MinGit 2.56.1 x64 archive `4a92850b6e917da4fd010669b614b55dccf5b0ec333a534cc4be4700dfefdafd`; Node 24.22.3 x64 ZIP `e612af99f626ab415ea225af6bce5c971feb448cb5cae250bb1c3fa50c5f7d9f`. Tools live under approved temp `gfs108-mingit` and `gfs108-node`; npm 11.19.1. PATH additions are process-only. Original Git owner SID differs from this recovered host: an exact-directory, per-command `safe.directory` exception enabled read-only inspection; no global Git config/security policy changed.
+
+### Environment names and live gate
+
+Offline app tests/build/lint need no real credential. Deployment/runtime names, not values: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `DB`, `RECEIPTS`, `EVENTS`, `DEPLOYMENT_STATE`, `ADMIN_EMAIL`, `COD_REFERENCE_HMAC_KEY`, `WHATSAPP_PROVIDER`, `WHATSAPP_CHECKOUT_MODE`, `META_PROVIDER_ENABLED`, `META_GRAPH_VERSION`, `META_ACCESS_TOKEN`, `META_PHONE_NUMBER_ID`, `META_WABA_ID`, `META_APP_ID`, `META_FLOW_ID`, `META_CALLBACK_URL`, `META_APP_SECRET`, `WEBHOOK_VERIFY_TOKEN`, `FLOW_PRIVATE_KEY`, `FLOW_PUBLIC_KEY`, `META_CAPI_ENABLED`, `META_DATASET_ID`, `META_INSTANT_FORM_ENABLED`, `META_LEAD_ACCESS_TOKEN`, `META_PAGE_ID`, `META_INSTANT_FORM_ID`, `COD_V1_ENABLED`, `COD_ROLLOUT_MODE`, `COD_TESTER_WA_ID`, `PAYMENT_AUTOMATION_V2_ENABLED`, `PAYMENT_REMINDERS_V2_ENABLED`, `PAYMENT_UTILITY_TEMPLATES_APPROVED`, `PAYMENT_CHOICE_RECOVERY_ENABLED`, `PAYMENT_CHOICE_RECOVERY_START_AT`, `REFERENCE_REQUESTS_ENABLED`, `CF_VERSION_METADATA`. Separate legacy rollback test expects `GFS_LEGACY_ROOT` and was not pointed outside authorized roots. No relevant real cloud/Git token environment variable was present in the current shell.
+
+Next owner gate is the existing Chrome MCP reconnect until `list_pages` is exposed in this session, preserving authenticated profile/tabs. No token replacement, deployment runner, traffic promotion, live settlement test or Git write is part of that action. Fresh identity/safety readbacks must precede a GET-only existing-candidate preview. Do not use raw CDP, new browser profiles, direct dashboard HTTP or shell automation as substitutes.
+
 ## GFS-COD-MO-93 recovered state and digest evidence (2026-11-15 UTC)
 
 - Active C: worktree: `C:\Free Seeds\freeseeds-mo`; branch `codex/gfs88-admin-mo-isolated`; task-start HEAD56fc0e91e88fd575d2eb553d57793259379d0998; remote source head ad956563f2187e6a5c830fbd3a64691192681802. Two MO-92 commits were already ahead at task start; GFS-93 docs are local on this branch. Other PR11/auto/label worktrees remain preserved. Protected D: not touched.
@@ -2936,3 +3046,23 @@ No secrets are stored in this registry.
 
 - Git output handling is null-safe under Windows PowerShell 5.1; native Git exit codes remain mandatory. No live resource changed.
 - The current broad PR11 tree remains ineligible for Admin upload; source-isolated artifact verification is a separate gate.
+
+## GFS-COD-MO-97 Cloudflare readback (2026-11-15 PST)
+
+- Verified dashboard principal/account: `gisupp@gmail.com` / `cb5066a6d71ecdee0bd7ed8aacb4d3c2`.
+- Admin overview: 744 invocations, 0 errors (displayed last 24 hours); Workers Logs and Traces disabled. Bindings: D1 `getfreeseeds-staging`, Queue `getfreeseeds-events-staging`, R2 `getfreeseeds-receipts-staging`.
+- Deployment token expired Nov 7 10:59 PST; exact policy is Admin Worker-only `Individual Workers Editor`. Metadata token expired Nov 14 10:59:59 PST; policy is account-wide `Account API Tokens Read`. Secrets were not viewed or handled.
+- Ready upload row: abbreviated version `bd242216`, tag `gfs90-ae4a5cb93fd4a26e396359bcefb31ae4518604c0`, annotation names source `ae4a5cb93fd4a26e396359bcefb31ae4518604c0` and SHA `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`, age 7 days. Full version ID/detail, exact timestamp, and content provenance are not verified. Deployment-tab read was rejected by MCP safety review; no alternate route/API/CDP path was used.
+- Other resource state and latest routing weights are not confirmed by this readback. No resource mutation occurred.
+
+## GFS-COD-MO-99 active routing and candidate readback (2026-11-15 PKT)
+
+- Account `cb5066a6d71ecdee0bd7ed8aacb4d3c2`, Worker `getfreeseeds-admin-staging`; owner-opened Deployments tab shows active Admin weights `3e4b7c26`100% / `ce023b54`0%.
+- Candidate `bd242216` is Ready and not listed in active deployment rows. Visible tag is `gfs90-ae4a5cb93fd4a26e396359bcefb31ae4518604c0`; annotation lists source `ae4a5cb93fd4a26e396359bcefb31ae4518604c0` and artifact hash `3d0d17a3a953c6804a84f3449cc7b11ab2b87f68b0e8c602e79ff23ab32f7911`; Wrangler source, API token creator, relative age 7 days.
+- Full UUID, exact timestamp, source/config readback, and byte-level hash match remain UNVERIFIED. No Worker mutation occurred.
+
+## GFS-COD-MO-100 owner-provided candidate UUID (2026-11-15 PKT)
+
+- Owner-provided full UUID: `bd242216-e3fe-4adf-89a2-dd613aba2ea2`; visible Cloudflare candidate prefix `bd242216` matches. The page snapshot does not expose the full UUID directly.
+- Active Admin weights: `3e4b7c26`100% / `ce023b54`0%. Candidate not present in active deployment rows.
+- Exact candidate creation timestamp and independent source/config or byte-digest match remain UNVERIFIED; relative age is `7d ago` and annotation is insufficient for integrity.

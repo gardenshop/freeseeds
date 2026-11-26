@@ -1,5 +1,21 @@
 # Test Matrix
 
+## GFS ORDERFLOW INTENT-030 closeout (2026-11-26 UTC)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Local INTENT-030 focused suite | PASS36/36 | `tests/order-intent.test.ts`, `tests/free-messaging.test.ts`, `tests/meta-activation.test.ts`; provider timestamps, localization, countdown, arbitration, retry, migration and free-only evidence cases use synthetic data. |
+| Full guided API journey | PASS104/SKIP1 | `tests/guided-lead-only.test.ts`; explicitly seeded synthetic CTWA/referral/pricing evidence in the test D1 fixture. |
+| Full Vitest | PASS436/SKIP1 | `npm.cmd test -- --reporter=dot --maxWorkers=2`; no live provider, DB or customer fixture. |
+| Node safety suites | PASS52/52 | Eight documented `node --test` scripts. |
+| Build/TypeScript/lint | PASS | `npm.cmd run build`; `npm.cmd run lint`. |
+| Production dependency audit | PASS0 | `npm.cmd audit --omit=dev`; six previously registered moderate development-tool findings remain untouched. |
+| Migration sequence | PASS / LOCAL ONLY | Synthetic SQLite runs0049→unchanged0050→local0051; full guided fixture also runs ordered migrations. No remote apply. |
+| Protected checkout | PASS923/923 | Label Printer manifest SHA-256 hashes match. Standalone MO Printing and Hoja Seeds remain separate. |
+| External safety | NO MUTATION | Chrome DevTools `list_pages` only; no page navigation, account mutation, live message, payment, hosted migration, deployment or traffic change. |
+
+INT01-21/S1 local acceptance is complete. The timer is customer-confirmation policy only. No stock/warehouse schema or dependency; eligibility locks are cooldown-only. Per-contact live FEP expiry/pricing, display-name/template quality and release-specific rollback remain production gates; no paid fallback and no WhatsApp launch authorization.
+
 ## GFS ORDERFLOW Hono security correction (2026-11-25 UTC)
 
 | Gate | Result | Evidence |
@@ -4646,3 +4662,14 @@ Investigation query costs only (not production savings): representative `rows_re
 | MO-76 artifact gate | PASS (local) | Clean-HEAD and deterministic 7-file Admin artifact digest checks pass. |
 | MO-76 PowerShell runner parse/upload boundary | PASS (local) | PowerShell parse passes; static guard confirms `versions upload` only and no `versions deploy`. |
 | MO-76 live host credential/scope | UNVERIFIED | Current sandbox is not `bi\\nazim`; no credential or Cloudflare request was accessed. |
+
+| MO-97 Cloudflare dashboard identity | PASS | Existing authenticated UI showed `gisupp@gmail.com` and the expected account ID. |
+| MO-97 token status and scope | PASS (read-only UI) | Both named account tokens are expired; Admin token remains scoped to the target Worker; metadata token is account-wide read-only. No secrets handled. |
+| MO-97 Admin overview | PARTIAL | Overview showed 744 invocations/0 errors and the D1/Queue/R2 binding names; logs/traces disabled. No API, Access, service health, or resource counters tested. |
+| MO-97 MO version provenance/routing | BLOCKED | Annotated Ready row matches requested SHA text, but full version ID/source detail/creation time and current weights were not verified after Deployments-tab action was rejected by safety review. No workaround used. |
+
+| MO-99 authenticated active Admin weights | PASS (read-only) | Owner-opened Deployments table confirms `3e4b7c26`100% / `ce023b54`0%. |
+| MO-99 candidate UUID/time/source integrity | BLOCKED | Snapshot exposes only abbreviated `bd242216`, relative age, and tag/annotation text; no full ID, exact timestamp, source/config bytes, or independent digest readback. |
+
+| MO-100 candidate UUID | PARTIAL | Owner supplied full UUID; its eight-character prefix matches the visible Ready row. Full UUID not exposed by MCP snapshot. |
+| MO-100 artifact provenance | BLOCKED | Exact timestamp and independent source/config or byte-digest evidence are absent; annotation alone is insufficient. |

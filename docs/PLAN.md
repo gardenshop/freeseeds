@@ -1,4 +1,43 @@
-# Get Free Seeds Plan
+# GFS ORDERFLOW Master Plan Index / Get Free Seeds Plan
+
+Permanent master reference: **GFS ORDERFLOW**. All GFS-ORDER-001 REV.2 stages S0-S9, historical decisions and future subtasks belong to this project. Existing plan path, branch and task IDs remain unchanged. Label Printer, standalone MO Printing and Hoja Seeds are separate protected projects.
+
+## GFS-ORDER-001 REV.2 S0 (2026-11-25)
+
+Current lifecycle checkout: `D:\free seeds\gfs-order-001-rev2`, branch `codex/gfs-order-001-rev2`. See [master plan](GFS_ORDER_001_MASTER_PLAN.md), [audit](GFS_ORDER_001_CURRENT_AUDIT.md), [task register](GFS_ORDER_001_TASK_REGISTER.md), and [INTENT-030 closeout](GFS_ORDERFLOW_INTENT_030.md). S0 remains partial with Meta/original-spec/notification-identity/provenance gates. INTENT-030 local acceptance is complete; live per-contact FEP evidence and release-specific rollback remain production gates. The deadline governs customer confirmation only; stock management is not required, and existing eligibility locks are not stock reservations. No external runtime/release change occurred. Preserve historical MO and protected Label Printer/Hoja boundaries below.
+
+## GFS-COD-MO-109 canonicalization stages (2026-11-16 UTC)
+
+| Stage | Completion | Gate |
+|---|---|---|
+| D canonical Git branch/source | 100% | Four C-only MO commits and nine C working-record edits preserved on D; original D-only objects retained. |
+| E/F history backups and restoration | 100% | D raw Git copy byte-verified; bundles/patch SHA and restores verified. |
+| Portable Git/Node/npm cache on E | 100% | File-by-file SHA match; process tests ran from D with E PATH/temp/cache. |
+| D local test/build/bundle validation | 100% | 52/52 MO, 90/90 COD/Advance, 386/1 skipped, 46/46 Node mocks, build/lint and both dry-runs pass. |
+| PowerShell integration | 0% | Restricted policy denies normal scripts; no bypass. |
+| VS Code app/profile migration | 0% | Editor active; E alone lacks space for full profile/extensions. Migrate user-data to E and extensions to F after shutdown. |
+| Canonical D editor session | 0% | Current process has not opened D project. |
+| Chrome MCP handshake/identity | 0% | Official server configured, awaiting user Chrome remote-debug enable and allow dialog. |
+| Live inventory/current zero regression | 0% | No authenticated tools exposed/read today. |
+| Candidate-only MO preview | 0% | Live safety and GET preview gates remain. |
+| Authorized release/CAPI | 0% | Separate approval required; no upload, promotion, settlement or Purchase. |
+
+Follow `rules.md`; do not infer overall release readiness from local results. Sole immediate owner action: close all VS Code/Kilo windows normally, then resume this audit so user-data/extensions can be migrated without racing active state. Keep C data and profile intact. Reopen D only after supported E/F paths are verified; obtain official Chrome debugging consent before live actions. Stop until `list_pages` is available.
+
+## GFS-COD-MO-108 audited recovery stages (2026-11-16 UTC)
+
+| Stage | Completion | Remaining gate |
+|---|---|---|
+| Authorized local forensic inventory/source lineage | 100% | Classified unavailable/live resources explicitly; preserve unique D: objects and all C: work. |
+| Source and compiled artifact provenance | 100% | Exact original composite and exact-commit module hash reconciled; no upload required. |
+| Runnable app regression | 100% runnable | 386/386 runnable tests pass; one skip remains explicit. Build/lint, focused suites and dry-runs pass. |
+| Required PowerShell integration | 0% executed | Restricted policy; no bypass. |
+| Fresh authenticated live inventory | 0% | Restore exposed Chrome MCP, then verify correct accounts, baseline and resource health. Public GitHub reads alone do not satisfy it. |
+| Existing-candidate browser preview | 0% | All identity/live safety and GET-only preview gates first; no form submission. |
+| Live zero-regression verification | 0% | Protected state is historical until fresh readback. |
+| Authorized release and CAPI verification | 0% | Outside current authority; no promotion, settlement or Purchase. |
+
+Evidence is in RESOURCE_REGISTRY, TEST_MATRIX and STATUS. Dependency advisories remain a release security review. No overall production-readiness percentage is inferred from local passes. Sole next owner gate: reconnect the existing Chrome DevTools MCP until `list_pages` is exposed in this session, preserving the authenticated profile/tabs. Do not create/replace tokens or merge unrelated PR11. Verified record changes remain local until correct Git writer authorization is independently established; avoid documentation-only commits.
 
 ## GFS-COD-MO-55 secure watchdog credential bridge (2026-11-06 PKT)
 

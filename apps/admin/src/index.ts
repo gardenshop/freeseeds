@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, runtimeWhatsAppActionId, storedWhatsAppActionId, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, evaluateStoredFreeWhatsAppOutbound, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, META_SEND_TEST_RECIPIENT, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, runtimeWhatsAppActionId, storedWhatsAppActionId, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 import { analyticsCsv, AnalyticsInputError, parseAnalyticsFilters, readInboundAnalytics } from "./analytics";
 import { ConversationInputError, parseConversationFilters, readConversation, readConversations, readConversationSummary } from "./conversations";
 import { conversationsDashboardPageHtml } from "./conversations-dashboard";
@@ -1481,24 +1481,35 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
     const key = "welcome_media_test:923034901810:v6";
     const existing = await c.env.DB.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
     if (existing) return c.json({ executed: false, status: existing.status, messageId: existing.provider_message_id });
-    const [ur, en] = await Promise.all([publishedWhatsAppContent(c.env.DB, "WELCOME", "ur", "WELCOME_TEST:923034901810"), publishedWhatsAppContent(c.env.DB, "WELCOME", "en", "WELCOME_TEST:923034901810")]);
-    if (!ur || !en || !ur.mediaR2Key || !ur.mediaMimeType || !["image/jpeg", "image/png"].includes(ur.mediaMimeType)) return c.json({ executed: false, reason: "WELCOME_PUBLISHED_MEDIA_REQUIRED" }, 409);
-    const object = await c.env.RECEIPTS.get(ur.mediaR2Key);
+    const recipient = "+923034901810";
+    const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, recipient.replace(/\D/g, ""));
+    if (!decision.eligible) return c.json({ executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", detail: decision.reason }, 409);
+    const content = await publishedWhatsAppContent(c.env.DB, "WELCOME", decision.locale, `WELCOME_TEST:${recipient}`);
+    if (!content || !content.mediaR2Key || !content.mediaMimeType || !["image/jpeg", "image/png"].includes(content.mediaMimeType)) return c.json({ executed: false, reason: "WELCOME_PUBLISHED_MEDIA_REQUIRED" }, 409);
+    const object = await c.env.RECEIPTS.get(content.mediaR2Key);
     if (!object) return c.json({ executed: false, reason: "WELCOME_R2_MEDIA_MISSING" }, 409);
     const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
     const now = new Date().toISOString();
     await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "WELCOME_MEDIA_TEST", "PENDING", 0, now, now).run();
-    try { const sent = await provider.sendInteractive("+923034901810", `${ur.text}\n\n${en.text}`, [{ id: "LANG_UR", title: whatsAppActionLabel(ur, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(en, "LANG_EN") }], { body: await object.arrayBuffer(), mimeType: ur.mediaMimeType as "image/jpeg" | "image/png", filename: "welcome.jpg" }); await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run(); return c.json({ executed: true, messageId: sent.providerMessageId }); } catch (error) { const safe = error instanceof Error ? error.message.slice(0, 160) : "WELCOME_MEDIA_SEND_FAILED"; await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run(); return c.json({ executed: false, reason: safe }, 502); }
+    try { const sent = await provider.sendInteractive(recipient, content.text, [{ id: "GET_FREE_PACKS", title: content.buttonLabel ?? (decision.locale === "ur" ? "بیجوں کے پیک حاصل کریں" : "Get seed packs") }], { body: await object.arrayBuffer(), mimeType: content.mediaMimeType as "image/jpeg" | "image/png", filename: "welcome.jpg" }); await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run(); return c.json({ executed: true, messageId: sent.providerMessageId }); } catch (error) { const safe = error instanceof Error ? error.message.slice(0, 160) : "WELCOME_MEDIA_SEND_FAILED"; await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run(); return c.json({ executed: false, reason: safe }, 502); }
   }
   if (rawAction === "retry-failed-reply") {
     if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
     const row = await c.env.DB.prepare("SELECT id,idempotency_key FROM outbound_messages WHERE idempotency_key LIKE 'welcome_reply:%' AND status='FAILED' AND provider_message_id IS NULL ORDER BY updated_at ASC LIMIT 1").first<{ id: string; idempotency_key: string }>();
     if (!row) return c.json({ executed: false, reason: "NO_FAILED_REPLY_ELIGIBLE" });
+    const recipient = "+923034901810";
+    const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, recipient.replace(/\D/g, ""));
+    if (!decision.eligible) {
+      const reason = `FREE_MESSAGE_BLOCKED:${decision.reason}`;
+      await c.env.DB.prepare("UPDATE outbound_messages SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE id=? AND status='FAILED' AND provider_message_id IS NULL").bind(reason,new Date().toISOString(),row.id).run();
+      return c.json({ executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", detail: decision.reason }, 409);
+    }
     const claim = await c.env.DB.prepare("UPDATE outbound_messages SET status='RETRYING',attempt_count=attempt_count+1,updated_at=? WHERE id=? AND status='FAILED' AND provider_message_id IS NULL").bind(new Date().toISOString(), row.id).run();
     if (!claim.meta.changes) return c.json({ executed: false, reason: "REPLY_ALREADY_CLAIMED" });
     const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
     try {
-      const sent = await provider.sendText("+923034901810", "Welcome to Get Free Seeds! 🌱 Get 5 packs of vegetable seeds FREE. Reply START to begin your order.");
+      const text = decision.locale === "ur" ? "گارڈن شاپ میں خوش آمدید۔ آرڈر شروع کرنے کے لیے START لکھیں۔" : "Welcome to Garden Shop. Reply START to begin your order.";
+      const sent = await provider.sendText(recipient, text);
       await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,updated_at=? WHERE id=?").bind(sent.providerMessageId, new Date().toISOString(), row.id).run();
       return c.json({ executed: true, messageId: sent.providerMessageId, idempotencyKey: row.idempotency_key });
     } catch (error) {
@@ -1509,22 +1520,9 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
   }
   if (rawAction === "send-flow-test") {
     if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
-    const flowId = c.env.META_FLOW_ID ?? "1133458765899784";
-    const key = `flow_cta:${flowId}:923034901810`;
-    const existing = await c.env.DB.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
-    if (existing) return c.json({ executed: false, reason: "FLOW_CTA_ALREADY_ATTEMPTED", status: existing.status, messageId: existing.provider_message_id });
-    const now = new Date().toISOString();
-    await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "FLOW_CTA", "PENDING", 0, now, now).run();
-    const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
-    try {
-      const sent = await provider.sendFlow("+923034901810", flowId, `GFS_FLOW_E2E_${flowId}`);
-      await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
-      return c.json({ executed: true, messageId: sent.providerMessageId });
-    } catch (error) {
-      const safe = error instanceof Error ? error.message.slice(0, 180) : "META_FLOW_SEND_FAILED";
-      await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run();
-      return c.json({ executed: false, reason: safe }, 502);
-    }
+    const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, "+923034901810".replace(/\D/g, ""));
+    if (!decision.eligible) return c.json({ executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", detail: decision.reason }, 409);
+    return c.json({ executed: false, reason: "FLOW_LOCALE_VARIANT_UNVERIFIED" }, 409);
   }
   const action = rawAction as MetaActivationAction;
   const allowed: MetaActivationAction[] = ["phone-state", "waba-subscription", "webhook", "provider", "flow-key", "controlled-test", "send-test", "request-code", "request_code", "verify-code", "verify_code", "register", "subscribe-app"];
@@ -1538,13 +1536,21 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
     return c.json({ error: "META_ACTIVATION_INVALID_REQUEST" }, 400);
   }
   if (action === "send-test" && (Object.prototype.hasOwnProperty.call(body, "to") || Object.prototype.hasOwnProperty.call(body, "recipient"))) return c.json({ error: "META_SEND_TEST_RECIPIENT_FIXED" }, 400);
+  let messageLocale: "en" | "ur" | undefined;
+  if (action === "send-test") {
+    const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, META_SEND_TEST_RECIPIENT.replace(/\D/g, ""));
+    if (!decision.eligible) return c.json({ error: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", reason: decision.reason }, 409);
+    messageLocale = decision.locale;
+  }
   // Only the narrow action inputs below reach the service. Secrets never reach logs, audits, or responses.
   const otp = typeof body.otp === "string" ? body.otp : typeof body.code === "string" ? body.code : undefined;
   const input = (action === "request-code" || action === "request_code")
     ? { codeMethod: body.codeMethod === "VOICE" ? "VOICE" as const : body.codeMethod === "SMS" ? "SMS" as const : undefined, language: typeof body.language === "string" ? body.language : undefined }
     : (action === "verify-code" || action === "verify_code")
       ? { otp }
-      : action === "register"
+        : action === "send-test"
+          ? { locale: messageLocale, freeMessageEligibilityVerified: true }
+          : action === "register"
         ? { pin: typeof body.pin === "string" ? body.pin : undefined }
         : {};
   return c.json(await metaActivation(c).action(action, input));
@@ -2233,6 +2239,8 @@ app.post("/api/orders/:id/payment-choice-recovery", async (c) => {
   if (c.env.PAYMENT_CHOICE_RECOVERY_ENABLED !== "true") return c.json({ error: "PAYMENT_CHOICE_RECOVERY_DISABLED", message: "Recovery is not enabled; no customer message was queued." }, 409);
   const orderId = c.req.param("id");
   try {
+    const intentOwner = await c.env.DB.prepare("SELECT 1 AS present FROM order_confirmation_intents WHERE order_id=? AND workflow_version='GFS-ORDERFLOW-INTENT-030-V1' LIMIT 1").bind(orderId).first<{present:number}>();
+    if (intentOwner) return c.json({ error: "ORDER_INTENT_030_OWNS_ORDER" }, 409);
     const current = await c.env.DB.prepare(`SELECT o.id,o.order_number,o.state,o.payment_status,o.archived_at,p.method,p.review_state,c.id AS customer_id,c.wa_id,wc.state_data,wc.last_inbound_message_id,wc.last_inbound_at,
         EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id) AS has_receipt,
         EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id) AS is_cod,

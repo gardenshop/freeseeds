@@ -1,3 +1,12 @@
+## Owner decision and INTENT-030 local acceptance (2026-11-26)
+
+- Every WhatsApp customer message/button after language selection uses the immutable `en`/`ur` locale snapshot, including T0/T+10/T+25/T+30, payment, COD, status/tracking and delivery messages. The preselection prompt is neutral bilingual language selection with self-labeled `English` and `اردو` buttons.
+- The fixed30-minute T0 deadline is a customer confirmation policy only. Physical stock management is not required or a blocker; add no inventory/warehouse tables or counters, and make no availability/scarcity promises. Existing `order_eligibility_locks` are household cooldowns, not stock reservations.
+- T0 is the first valid provider timestamp of the exact options message's `DELIVERED`/`READ` status; no send-acceptance, callback-arrival or invented presentation timestamp. Delayed reminders compute actual remaining time and stale work is suppressed. Method changes do not reset the deadline.
+- Receipt/TID review and payment approval arbitrate against expiry; COD remains pending until explicit confirmation; no unconfirmed dispatch. Cancellation/committed expiry release only the exact matching lock. Outbound suppression cannot prevent safe internal expiry.
+- Local implementation includes a reusable fail-closed free-only guard and synthetic evidence tests. Unknown service-window, mobile-CTWA, verified FEP-expiry, approved-template, locale, opt-out or pricing evidence suppresses every send/retry with no paid fallback. FEP's live per-contact expiry/pricing evidence remains a production gate, not a local-development blocker; never assume168 hours.
+- Preserve migration0050 byte-for-byte. Migrations0049/0050/0051 are sequence-tested locally only and remain unapplied remotely. No live messages, payment/order changes, account mutation or deployment occurred. Preserve new-number WhatsApp, Hoja Seeds zero-connection, Hono/financial fixes, O01-O23 and independent release prerequisites.
+
 ## GFS ORDERFLOW master identity and profile context (2026-11-25 UTC)
 
 Permanent master project is **GFS ORDERFLOW**, encompassing GFS-ORDER-001 REV.2, all S0-S9 work, historical decisions and subtasks. Keep established file names/task IDs; Label Printer, standalone Money Order Printing and Hoja Seeds remain separate. Owner reports Facebook profile contact `ayesha.butt55@hotmail.com`; this is not an auth factor or independent browser-session proof. Never ask for authentication secrets; owner personally clears a Meta challenge.
@@ -13,6 +22,28 @@ Actual Admin Hono routes reproduced Advance payment/order and normal MO/payment 
 ## GFS-ORDER-001 REV.2 S0 boundaries (2026-11-25 UTC)
 
 Owner approved the existing isolated lifecycle checkout with inherited edits preserved. [MASTER_PLAN](GFS_ORDER_001_MASTER_PLAN.md) governs REV.2; S0 remains partial, not a release PASS. Do not invent original23/owner2&5 mapping, infer free billing from24h/all-ad traffic, automate Pakistan Post contrary to its terms, or rewrite MO gross/history to fit principal. Reuse native Free Seeds private labels without Label Printer dependencies. No runtime/production change or stage commit yet. [HANDOVER](GFS_ORDER_001_HANDOVER.md) records blockers and next task.
+
+## GFS-COD-MO-109 canonical D workspace, preservation and stop gate (2026-11-16 UTC)
+
+**Decision:** D is the only active development workspace; retain C as inactive recovery evidence. No release/live action until VS Code is safely moved/reopened and owner approves Chrome connection.
+
+- Fast-forward existing isolated branch to remote base then exact C HEAD; transfer all four MO commits without rewriting. Apply the complete C working-record patch only after backup and successful check. D source inputs and provenance hash remain unchanged.
+- Preserve original D `.git` raw object files and both history bundles/patch on E/F. Restoration and hashes are recorded in RESOURCE_REGISTRY. Keep dangling commits; never GC or overwrite. Do not delete C.
+- E portable tools/npm cache are byte-verified and used process-only. E capacity cannot hold app/profile/extensions together; use supported E portable app/user-data with F extensions only after VS Code closes. No global path/security or Credential Manager change.
+- Official Chrome DevTools MCP is configured pinned in D `.kilo/kilo.json` with privacy controls (`--autoConnect`, input/network/JS/file tools and telemetry/update checks off). Package integrity/help were validated; server not started. Require owner remote-debugging enable/connection approval before MCP use. Do not use raw CDP or create another profile.
+- Local regressions/build/dry-runs pass, but PowerShell is blocked under Restricted. Hono 4.13.13 has five advisories (one moderate package); CVE-2026-126358 affects wildcard middleware and Admin uses default Hono plus a global auth `app.use("*")`. Exploitability was not proven; assess before release and do not alter pinned candidate dependencies. Current live state and UI remain unverified; no production mutation.
+- Remote write identity is unverified; do not publish local ahead commits yet. No force push or unrelated PR11 merge.
+
+## GFS-COD-MO-108 trust original bytes and reproducible bundle (2026-11-16 UTC)
+
+**Decision:** preserve D: as immutable recovered evidence, continue isolated work in C:, and accept exact source/build provenance against the recorded Cloudflare module without authorizing release.
+
+- Original D: mixed-EOL inputs reproduce historical source composite `3d0d17a3...`; the prior MO-93/94 missing-input finding is superseded, not erased. Canonical LF/CRLF composites remain valid but are different inputs.
+- Exact commit `ae4a5cb93fd4a26e396359bcefb31ae4518604c0` exported into temporary storage with fresh locked dependencies and official Wrangler dry-run reproduces the full 1,323,158-byte module SHA256 `6fd900138e8f8aeef51035bf58fa447fb064fa6e226cb4d4aee488f1be4ab49f`. No source repair, duplicate upload or replacement approval is justified. This is a match against recorded MO-106 provider evidence, not a fresh live resource check.
+- Preserve both object stores, D:-only dangling `beef29f0...`/`caa5a340...`, C:'s four unpublished MO commits and pre-existing edits. Never GC/prune, overwrite, reset/clean, force-push or merge broad PR11. Future isolated-branch synchronization must be normal fast-forward after authenticated correct writer/review, with remote SHA readback; it was not executed.
+- PS integration remains policy-blocked; Hono advisory assessment remains open. Retain pinned forensic dependencies rather than silently changing the identified artifact. Do not invoke existing runner paths using `-ExecutionPolicy Bypass`.
+- No exposed authenticated MCP means no live safety PASS, preview, promotion, settlement, messaging or CAPI activation. Reconnect only the existing Chrome MCP/profile as the next owner gate; then verify visible identity, current production baselines and approved GET-only preview mechanism.
+
 ## GFS-COD-MO-91 recover before re-upload (2026-11-08 PKT)
 
 **Decision:** resolve the prior upload through read-only authoritative version records before permitting another upload.

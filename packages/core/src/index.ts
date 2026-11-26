@@ -21,6 +21,7 @@ export * from "./whatsapp-content";
 export * from "./whatsapp-media";
 export * from "./province-list";
 export * from "./service-window";
+export * from "./free-messaging";
 export * from "./payment-reference";
 export * from "./service-window";
 export * from "./cancellation";

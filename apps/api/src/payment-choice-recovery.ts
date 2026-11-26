@@ -78,13 +78,15 @@ export async function enqueueDuePaymentChoiceRecoveryStages(
   db: D1Database,
   now: Date,
   enabled: boolean,
-  configuredStartAt: string | undefined
+  configuredStartAt: string | undefined,
+  orderIntentAutomationEnabled = false
 ): Promise<PaymentChoiceRecoveryScheduleResult> {
   const result: PaymentChoiceRecoveryScheduleResult = { scheduled: 0, queued: 0, blocked: 0, skipped: 0 };
   if (!enabled) return result;
   const activationAt = startAt(configuredStartAt);
   if (!activationAt) return result;
   const timestamp = iso(now);
+  const intentExclusion = orderIntentAutomationEnabled ? "AND NOT EXISTS(SELECT 1 FROM order_confirmation_intents oi WHERE oi.order_id=o.id AND oi.workflow_version='GFS-ORDERFLOW-INTENT-030-V1')" : "";
   const candidates = await db.prepare(`SELECT o.id,o.created_at,p.id AS payment_id,c.wa_id,wc.last_inbound_message_id,wc.last_inbound_at,
       CASE WHEN json_extract(wc.state_data,'$.language')='ur' THEN 'ur' ELSE 'en' END AS locale
     FROM orders o JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id
@@ -97,6 +99,7 @@ export async function enqueueDuePaymentChoiceRecoveryStages(
       AND NOT EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id)
       AND NOT EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id)
       AND NOT EXISTS(SELECT 1 FROM payment_choice_recovery_stages existing_stage WHERE existing_stage.order_id=o.id)
+      ${intentExclusion}
     ORDER BY o.created_at,o.id LIMIT 100`).bind(activationAt, timestamp).all<{
       id: string; created_at: string; payment_id: string; wa_id: string; last_inbound_message_id: string | null; last_inbound_at: string | null; locale: "en" | "ur";
     }>();
@@ -122,7 +125,7 @@ export async function enqueueDuePaymentChoiceRecoveryStages(
       EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.customer_id=c.id OR x.wa_id=c.wa_id) AS opted_out
     FROM payment_choice_recovery_stages s JOIN orders o ON o.id=s.order_id JOIN payments p ON p.order_id=o.id
       JOIN customers c ON c.id=o.customer_id JOIN whatsapp_conversations wc ON wc.wa_id=c.wa_id
-    WHERE s.status='PENDING' AND s.due_at<=? ORDER BY s.due_at,s.order_id LIMIT 100`).bind(timestamp).all<{
+     WHERE s.status='PENDING' AND s.due_at<=? ${intentExclusion} ORDER BY s.due_at,s.order_id LIMIT 100`).bind(timestamp).all<{
       order_id: string; stage_minutes: PaymentChoiceRecoveryStageMinutes; outbound_idempotency_key: string; inbound_message_id: string | null; inbound_at: string | null;
       state: string; payment_status: string; archived_at: string | null; review_state: string; method: string | null; customer_id: string; wa_id: string; conversation_state: string;
       last_inbound_message_id: string | null; last_inbound_at: string | null; has_receipt: number; is_cod: number; opted_out: number;

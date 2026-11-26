@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage } from "@gfs/core";
+import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, parseWhatsAppDeliveryReceipts, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage, type FreeMessagingDecision, type OrderIntentPersistence } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 import { createPaymentV2Schedule, enqueueDuePaymentV2Stages, isPaymentReminderV2ServiceWindowOpen, resolvePaymentReminderCodFallback, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
 import { enqueueDuePaymentChoiceRecoveryStages, paymentChoiceRecoveryCopy } from "./payment-choice-recovery";
+import { anchorOrderIntentOnDelivery, cancelOrderIntent, expireDueOrderIntents, expireOrderIntent, formatIntentRemainingTime, ORDER_INTENT_VERSION, orderIntentCodConfirmationText, orderIntentNewOrderButton, orderIntentOptionRows, orderIntentOptionsText, orderIntentReminderText, queueDueOrderIntentReminders, setOrderIntentChoiceState, switchIntentAdvanceToCod } from "./order-intent";
 
 type Env = {
   Bindings: {
@@ -37,6 +38,7 @@ type Env = {
     PAYMENT_UTILITY_TEMPLATES_APPROVED?: string;
     PAYMENT_CHOICE_RECOVERY_ENABLED?: string;
     PAYMENT_CHOICE_RECOVERY_START_AT?: string;
+     ORDER_INTENT_AUTOMATION_ENABLED?: string;
     CF_VERSION_METADATA?: { id: string; tag?: string; timestamp?: string };
   };
 };
@@ -95,7 +97,8 @@ async function createFlowToken(waId: string, inboundId: string, secret: string):
 async function verifyFlowToken(token: string, secret: string): Promise<string | null> { const [payload, signature] = token.split("."); if (!payload || !signature) return null; try { const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]); if (!(await crypto.subtle.verify("HMAC", key, decodeBase64Url(signature), new TextEncoder().encode(payload)))) return null; const data = JSON.parse(new TextDecoder().decode(decodeBase64Url(payload))) as { waId?: string; exp?: number }; return typeof data.waId === "string" && typeof data.exp === "number" && data.exp > Date.now() ? data.waId : null; } catch { return null; } }
 
 type CodQuoteSnapshot = { baseAmountPkr: number; feePkr: number; totalPkr: number; policyRevision: string; collectionPolicyHash: string | null; remittancePolicyHash: string | null };
-type ConversationData = { language?: "en" | "ur"; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; checkoutId?: string; orderId?: string; orderNumber?: string; amountPkr?: number; codQuote?: CodQuoteSnapshot; cancellationFeedback?: CancellationFeedbackState };
+type ConversationData = { language?: "en" | "ur"; freeMessagingEvidence?: unknown; fullName?: string; deliveryAddress?: string; nearbyPlace?: string; city?: string; contactNumber?: string; province?: string; fertilizerSelected?: boolean; checkoutId?: string; intentId?: string; orderId?: string; orderNumber?: string; amountPkr?: number; paymentUnavailable?: boolean; codQuote?: CodQuoteSnapshot; cancellationFeedback?: CancellationFeedbackState };
+const LANGUAGE_SELECTION_PROMPT = "Choose your language / اپنی زبان منتخب کریں";
 
 type PendingCancellationEvent = { id: string; conversationId: string; maskedRef: string; stage: CancellationStage; language: "en" | "ur" | "UNKNOWN"; providerEventId: string; occurredAt: string };
 type PendingCancellationFeedback = { cancellationEventId: string; eventType: "REASON" | "SUGGESTION" | "SKIPPED" | "OUTCOME" | "RESTARTED"; reasonCode?: CancellationReasonCode; suggestion?: string; recoveryCode?: string; responseOutcome: "REASON_SELECTED" | "FEEDBACK_SKIPPED" | "SUGGESTION_REQUESTED" | "SUGGESTION_PROVIDED" | "SUGGESTION_SKIPPED" | "RESTARTED"; providerEventId: string; occurredAt: string; suggestionExpiresAt?: string };
@@ -144,7 +147,7 @@ function codTestHoldForAdmission(rolloutMode: string | undefined): 0 | 1 | undef
 }
 
 type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> }; image?: OutboundImage; flow?: { id: string; token: string } };
-type ConversationOutboundAssociation = { orderId?: string; customerId?: string; kind?: string };
+type ConversationOutboundAssociation = { orderId?: string; customerId?: string; kind?: string; intentId?: string; locale?: "en" | "ur" };
 
 const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: string }>> = {
   WELCOME: { en: "Welcome to Get Free Seeds! Tap below to begin your order.", ur: "گٹ فری سیڈز میں خوش آمدید! آرڈر شروع کرنے کے لیے نیچے دبائیں۔" },
@@ -292,11 +295,25 @@ export function guidedReplyMediaKey(normalized: string, state: string, nextState
   return nextStateTemplate[nextState];
 }
 
+async function linkOrderIntentPresentation(db: D1Database, intentId: string, providerMessageId: string): Promise<void> {
+  await db.prepare(`UPDATE order_confirmation_intents SET presentation_message_id=COALESCE(presentation_message_id,?),updated_at=?
+    WHERE intent_id=? AND workflow_version=? AND presentation_message_id IS NULL AND state NOT IN ('EXPIRED','CANCELLED','PRESENTATION_FAILED')`).bind(providerMessageId, new Date().toISOString(), intentId, ORDER_INTENT_VERSION).run();
+  await anchorOrderIntentOnDelivery(db, intentId, providerMessageId);
+  await db.prepare("DELETE FROM whatsapp_delivery_receipts WHERE provider_message_id=? AND EXISTS(SELECT 1 FROM order_confirmation_intents WHERE intent_id=? AND presented_at IS NOT NULL)").bind(providerMessageId,intentId).run();
+}
+
+async function evaluateConversationFreeMessage(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date()): Promise<FreeMessagingDecision> {
+  return evaluateStoredFreeWhatsAppOutbound(db,waId,localeHint,now);
+}
+
 async function sendConversationReply(db: D1Database, provider: ReturnType<typeof createWhatsAppProvider>, to: string, inboundId: string, body: string, options: ConversationReplyOptions = {}, idempotencyKey = `conversation_reply:${inboundId}`, association: ConversationOutboundAssociation = {}): Promise<{ sent: boolean; messageId?: string }> {
   const key = idempotencyKey;
   const existing = await db.prepare("SELECT id,status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ id: string; status: string; provider_message_id: string | null }>();
   const now = new Date().toISOString();
-  if (existing?.status === "SENT" || existing?.provider_message_id) return { sent: true, ...(existing.provider_message_id ? { messageId: existing.provider_message_id } : {}) };
+  if (existing?.status === "SENT" || existing?.provider_message_id) {
+    if (association.intentId && existing.provider_message_id) await linkOrderIntentPresentation(db, association.intentId, existing.provider_message_id);
+    return { sent: true, ...(existing.provider_message_id ? { messageId: existing.provider_message_id } : {}) };
+  }
   if (existing && isTerminalOutboxStatus(existing.status)) return { sent: false };
   const outboundId = existing?.id ?? crypto.randomUUID();
   if (!existing) await db.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,order_id,customer_id,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").bind(outboundId, key, association.orderId ?? null, association.customerId ?? null, association.kind ?? "CONVERSATION_REPLY", "PENDING", 0, now, now).run();
@@ -305,6 +322,16 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
     await db.batch([
       db.prepare("UPDATE outbound_messages SET status='PERMANENT_FAILURE',last_error='WHATSAPP_SERVICE_WINDOW_CLOSED',updated_at=? WHERE id=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY','SENDING')").bind(now, outboundId),
       db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "OUTBOUND_MESSAGE", outboundId, crypto.randomUUID(), JSON.stringify({ reason: "WHATSAPP_SERVICE_WINDOW_CLOSED" }), now)
+    ]);
+    return { sent: false };
+  }
+  const freeDecision = await evaluateConversationFreeMessage(db, to, association.locale, new Date());
+  if (!freeDecision.eligible) {
+    const reason = `FREE_MESSAGE_BLOCKED:${freeDecision.reason}`;
+    await db.batch([
+      db.prepare("UPDATE outbound_messages SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE id=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY','SENDING')").bind(reason, new Date().toISOString(), outboundId),
+      db.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE idempotency_key=? AND status IN ('PENDING','RETRY','QUEUED')").bind(reason, new Date().toISOString(), key),
+      db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_FREE_MESSAGE_SUPPRESSED", "SYSTEM", "OUTBOUND_MESSAGE", outboundId, crypto.randomUUID(), JSON.stringify({ reason, kind: association.kind ?? "CONVERSATION_REPLY" }), new Date().toISOString())
     ]);
     return { sent: false };
   }
@@ -322,10 +349,20 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
   // acknowledgement; never classify an accepted send as failed or resend it.
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const saved = await db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run();
-      if (saved.meta.changes) return { sent: true, messageId: sent.providerMessageId };
+      const now = new Date().toISOString();
+      const statements = [db.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, now, key)];
+      if (association.intentId) statements.push(db.prepare(`UPDATE order_confirmation_intents SET presentation_message_id=COALESCE(presentation_message_id,?),updated_at=?
+        WHERE intent_id=? AND workflow_version=? AND presentation_message_id IS NULL AND state NOT IN ('EXPIRED','CANCELLED','PRESENTATION_FAILED')`).bind(sent.providerMessageId, now, association.intentId, ORDER_INTENT_VERSION));
+      const saved = await db.batch(statements);
+      if (Number(saved[0]?.meta?.changes ?? 0)) {
+        if (association.intentId) await anchorOrderIntentOnDelivery(db, association.intentId, sent.providerMessageId, new Date(now));
+        return { sent: true, messageId: sent.providerMessageId };
+      }
       const current = await db.prepare("SELECT provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ provider_message_id: string | null }>();
-      if (current?.provider_message_id === sent.providerMessageId) return { sent: true, messageId: sent.providerMessageId };
+      if (current?.provider_message_id === sent.providerMessageId) {
+        if (association.intentId) await linkOrderIntentPresentation(db, association.intentId, sent.providerMessageId);
+        return { sent: true, messageId: sent.providerMessageId };
+      }
     } catch { /* bounded retry below */ }
   }
   return { sent: true, messageId: sent.providerMessageId };
@@ -352,10 +389,10 @@ async function saveCustomerTransactionReference(db: D1Database, waId: string, or
   }
 }
 
-type PaymentPartStatus = "SENT" | "SKIPPED" | "FAILED";
+type PaymentPartStatus = "SENT" | "SKIPPED" | "FAILED" | "BLOCKED";
 type PaymentDeliveryResult = { textSent: boolean; qrStatus: PaymentPartStatus };
 
-async function sendPaymentPart(db: D1Database, to: string, orderId: string, key: string, kind: string, send: () => Promise<{ providerMessageId: string }>): Promise<PaymentPartStatus> {
+async function sendPaymentPart(db: D1Database, to: string, orderId: string, key: string, kind: string, send: () => Promise<{ providerMessageId: string }>, locale: "en" | "ur"): Promise<PaymentPartStatus> {
   const existing = await db.prepare("SELECT id,status,provider_message_id,updated_at FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ id: string; status: string; provider_message_id: string | null; updated_at?: string }>();
   if (existing?.provider_message_id || (existing && ["SENT", "DELIVERED", "READ"].includes(existing.status))) return "SENT";
   if (existing?.status === "SKIPPED") return "SKIPPED";
@@ -365,6 +402,12 @@ async function sendPaymentPart(db: D1Database, to: string, orderId: string, key:
   const staleSending = row?.status === "SENDING" && row.updated_at && Date.now() - Date.parse(row.updated_at) > 5 * 60 * 1000;
   if (row?.provider_message_id || (row && ["SENT", "DELIVERED", "READ"].includes(row.status))) return "SENT";
   if (!row || (!staleSending && !["PENDING", "FAILED", "RETRY"].includes(row.status))) return "FAILED";
+  const freeDecision = await evaluateConversationFreeMessage(db, to, locale);
+  if (!freeDecision.eligible) {
+    const reason = `FREE_MESSAGE_BLOCKED:${freeDecision.reason}`;
+    await db.prepare("UPDATE outbound_messages SET status='SKIPPED',last_error=?,updated_at=? WHERE id=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY','SENDING')").bind(reason, new Date().toISOString(), row.id).run();
+    return "BLOCKED";
+  }
   const claim = await db.prepare("UPDATE outbound_messages SET status='SENDING',attempt_count=attempt_count+1,updated_at=? WHERE id=? AND provider_message_id IS NULL AND (status IN ('PENDING','FAILED','RETRY') OR (status='SENDING' AND updated_at<?))").bind(now, row.id, new Date(Date.now() - 5 * 60 * 1000).toISOString()).run();
   if (!claim.meta.changes) return "FAILED";
   try {
@@ -414,14 +457,16 @@ async function paymentQrFromR2(db: D1Database, bucket: R2Bucket, config: ReturnT
 async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, to: string, orderId: string, orderNumber: string, amount: number, method: PaymentMethod, locale: "en" | "ur", message: string, requestKey: string, config: ReturnType<typeof normalizePaymentMethodRow>): Promise<PaymentDeliveryResult> {
   const textKey = `${requestKey}:text`;
   const qrKey = `${requestKey}:qr`;
-  const conversation = await db.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id=?").bind(to).first<{ last_inbound_at: string | null }>();
-  if (!isInsideWhatsAppServiceWindow(conversation?.last_inbound_at)) {
-    const reason = "WHATSAPP_SERVICE_WINDOW_CLOSED";
+  const freeDecision = await evaluateConversationFreeMessage(db, to, locale);
+  if (!freeDecision.eligible) {
+    const reason = `FREE_MESSAGE_BLOCKED:${freeDecision.reason}`;
     const blockedAt = new Date().toISOString();
     await markPaymentPartSkipped(db, orderId, textKey, "WHATSAPP_PAYMENT_TEXT", reason);
     await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", reason);
-    await db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ reason }), blockedAt).run();
-    return { textSent: false, qrStatus: "FAILED" };
+    await db.batch([textKey,qrKey].map((key) => db.prepare("UPDATE outbound_messages SET status='SKIPPED',last_error=?,updated_at=? WHERE idempotency_key=? AND provider_message_id IS NULL AND status IN ('PENDING','FAILED','RETRY')").bind(reason,blockedAt,key)));
+    await db.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','SUCCEEDED','DEAD_LETTER')").bind(reason,blockedAt,requestKey).run();
+    await db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_FREE_MESSAGE_SUPPRESSED", "SYSTEM", "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ reason }), blockedAt).run();
+    return { textSent: false, qrStatus: "BLOCKED" };
   }
   const order = await db.prepare("SELECT o.order_number,o.total_payable,o.state,o.payment_status,p.method AS selected_method FROM orders o JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(orderId).first<Record<string, unknown>>();
   const currentRow = await db.prepare("SELECT pm.* FROM payment_methods pm JOIN payment_qr_assets qa ON qa.method=pm.method AND qa.derivative_r2_key=pm.qr_r2_key AND qa.active=1 AND qa.decoder_agreement=1 AND qa.payload_match=1 AND qa.scan_pass=1 AND qa.independent_ownership_verified=1 AND qa.independent_evidence_ref IS NOT NULL AND TRIM(qa.independent_evidence_ref)<>'' WHERE pm.method=? AND pm.enabled=1 AND pm.qr_owner_verified=1").bind(method).first<Record<string, unknown>>();
@@ -436,7 +481,7 @@ async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, prov
     await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", "PAYMENT_METHOD_NO_LONGER_ELIGIBLE");
     return { textSent: false, qrStatus: "SKIPPED" };
   }
-  const textStatus = await sendPaymentPart(db, to, orderId, textKey, "WHATSAPP_PAYMENT_TEXT", () => provider.sendText(to, currentMessage));
+  const textStatus = await sendPaymentPart(db, to, orderId, textKey, "WHATSAPP_PAYMENT_TEXT", () => provider.sendText(to, currentMessage), locale);
   const completedQr = await db.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(qrKey).first<{ status: string; provider_message_id: string | null }>();
   let qrStatus: PaymentPartStatus;
   if (completedQr?.provider_message_id || (completedQr && ["SENT", "DELIVERED", "READ"].includes(completedQr.status))) {
@@ -450,7 +495,7 @@ async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, prov
   } else {
     try {
       const qr = await paymentQrFromR2(db, bucket, currentConfig);
-      qrStatus = qr ? await sendPaymentPart(db, to, orderId, qrKey, "WHATSAPP_PAYMENT_QR", () => provider.sendPaymentQr(to, qr)) : "SKIPPED";
+      qrStatus = qr ? await sendPaymentPart(db, to, orderId, qrKey, "WHATSAPP_PAYMENT_QR", () => provider.sendPaymentQr(to, qr), locale) : "SKIPPED";
     } catch (error) {
       const reason = error instanceof Error ? error.message.slice(0, 160) : "PAYMENT_QR_DELIVERY_BLOCKED";
       qrStatus = await markPaymentPartSkipped(db, orderId, qrKey, "WHATSAPP_PAYMENT_QR", reason);
@@ -459,7 +504,8 @@ async function deliverPaymentInstructions(db: D1Database, bucket: R2Bucket, prov
       await db.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "PAYMENT_QR_DELIVERY_BLOCKED", "SYSTEM", "ORDER", orderId, crypto.randomUUID(), JSON.stringify({ method, orderNumber, reason }), new Date().toISOString()).run();
     }
   }
-  await db.prepare("UPDATE outbox_jobs SET status=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','SUCCEEDED','PERMANENT_FAILURE','DEAD_LETTER')").bind(textStatus === "SENT" && qrStatus !== "FAILED" ? "SENT" : "RETRY", qrStatus === "FAILED" ? "PAYMENT_QR_DELIVERY_BLOCKED" : null, new Date().toISOString(), requestKey).run();
+  const freeBlocked = textStatus === "BLOCKED" || qrStatus === "BLOCKED";
+  await db.prepare("UPDATE outbox_jobs SET status=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','SUCCEEDED','PERMANENT_FAILURE','DEAD_LETTER')").bind(freeBlocked ? "PERMANENT_FAILURE" : textStatus === "SENT" && qrStatus !== "FAILED" ? "SENT" : "RETRY", freeBlocked ? "FREE_MESSAGE_BLOCKED" : qrStatus === "FAILED" ? "PAYMENT_QR_DELIVERY_BLOCKED" : null, new Date().toISOString(), requestKey).run();
   return { textSent: textStatus === "SENT", qrStatus };
 }
 
@@ -507,24 +553,29 @@ function codConfirmationLines(baseAmountPkr: number, feePkr: number, totalPkr: n
   return [`Order amount including delivery: PKR ${baseAmountPkr}`, `COD collection fee: PKR ${feePkr}`, `TOTAL ON DELIVERY: PKR ${totalPkr}`, "Confirm only if you agree to pay this full amount on delivery."];
 }
 
-async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuoteSnapshot | undefined, correlationId: string, waId: string, stateData: string, testHold: 0 | 1 | undefined): Promise<"CREATED" | "NOT_ELIGIBLE"> {
+export async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuoteSnapshot | undefined, correlationId: string, waId: string, stateData: string, testHold: 0 | 1 | undefined, intentId?: string): Promise<"CREATED" | "NOT_ELIGIBLE"> {
   if (testHold === undefined) return "NOT_ELIGIBLE";
   if (!quote || codQuote(quote.baseAmountPkr, quote.feePkr) !== quote.totalPkr) return "NOT_ELIGIBLE";
   const now = new Date().toISOString();
   const correlationHash = await customerTransactionReferenceHash(correlationId);
   const auditId = crypto.randomUUID();
+  const eligibleOrderState = intentId ? "o.state IN ('DETAILS_COMPLETED','PAYMENT_PENDING')" : "o.state='DETAILS_COMPLETED'";
+  const priorAdvanceGuard = intentId
+    ? "AND NOT EXISTS(SELECT 1 FROM audit_log h WHERE h.entity_id IN (o.id,p.id) AND h.action IN ('PAYMENT_APPROVED','PAYMENT_CONFIRMED','RECEIPT_SUBMITTED'))"
+    : "AND NOT EXISTS(SELECT 1 FROM audit_log h WHERE h.entity_id IN (o.id,p.id) AND h.action IN ('PAYMENT_METHOD_SELECTED','PAYMENT_APPROVED','PAYMENT_CONFIRMED','RECEIPT_SUBMITTED'))";
+  const instructionsGuard = intentId ? "" : "AND NOT EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS')";
+  const intentGuard = intentId ? "AND EXISTS(SELECT 1 FROM order_confirmation_intents i WHERE i.intent_id=? AND i.order_id=o.id AND i.workflow_version=? AND i.state='COD_CONFIRM_PENDING' AND (i.deadline_at IS NULL OR i.deadline_at>?))" : "";
   const results = await db.batch([
     db.prepare(`INSERT OR IGNORE INTO cod_order_details(order_id,base_amount_pkr,cod_fee_pkr,quoted_total_pkr,policy_revision,collection_policy_hash,remittance_policy_hash,test_hold,status,created_at,updated_at)
       SELECT o.id,o.total_payable,cfg.fee_pkr,?,?,cfg.collection_policy_hash,cfg.remittance_policy_hash,?,'COD_PENDING',?,?
       FROM orders o JOIN payments p ON p.order_id=o.id JOIN province_delivery_rates province ON province.province=o.province AND province.enabled=1
       JOIN cod_configuration cfg ON cfg.id='default' AND cfg.enabled=1 JOIN audit_log a ON ${codAuditMatch}
-      WHERE o.id=? AND o.state='DETAILS_COMPLETED' AND o.payment_status='PENDING' AND o.total_payable=?
+      WHERE o.id=? AND ${eligibleOrderState} AND o.payment_status='PENDING' AND o.total_payable=? AND p.expected_amount=o.total_payable
       AND cfg.revision=? AND cfg.fee_pkr=? AND cfg.collection_policy_hash IS ? AND cfg.remittance_policy_hash IS ?
       AND p.method IS NULL AND p.review_state='PENDING' AND p.approved_amount IS NULL AND p.approved_by IS NULL AND p.approved_at IS NULL AND p.submitted_at IS NULL AND p.customer_transaction_reference IS NULL
       AND NOT EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id)
-      AND NOT EXISTS(SELECT 1 FROM audit_log h WHERE h.entity_id IN (o.id,p.id) AND h.action IN ('PAYMENT_METHOD_SELECTED','PAYMENT_APPROVED','PAYMENT_CONFIRMED','RECEIPT_SUBMITTED'))
-      AND NOT EXISTS(SELECT 1 FROM outbox_jobs j WHERE j.entity_id=o.id AND j.kind='WHATSAPP_PAYMENT_INSTRUCTIONS')
-      AND EXISTS(SELECT 1 FROM whatsapp_conversations c WHERE c.wa_id=? AND c.state='COD_CONFIRM' AND c.state_data=?)`).bind(quote.totalPkr, quote.policyRevision, testHold, now, now, orderId, quote.baseAmountPkr, quote.policyRevision, quote.feePkr, quote.collectionPolicyHash, quote.remittancePolicyHash, waId, stateData),
+      ${priorAdvanceGuard} ${instructionsGuard}
+      AND EXISTS(SELECT 1 FROM whatsapp_conversations c WHERE c.wa_id=? AND c.state='COD_CONFIRM' AND c.state_data=?) ${intentGuard}`).bind(quote.totalPkr, quote.policyRevision, testHold, now, now, orderId, quote.baseAmountPkr, quote.policyRevision, quote.feePkr, quote.collectionPolicyHash, quote.remittancePolicyHash, waId, stateData, ...(intentId ? [intentId, ORDER_INTENT_VERSION, now] : [])),
     db.prepare("UPDATE orders SET state='COD_PENDING',payment_status='COD_PENDING',updated_at=? WHERE id=? AND changes()=1").bind(now, orderId),
     db.prepare("UPDATE payments SET review_state='COD_PENDING',updated_at=? WHERE order_id=? AND changes()=1").bind(now, orderId),
     db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,? WHERE changes()=1").bind(auditId, "COD_ORDER_CONFIRMED", "CUSTOMER", "ORDER", orderId, correlationHash, JSON.stringify({ orderId, baseAmountPkr: quote.baseAmountPkr, codFeePkr: quote.feePkr, totalPkr: quote.totalPkr, policyRevision: quote.policyRevision, admission: testHold === 0 ? "PUBLIC" : "TESTER_ONLY", testHold }), now)
@@ -532,7 +583,7 @@ async function finalizeCodOrder(db: D1Database, orderId: string, quote: CodQuote
   return results.every((result) => Number(result.meta?.changes ?? 0) === 1) ? "CREATED" : "NOT_ELIGIBLE";
 }
 
-async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false, codRolloutMode?: string, codTesterWaId?: string, paymentRemindersV2Enabled = false, paymentAutomationV2Enabled = false): Promise<boolean> {
+async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, flowId: string, flowTokenSecret?: string, checkoutMode: string = "guided", events?: Queue, codEnabled = false, codRolloutMode?: string, codTesterWaId?: string, paymentRemindersV2Enabled = false, paymentAutomationV2Enabled = false, orderIntentAutomationEnabled = false): Promise<boolean> {
   const sessionContent = (key: WhatsAppTemplateKey, fallback: string, values: { orderNumber?: string; amount?: string | number; totalPkr?: string | number; province?: string; paymentMethod?: string; recipientName?: string; tillId?: string; orderSummaryItems?: string; deliveryFee?: string | number; orderTotal?: string | number; codFee?: string | number } = {}) => contentFor(db, key, fallback, values, `CHAT:${event.from}`, data.language ?? "en");
   const message = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string }; nfm_reply?: { response_json?: string } }; button?: { payload?: string; text?: string }; context?: { id?: string } } : {};
   const interaction = message.interactive?.button_reply ?? message.interactive?.list_reply;
@@ -542,6 +593,8 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   // Deduplicate before interpreting a replay against a later conversation state.
   const delivered = await db.prepare("SELECT provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(`conversation_reply:${event.id}`).first<{ provider_message_id: string | null }>();
   if (delivered?.provider_message_id) return true;
+  const priorFreeBlock = await db.prepare("SELECT last_error FROM outbound_messages WHERE idempotency_key=? AND status='PERMANENT_FAILURE'").bind(`conversation_reply:${event.id}`).first<{ last_error:string|null }>();
+  if (priorFreeBlock?.last_error?.startsWith("FREE_MESSAGE_BLOCKED:") || priorFreeBlock?.last_error === "WHATSAPP_SERVICE_WINDOW_CLOSED") return true;
   const recordedCancellationInput = await db.prepare(`SELECT provider_event_id FROM checkout_cancellation_events WHERE provider_event_id=?
     UNION ALL SELECT provider_event_id FROM checkout_cancellation_feedback_events WHERE provider_event_id=? LIMIT 1`).bind(`message:${event.id}`, `message:${event.id}`).first<{ provider_event_id: string }>();
   if (recordedCancellationInput) return true;
@@ -556,6 +609,27 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   const originalStateData = row?.state_data ?? "{}";
   let data: ConversationData = {};
   try { data = row?.state_data ? JSON.parse(row.state_data) as ConversationData : {}; } catch { data = {}; }
+  const sessionFreeMessagingEvidence = data.freeMessagingEvidence;
+  let intentRow = data.intentId ? await db.prepare(`SELECT i.intent_id,i.workflow_version,i.order_id,i.state,i.advance_total_pkr,i.cod_enabled,i.cod_fee_pkr,i.cod_total_pkr,i.cod_policy_revision,i.collection_policy_hash,i.remittance_policy_hash,i.presentation_message_id,i.presented_at,i.deadline_at,pref.locale,o.order_number,o.total_payable
+    FROM order_confirmation_intents i JOIN orders o ON o.id=i.order_id LEFT JOIN order_confirmation_intent_preferences pref ON pref.intent_id=i.intent_id WHERE i.intent_id=?`).bind(data.intentId).first<{ intent_id:string;workflow_version:string;order_id:string;state:string;advance_total_pkr:number;cod_enabled:number;cod_fee_pkr:number|null;cod_total_pkr:number|null;cod_policy_revision:string|null;collection_policy_hash:string|null;remittance_policy_hash:string|null;presentation_message_id:string|null;presented_at:string|null;deadline_at:string|null;locale:"en"|"ur"|null;order_number:string;total_payable:number }>():undefined;
+  if (intentRow?.deadline_at && Date.parse(intentRow.deadline_at) <= Date.now() && ["PRESENTATION_PENDING","AWAITING_DECISION","ADVANCE_PENDING","COD_CONFIRM_PENDING"].includes(intentRow.state)) {
+    await expireOrderIntent(db, intentRow.intent_id);
+    intentRow = (await db.prepare(`SELECT i.intent_id,i.workflow_version,i.order_id,i.state,i.advance_total_pkr,i.cod_enabled,i.cod_fee_pkr,i.cod_total_pkr,i.cod_policy_revision,i.collection_policy_hash,i.remittance_policy_hash,i.presentation_message_id,i.presented_at,i.deadline_at,pref.locale,o.order_number,o.total_payable
+      FROM order_confirmation_intents i JOIN orders o ON o.id=i.order_id LEFT JOIN order_confirmation_intent_preferences pref ON pref.intent_id=i.intent_id WHERE i.intent_id=?`).bind(intentRow.intent_id).first<NonNullable<typeof intentRow>>()) ?? undefined;
+  }
+  if (intentRow) {
+    data.intentId = intentRow.intent_id;
+    if (intentRow.locale === "en" || intentRow.locale === "ur") data.language = intentRow.locale;
+    data.orderId ??= intentRow.order_id;
+    data.orderNumber ??= intentRow.order_number;
+    data.amountPkr ??= Number(intentRow.total_payable);
+    if (Number(intentRow.cod_enabled) === 1 && intentRow.cod_fee_pkr !== null && intentRow.cod_total_pkr !== null) data.codQuote ??= {
+      baseAmountPkr: Number(intentRow.advance_total_pkr), feePkr: Number(intentRow.cod_fee_pkr), totalPkr: Number(intentRow.cod_total_pkr),
+      policyRevision: intentRow.cod_policy_revision ?? "", collectionPolicyHash: intentRow.collection_policy_hash ?? "", remittancePolicyHash: intentRow.remittance_policy_hash ?? ""
+    };
+  }
+  const intentExpired = Boolean(intentRow && (intentRow.state === "EXPIRED" || (intentRow.deadline_at && Date.parse(intentRow.deadline_at) <= Date.now() && ["AWAITING_DECISION","ADVANCE_PENDING","COD_CONFIRM_PENDING"].includes(intentRow.state))));
+  const intentActive = Boolean(intentRow && intentRow.workflow_version === ORDER_INTENT_VERSION && ["PRESENTATION_PENDING","AWAITING_DECISION","ADVANCE_PENDING","COD_CONFIRM_PENDING"].includes(intentRow.state) && (!intentRow.deadline_at || Date.parse(intentRow.deadline_at) > Date.now()));
   let callbackOrigin: "OFFER" | "REVIEW" | undefined;
   if (message.context?.id) {
     const origin = await db.prepare("SELECT kind FROM outbound_messages WHERE provider_message_id=? LIMIT 1").bind(message.context.id).first<{ kind: string }>();
@@ -578,7 +652,8 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
       .bind(event.from, data.orderId, await customerTransactionReferenceHash(event.id)).first<{ order_number: string; quoted_total_pkr: number }>();
     if (confirmed) {
       const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status.");
-      await sendConversationReply(db, provider, event.from, event.id, codConfirmationReply(confirmed.order_number, Number(confirmed.quoted_total_pkr)), { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] });
+      const confirmation = data.intentId ? orderIntentCodConfirmationText(confirmed.order_number, Number(confirmed.quoted_total_pkr), data.language === "ur" ? "ur" : "en") : codConfirmationReply(confirmed.order_number, Number(confirmed.quoted_total_pkr));
+      await sendConversationReply(db, provider, event.from, event.id, confirmation, { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] }, `conversation_reply:${event.id}`, { kind: "COD_CONFIRMATION", locale: data.language });
       return true;
     }
   }
@@ -608,7 +683,20 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     const submission = { fullName: data.fullName!, deliveryAddress: data.deliveryAddress!, nearbyPlace: data.nearbyPlace!, city: data.city!, contactNumber: data.contactNumber!, productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province!, fertilizerSelected: data.fertilizerSelected ?? false, whatsappNumber: event.from };
     const key = `WHATSAPP:CHECKOUT:${data.checkoutId ?? event.from}`;
     try {
-      const result = await persistFlowSubmission(db, submission, undefined, key, event.from);
+      const orderIntent = orderIntentAutomationEnabled && data.intentId && row?.id ? {
+        intentId: data.intentId,
+        conversationId: row.id,
+        version: ORDER_INTENT_VERSION,
+        locale: data.language === "ur" ? "ur" as const : "en" as const,
+        ...(data.codQuote ? {
+          codFeePkr: data.codQuote.feePkr,
+          codTotalPkr: data.codQuote.totalPkr,
+          codPolicyRevision: data.codQuote.policyRevision,
+          collectionPolicyHash: data.codQuote.collectionPolicyHash,
+          remittancePolicyHash: data.codQuote.remittancePolicyHash
+        } : {})
+      } satisfies OrderIntentPersistence : undefined;
+      const result = await persistFlowSubmission(db, submission, undefined, key, event.from, orderIntent);
       data.orderId = result.orderId; data.orderNumber = result.orderNumber;
       const quote = await getPersistedOrderSummary(db, result.orderId);
       data.amountPkr = quote.totalPayablePkr;
@@ -626,8 +714,15 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   const preSubmitStates = ["NEW", "LANGUAGE", "OFFER", "FERTILIZER", "PRODUCT", "PROVINCE", "FULL_NAME", "ADDRESS", "NEARBY", "CITY", "CONTACT", "REVIEW"];
   const feedback = state === "CANCELLED" ? data.cancellationFeedback : undefined;
   const feedbackReason = cancellationReasonFromAction(normalized);
-  const preSubmitCancellation = preSubmitStates.includes(state) && (normalized === "CANCEL" || normalized === "CANCEL_ORDER" || (state === "OFFER" && normalized === "CANCEL_OFFER"));
+  const intentActionState = Boolean(intentActive && intentRow && data.intentId && data.intentId === intentRow.intent_id);
+  const intentExpiredStart = Boolean(intentExpired && normalized === "START");
+  const intentExpiredChoice = Boolean(intentExpired && /^(PAY_ADVANCE|PAY_COD|CONFIRM_COD_ORDER|CANCEL|CANCEL_ORDER|ADVANCE_PAYMENT|COD)$/.test(normalized));
+  const intentCancelAction = Boolean(intentActionState && ["REVIEW","PAYMENT_METHOD","PAYMENT_PENDING","COD_CONFIRM"].includes(state) && /^(CANCEL|CANCEL_ORDER)$/.test(normalized));
+  const preSubmitCancellation = preSubmitStates.includes(state) && !intentRow && !intentExpired && !intentCancelAction && (normalized === "CANCEL" || normalized === "CANCEL_ORDER" || (state === "OFFER" && normalized === "CANCEL_OFFER"));
   const actionAllowed = /^(STATUS|CHECK_ORDER|HELP|SUPPORT)$/.test(normalized)
+    || intentExpiredStart
+    || intentExpiredChoice
+    || intentCancelAction
     || preSubmitCancellation
     || (state === "OFFER" && /^(CONTINUE_ORDER|CANCEL_OFFER|CANCEL_ORDER)$/.test(normalized))
     || (state === "NEW" && normalized === "GET_FREE_PACKS")
@@ -639,8 +734,10 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     || (state === "LANGUAGE" && /^(LANG_EN|LANG_UR)$/.test(normalized))
     || (["FERTILIZER", "PRODUCT"].includes(state) && /^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/.test(normalized))
     || (state === "PROVINCE" && normalized.startsWith("PROVINCE_"))
-    || (state === "REVIEW" && (/^(CONFIRM|CONFIRM_ORDER|PLACE_ORDER|BACK|CANCEL_ORDER)$/.test(normalized) || normalized === "PAY_ADVANCE" || (normalized === "PAY_COD" && codAvailable)))
+    || (state === "REVIEW" && (/^(CONFIRM|CONFIRM_ORDER|PLACE_ORDER|BACK|CANCEL_ORDER)$/.test(normalized) || (normalized === "PAY_ADVANCE" && !data.paymentUnavailable) || (normalized === "PAY_COD" && codAvailable)))
     || (["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(state) && Boolean(paymentMethodFromAction(normalized)))
+    || (intentActionState && state === "PAYMENT_PENDING" && normalized === "PAY_COD" && codAvailable)
+    || (intentActionState && state === "PAYMENT_METHOD" && normalized === "COD" && codAvailable)
     || (state === "PAYMENT_METHOD" && /^(ADVANCE_PAYMENT|COD)$/.test(normalized))
     || (state === "COD_CONFIRM" && /^(CONFIRM_COD_ORDER|ADVANCE_PAYMENT)$/.test(normalized))
     || (state === "COD_PENDING" && normalized === "ADVANCE_PAYMENT")
@@ -651,10 +748,35 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   let completePaymentMethods: Awaited<ReturnType<typeof completeEnabledPaymentMethods>> = [];
   let showPaymentChoice = false;
   let showAdvanceMethods = false;
+  let showOrderIntentOptions = false;
   let feedbackOptions: ConversationReplyOptions | undefined;
   let pendingCancellationEvent: PendingCancellationEvent | undefined;
   let pendingCancellationFeedback: PendingCancellationFeedback | undefined;
-  if (invalidAction) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; }
+  if (intentExpiredChoice) {
+    nextState = "EXPIRED";
+    reply = orderIntentReminderText(30, data.language ?? "en", data.orderNumber);
+    feedbackOptions = { buttons: [orderIntentNewOrderButton(data.language === "ur" ? "ur" : "en")] };
+  }
+  else if (intentExpiredStart) {
+    nextState = "LANGUAGE";
+    data = { freeMessagingEvidence: sessionFreeMessagingEvidence };
+    reply = LANGUAGE_SELECTION_PROMPT;
+  }
+  else if (intentCancelAction && data.intentId) {
+    const cancelled=await cancelOrderIntent(db,data.intentId,new Date());
+    if(cancelled){
+      const locale=data.language??"en",occurredAt=new Date().toISOString(),cancellationEventId=crypto.randomUUID(),originalStage:CancellationStage="REVIEW",conversationId=row?.id??crypto.randomUUID();
+      pendingCancellationEvent={id:cancellationEventId,conversationId,maskedRef:maskCancellationReference(event.from),stage:originalStage,language:data.language??"UNKNOWN",providerEventId:`message:${event.id}`,occurredAt};
+      data={language:data.language,cancellationFeedback:{eventId:cancellationEventId,originalStage,phase:"REASON",fertilizerSelected:Boolean(data.fertilizerSelected)}};
+      nextState="CANCELLED";reply=`${cancellationConfirmation(locale,originalStage)}\n\n${cancellationReasonPrompt(locale)}`;
+      feedbackOptions={list:{buttonText:locale==="ur"?"وجہ منتخب کریں":"Choose a reason",rows:[...cancellationReasonRows(locale,Boolean(data.cancellationFeedback?.fertilizerSelected)),{id:"SKIP_FEEDBACK",title:locale==="ur"?"چھوڑیں":"Skip",description:locale==="ur"?"وجہ بتانا اختیاری ہے۔":"Sharing a reason is optional."}]}};
+    }else{
+      const outcome=await expireOrderIntent(db,data.intentId,new Date());
+      nextState=outcome==="EXPIRED"?"EXPIRED":outcome==="PAYMENT_REVIEW"?"PAYMENT_REVIEW":state;
+      reply=outcome==="EXPIRED"?orderIntentReminderText(30,data.language??"en",data.orderNumber):outcome==="PAYMENT_REVIEW"?(data.language==="ur"?"آپ کی رسید ایڈمن کے جائزے میں ہے۔ ادائیگی کی تصدیق تک آرڈر نہیں بھیجا جائے گا۔":"Your receipt is under Admin review. The order will not be dispatched until payment is verified."):(await sessionContent("ORDER_STATUS","The order is already confirmed or otherwise no longer cancellable.",{orderNumber:data.orderNumber??""})).text;
+    }
+  }
+  else if (invalidAction) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; }
   else if (preSubmitCancellation) {
     const locale = data.language ?? "en";
     const occurredAt = new Date().toISOString();
@@ -663,7 +785,7 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     const conversationId = row?.id ?? crypto.randomUUID();
     pendingCancellationEvent = { id: cancellationEventId, conversationId, maskedRef: maskCancellationReference(event.from), stage: originalStage, language: data.language ?? "UNKNOWN", providerEventId: `message:${event.id}`, occurredAt };
     nextState = "CANCELLED";
-    data = { language: data.language, cancellationFeedback: { eventId: cancellationEventId, originalStage, phase: "REASON", fertilizerSelected: Boolean(data.fertilizerSelected) } };
+    data = { language: data.language, freeMessagingEvidence: sessionFreeMessagingEvidence, cancellationFeedback: { eventId: cancellationEventId, originalStage, phase: "REASON", fertilizerSelected: Boolean(data.fertilizerSelected) } };
     reply = `${cancellationConfirmation(locale, originalStage)}\n\n${cancellationReasonPrompt(locale)}`;
     feedbackOptions = { list: { buttonText: locale === "ur" ? "وجہ منتخب کریں" : "Choose a reason", rows: [
       ...cancellationReasonRows(locale, Boolean(data.cancellationFeedback!.fertilizerSelected)),
@@ -712,11 +834,11 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
     const resolved = await resolvePaymentReminderCodFallback(db, data.orderId, event.from, choice, event.id, policy);
     if (resolved === "CONFIRMED") { nextState = "COD_PENDING"; reply = data.language === "ur" ? `آرڈر ${data.orderNumber ?? ""} COD کے لیے تصدیق ہو گیا۔ ڈیلیوری پر PKR ${Number(data.amountPkr ?? 0) + 125} ادا کریں۔` : `Order ${data.orderNumber ?? ""} is confirmed for COD. Pay PKR ${Number(data.amountPkr ?? 0) + 125} on delivery.`; }
     else if (resolved === "KEPT_ADVANCE") { nextState = "PAYMENT_PENDING"; reply = data.language === "ur" ? "ایڈوانس ادائیگی برقرار ہے۔ آرڈر زیرِ التوا رہے گا؛ آپ ادائیگی کی رسید بھیج سکتے ہیں۔" : "Advance payment is retained. The order remains unpaid and pending; you may send the payment receipt."; }
-    else if (resolved === "CANCELLED") { nextState = "CANCELLED"; data = { language: data.language }; reply = data.language === "ur" ? "آپ کا زیرِ التوا آرڈر منسوخ کر دیا گیا ہے۔" : "Your pending order has been cancelled."; }
+    else if (resolved === "CANCELLED") { nextState = "CANCELLED"; data = { language: data.language, freeMessagingEvidence: sessionFreeMessagingEvidence }; reply = data.language === "ur" ? "آپ کا زیرِ التوا آرڈر منسوخ کر دیا گیا ہے۔" : "Your pending order has been cancelled."; }
     else reply = data.language === "ur" ? "آرڈر کی حالت تبدیل ہو چکی ہے؛ کوئی COD تبدیلی نہیں کی گئی۔" : "The order is no longer eligible; no COD change was applied.";
   }
   else if (state === "COD_PENDING" && normalized === "ADVANCE_PAYMENT") { reply = data.language === "ur" ? "یہ آرڈر پہلے ہی COD کے لیے تصدیق ہو چکا ہے۔ حالت دیکھنے کے لیے Check Order استعمال کریں۔" : "This order is already confirmed for Cash on Delivery. Use Check Order to view its status."; }
-  else if (normalized === "CANCEL") { nextState = "CANCELLED"; data = { language: data.language }; reply = data.language === "ur" ? "یہ غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔ دوبارہ شروع کرنے کے لیے START لکھیں۔" : "This unsubmitted order entry is cancelled. No order or payment was created. Reply START to begin again."; }
+  else if (normalized === "CANCEL") { nextState = "CANCELLED"; data = { language: data.language, freeMessagingEvidence: sessionFreeMessagingEvidence }; reply = data.language === "ur" ? "یہ غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔ دوبارہ شروع کرنے کے لیے START لکھیں۔" : "This unsubmitted order entry is cancelled. No order or payment was created. Reply START to begin again."; }
   else if (normalized === "BACK" && state === "REVIEW") { nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; }
   else if (/^(STATUS|CHECK_ORDER)$/i.test(normalized)) { const locale = data.language ?? "en"; const order = await getLatestOrderForWaId(db, event.from, data.orderId); const status = await sessionContent("ORDER_STATUS", "Use Check Order to see the current order and payment status."); const paymentStatusCopy = order ? await paymentCopyForOrder(db, order.id, "status_copy", locale) : undefined; reply = order ? `${paymentStatusCopy ?? status.text}\n${formatCustomerOrderStatus(order, locale)}` : locale === "ur" ? "اس واٹس ایپ گفتگو کے لیے کوئی آرڈر نہیں ملا۔" : "No order was found for this WhatsApp conversation."; }
   else if (/^(HELP|SUPPORT)$/i.test(normalized)) { reply = (await sessionContent("SUPPORT", "Reply START to begin, STATUS to check an order, or CANCEL to stop the current order entry.")).text; }
@@ -724,27 +846,111 @@ async function processGuidedConversation(db: D1Database, bucket: R2Bucket, provi
   else if (state === "CANCELLED" && normalized === "START" && feedback?.eventId) {
     pendingCancellationFeedback = { cancellationEventId: feedback.eventId, eventType: "RESTARTED", reasonCode: feedback.reasonCode, responseOutcome: "RESTARTED", providerEventId: `message:${event.id}`, occurredAt: new Date().toISOString() };
     nextState = "LANGUAGE";
-    data = {};
-    const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "Get Free Seeds", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]);
-    reply = `${welcomeUr.text}\n\n${welcomeEn.text}`;
+    data = { freeMessagingEvidence: sessionFreeMessagingEvidence };
+    reply = LANGUAGE_SELECTION_PROMPT;
   }
-  else if (state === "CANCELLED" && normalized === "START") { nextState = "LANGUAGE"; data = {}; const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
-  else if (state === "NEW" && (normalized === "START" || Boolean(text))) { nextState = "LANGUAGE"; const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
+  else if (state === "CANCELLED" && normalized === "START") { nextState = "LANGUAGE"; data = { freeMessagingEvidence: sessionFreeMessagingEvidence }; reply = LANGUAGE_SELECTION_PROMPT; }
+  else if (state === "NEW" && (normalized === "START" || Boolean(text))) { nextState = "LANGUAGE"; reply = LANGUAGE_SELECTION_PROMPT; }
   else if (state === "LANGUAGE" && (normalized === "LANG_EN" || normalized === "LANG_UR")) { data.language = normalized === "LANG_UR" ? "ur" : "en"; nextState = "OFFER"; reply = (await sessionContent("OFFER", "Choose whether to continue your free seed order or cancel this unsubmitted request.")).text; }
-  else if (state === "LANGUAGE") { const [welcomeUr, welcomeEn] = await Promise.all([contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"), contentFor(db, "WELCOME", "Welcome to Get Free Seeds!", {}, `CHAT:${event.from}`, "en")]); reply = `${welcomeUr.text}\n\n${welcomeEn.text}`; }
-  else if (state === "OFFER" && normalized === "CONTINUE_ORDER") { nextState = checkoutMode === "guided" ? "FERTILIZER" : "FLOW_ACTIVE"; reply = (await sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?")).text; }
-  else if (state === "OFFER" && normalized === "CANCEL_ORDER") { nextState = "CANCELLED"; data = { language: data.language }; reply = data.language === "ur" ? "یہ غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔ دوبارہ شروع کرنے کے لیے START لکھیں۔" : "This unsubmitted order entry is cancelled. No order or payment was created. Reply START to begin again."; }
+  else if (state === "LANGUAGE") { reply = LANGUAGE_SELECTION_PROMPT; }
+  else if (state === "OFFER" && normalized === "CONTINUE_ORDER") { if (orderIntentAutomationEnabled && checkoutMode === "guided") data.checkoutId ??= crypto.randomUUID(); nextState = checkoutMode === "guided" ? "FERTILIZER" : "FLOW_ACTIVE"; reply = (await sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?")).text; }
+  else if (state === "OFFER" && normalized === "CANCEL_ORDER") { nextState = "CANCELLED"; data = { language: data.language, freeMessagingEvidence: sessionFreeMessagingEvidence }; reply = data.language === "ur" ? "یہ غیر جمع شدہ آرڈر منسوخ کر دیا گیا ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔ دوبارہ شروع کرنے کے لیے START لکھیں۔" : "This unsubmitted order entry is cancelled. No order or payment was created. Reply START to begin again."; }
   else if (state === "FULL_NAME") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid full name.")).text; else { data.fullName = text; nextState = "ADDRESS"; reply = (await sessionContent("FIELD_DELIVERY_ADDRESS", "Please reply with your complete delivery address.")).text; } }
   else if (state === "ADDRESS") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a complete delivery address.")).text; else { data.deliveryAddress = text; nextState = "NEARBY"; reply = (await sessionContent("FIELD_NEARBY_PLACE", "Please reply with a nearby famous place.")).text; } }
   else if (state === "NEARBY") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a nearby famous place.")).text; else { data.nearbyPlace = text; nextState = "CITY"; reply = (await sessionContent("FIELD_CITY", "Please reply with your city.")).text; } }
   else if (state === "CITY") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid city.")).text; else { data.city = text; nextState = "CONTACT"; reply = (await sessionContent("FIELD_CONTACT_NUMBER", "Please reply with your contact number.")).text; } }
-else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (await sessionContent("VALIDATION", "Please enter a valid contact number.")).text; else { data.contactNumber = text; data.checkoutId ??= crypto.randomUUID(); nextState = "REVIEW"; const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false }); const locale = data.language ?? "en"; const summary = { items: quote.items, deliveryPkr: quote.deliveryFeePkr, totalPayablePkr: quote.totalPayablePkr }; const itemLines = checkoutItemLines(quote.items, locale); reply = (await sessionContent("REVIEW", checkoutReviewLinesFromItems(itemLines, quote.deliveryFeePkr, quote.totalPayablePkr, locale).join("\n"), { orderSummaryItems: itemLines.join("\n"), deliveryFee: quote.deliveryFeePkr, orderTotal: quote.totalPayablePkr })).text; } }
+  else if (state === "CONTACT") {
+    if (!guidedFieldIsValid(state, text)) {
+      reply = (await sessionContent("VALIDATION", "Please enter a valid contact number.")).text;
+    } else {
+      data.contactNumber = normalizeMobileContactNumber(text) ?? text;
+      data.checkoutId ??= crypto.randomUUID();
+      nextState = "REVIEW";
+      const locale = data.language ?? "en";
+      if (orderIntentAutomationEnabled && checkoutMode === "guided" && row?.id) {
+        completePaymentMethods = await completeEnabledPaymentMethods(db, locale);
+        if (completePaymentMethods.length === 0 && !codAvailable) {
+          data.paymentUnavailable = true;
+          reply = noPaymentRequest();
+          feedbackOptions = { buttons: [{ id: "CANCEL_ORDER", title: locale === "ur" ? "آرڈر منسوخ کریں" : "Cancel Order" }] };
+        } else {
+          const freeDecision = await evaluateConversationFreeMessage(db, event.from, locale);
+          if (!freeDecision.eligible) {
+            const reason = `FREE_MESSAGE_BLOCKED:${freeDecision.reason}`;
+            const now = new Date().toISOString();
+            await db.batch([
+              db.prepare("INSERT OR IGNORE INTO outbound_messages(id,idempotency_key,kind,status,attempt_count,last_error,created_at,updated_at) VALUES(?,?,?,'PERMANENT_FAILURE',0,?,?,?)").bind(crypto.randomUUID(),`conversation_reply:${event.id}`,"ORDER_INTENT_OPTIONS",reason,now,now),
+              db.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"WHATSAPP_FREE_MESSAGE_SUPPRESSED","SYSTEM","CONVERSATION",row.id,event.id,JSON.stringify({reason,kind:"ORDER_INTENT_OPTIONS"}),now)
+            ]);
+            return true;
+          }
+          const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false });
+          data.checkoutId ??= crypto.randomUUID();
+          data.intentId = data.checkoutId;
+          data.codQuote = codAvailable ? {
+            baseAmountPkr: quote.totalPayablePkr,
+            feePkr: Number(codSettings!.fee_pkr),
+            totalPkr: codQuote(quote.totalPayablePkr, Number(codSettings!.fee_pkr)),
+            policyRevision: codSettings!.revision,
+            collectionPolicyHash: codSettings!.collection_policy_hash,
+            remittancePolicyHash: codSettings!.remittance_policy_hash
+          } : undefined;
+          try {
+            const provisional = await ensureProvisionalOrder();
+            const intent = await db.prepare("SELECT intent_id FROM order_confirmation_intents WHERE intent_id=? AND order_id=? AND workflow_version=? AND state='PRESENTATION_PENDING'").bind(data.intentId, provisional.orderId, ORDER_INTENT_VERSION).first<{ intent_id: string }>();
+            if (!intent) {
+              delete data.intentId;
+              reply = data.language === "ur" ? "آرڈر کے اختیارات محفوظ نہیں ہو سکے۔ براہ کرم دوبارہ کوشش کریں۔" : "The order confirmation options could not be saved. Please try again.";
+              feedbackOptions = { buttons: [{ id: "CANCEL_ORDER", title: locale === "ur" ? "آرڈر منسوخ کریں" : "Cancel Order" }] };
+            } else {
+              const itemLines = checkoutItemLines(quote.items, locale);
+              const summary = checkoutReviewLinesFromItems(itemLines, quote.deliveryFeePkr, provisional.quote.totalPayablePkr, locale).join("\n");
+              reply = `${summary}\n\n${orderIntentOptionsText(locale, provisional.quote.totalPayablePkr, data.codQuote?.totalPkr, data.codQuote?.feePkr)}`;
+              showOrderIntentOptions = true;
+            }
+          } catch (error) {
+            if (!(error instanceof OrderCooldownError)) throw error;
+            delete data.intentId;
+            delete data.codQuote;
+            data = { language: locale, freeMessagingEvidence: sessionFreeMessagingEvidence };
+            nextState = "OFFER";
+            reply = locale === "ur" ? "اس گھرانے کے لیے ایک حالیہ آرڈر موجود ہے۔ نیا مفت بیج آرڈر دستیابی اور اہلیت کے بعد دیا جا سکتا ہے۔" : "A recent order exists for this household. A new free-seed request is subject to availability and eligibility.";
+          }
+        }
+      } else {
+        const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: data.province ?? "", fertilizerSelected: data.fertilizerSelected ?? false });
+        const itemLines = checkoutItemLines(quote.items, locale);
+        reply = (await sessionContent("REVIEW", checkoutReviewLinesFromItems(itemLines, quote.deliveryFeePkr, quote.totalPayablePkr, locale).join("\n"), { orderSummaryItems: itemLines.join("\n"), deliveryFee: quote.deliveryFeePkr, orderTotal: quote.totalPayablePkr })).text;
+      }
+    }
+  }
   else if (state === "PRODUCT") { if (!/^(YES|SEEDS_ONLY|ADD_FERTILIZER)$/i.test(normalized)) { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } else { data.fertilizerSelected = normalized === "ADD_FERTILIZER"; nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
   else if (state === "PROVINCE") { const provinceChoice = normalized.startsWith("PROVINCE_") ? normalized.slice(9).replace(/_/g, " ") : text; try { const quote = await quoteOrder(db, { productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: provinceChoice, fertilizerSelected: data.fertilizerSelected ?? false }); data.province = quote.province; nextState = "FULL_NAME"; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; } catch { reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; } }
   else if (state === "FERTILIZER") { if (!/^(YES|NO|ADD_FERTILIZER|SEEDS_ONLY)$/i.test(normalized)) reply = (await sessionContent("VALIDATION", "Please choose one of the listed options.")).text; else { data.fertilizerSelected = /^(YES|ADD_FERTILIZER)$/i.test(normalized); nextState = "PROVINCE"; reply = (await sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery.")).text; } }
   else if (state === "REVIEW" && /^(PAY_ADVANCE|PAY_COD)$/.test(normalized)) {
-    if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) { nextState = "FULL_NAME"; data = { language: data.language }; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; }
-    else {
+    if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) { nextState = "FULL_NAME"; data = { language: data.language, freeMessagingEvidence: sessionFreeMessagingEvidence }; reply = (await sessionContent("FIELD_FULL_NAME", "Please reply with your full name.")).text; }
+    else if (orderIntentAutomationEnabled && data.intentId) {
+      const targetState = normalized === "PAY_COD" ? "COD_CONFIRM_PENDING" : "ADVANCE_PENDING";
+      const transitioned = await setOrderIntentChoiceState(db, data.intentId, targetState, new Date());
+      if (!transitioned) {
+        const outcome = await expireOrderIntent(db, data.intentId, new Date());
+        nextState = outcome === "PAYMENT_REVIEW" ? "PAYMENT_REVIEW" : "EXPIRED";
+        reply = outcome === "PAYMENT_REVIEW" ? (data.language === "ur" ? "آپ کی رسید ایڈمن کے جائزے میں ہے۔ ادائیگی کی تصدیق تک آرڈر نہیں بھیجا جائے گا۔" : "Your receipt is under Admin review. The order will not be dispatched until payment is verified.") : orderIntentReminderText(30, data.language ?? "en", data.orderNumber);
+      } else if (normalized === "PAY_ADVANCE") {
+        try {
+          const result = await ensureProvisionalOrder();
+          nextState = "PAYMENT_METHOD";
+          showAdvanceMethods = true;
+          reply = (await sessionContent("PAYMENT", "Choose an enabled advance payment method for order {orderNumber}.", { orderNumber: result.orderNumber, amount: result.quote.totalPayablePkr })).text;
+        } catch (error) { if (error instanceof OrderCooldownError) { nextState = "PAYMENT_PENDING"; data.orderNumber = error.orderNumber; reply = `You already have order ${error.orderNumber}.`; } else throw error; }
+      } else if (data.codQuote) {
+        nextState = "COD_CONFIRM";
+        reply = codConfirmationLines(data.codQuote.baseAmountPkr, data.codQuote.feePkr, data.codQuote.totalPkr, data.language ?? "en").join("\n");
+      } else {
+        nextState = "REVIEW";
+        reply = noPaymentRequest();
+      }
+    } else {
       try {
         const result = await ensureProvisionalOrder();
         if (normalized === "PAY_ADVANCE") { nextState = "PAYMENT_METHOD"; showAdvanceMethods = true; reply = (await sessionContent("PAYMENT", "Choose an enabled advance payment method for order {orderNumber}.", { orderNumber: result.orderNumber, amount: result.quote.totalPayablePkr })).text; }
@@ -755,7 +961,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
   else if (state === "REVIEW") {
     if (!/^(CONFIRM|CONFIRM_ORDER|PLACE_ORDER)$/i.test(normalized)) reply = (await sessionContent("REVIEW", "Review your order. Tap Confirm Order to continue or Cancel Order to stop.")).text;
     else if (!data.fullName || !data.deliveryAddress || !data.nearbyPlace || !data.city || !data.contactNumber || !data.province) {
-      nextState = "FULL_NAME"; data = { language: data.language };
+      nextState = "FULL_NAME"; data = { language: data.language, freeMessagingEvidence: sessionFreeMessagingEvidence };
       reply = (await sessionContent("FIELD_FULL_NAME", "I need to restart safely. Please reply with your full name.")).text;
     } else if (codAvailable) {
       try {
@@ -793,28 +999,53 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     reply = (await sessionContent("PAYMENT", "Choose an enabled advance payment method for order {orderNumber}.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text;
   }
   else if (state === "PAYMENT_METHOD" && normalized === "COD" && data.orderId && codAvailable) {
-    try {
-      const summary = await getPersistedOrderSummary(db, data.orderId);
-      const feePkr = Number(codSettings!.fee_pkr);
-      const total = codQuote(summary.totalPayablePkr, feePkr);
-      data.codQuote = { baseAmountPkr: summary.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash };
-      nextState = "COD_CONFIRM";
-      reply = codConfirmationLines(summary.totalPayablePkr, feePkr, total, data.language ?? "en").join("\n");
-    } catch {
-      reply = data.language === "ur" ? "COD کوٹ دستیاب نہیں۔ آپ کا موجودہ آرڈر تبدیل نہیں ہوا۔" : "The COD quote is unavailable. Your existing order is unchanged.";
+    if (orderIntentAutomationEnabled && data.intentId) {
+      const transitioned=await setOrderIntentChoiceState(db,data.intentId,"COD_CONFIRM_PENDING",new Date());
+      if(!transitioned){await expireOrderIntent(db,data.intentId,new Date());nextState="EXPIRED";reply=orderIntentReminderText(30,data.language??"en",data.orderNumber);}
+      else if(data.codQuote){nextState="COD_CONFIRM";reply=codConfirmationLines(data.codQuote.baseAmountPkr,data.codQuote.feePkr,data.codQuote.totalPkr,data.language??"en").join("\n");}
+      else{reply=noPaymentRequest();}
+    } else {
+      try {
+        const summary = await getPersistedOrderSummary(db, data.orderId);
+        const feePkr = Number(codSettings!.fee_pkr);
+        const total = codQuote(summary.totalPayablePkr, feePkr);
+        data.codQuote = { baseAmountPkr: summary.totalPayablePkr, feePkr, totalPkr: total, policyRevision: codSettings!.revision, collectionPolicyHash: codSettings!.collection_policy_hash, remittancePolicyHash: codSettings!.remittance_policy_hash };
+        nextState = "COD_CONFIRM";
+        reply = codConfirmationLines(summary.totalPayablePkr, feePkr, total, data.language ?? "en").join("\n");
+      } catch {
+        reply = data.language === "ur" ? "COD کوٹ دستیاب نہیں۔ آپ کا موجودہ آرڈر تبدیل نہیں ہوا۔" : "The COD quote is unavailable. Your existing order is unchanged.";
+      }
+    }
+  }
+  else if (state === "PAYMENT_PENDING" && normalized === "PAY_COD" && data.orderId && intentActionState && codAvailable) {
+    const actorHash=await customerTransactionReferenceHash(event.from);
+    const correlationHash=await customerTransactionReferenceHash(event.id);
+    if(await switchIntentAdvanceToCod(db,data.intentId!,data.orderId,actorHash,correlationHash,new Date())&&data.codQuote){
+      nextState="COD_CONFIRM";
+      reply=codConfirmationLines(data.codQuote.baseAmountPkr,data.codQuote.feePkr,data.codQuote.totalPkr,data.language??"en").join("\n");
+    }else{
+      const review=await db.prepare("SELECT p.review_state,EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=p.order_id AND r.payment_id=p.id) AS receipt FROM payments p WHERE p.order_id=?").bind(data.orderId).first<{review_state:string;receipt:number}>();
+      if(review?.review_state==="REVIEW"||Number(review?.receipt??0)===1){nextState="PAYMENT_REVIEW";reply=data.language==="ur"?"آپ کی ادائیگی ایڈمن کے جائزے میں ہے۔ جائزے کے دوران اسے COD میں تبدیل نہیں کیا جا سکتا۔":"Your payment evidence is under Admin review. It cannot be converted to COD during review.";}
+      else{await expireOrderIntent(db,data.intentId!,new Date());nextState="EXPIRED";reply=orderIntentReminderText(30,data.language??"en",data.orderNumber);}
     }
   }
   else if (state === "COD_CONFIRM" && normalized === "ADVANCE_PAYMENT") {
-    if (!data.orderId) {
-      const provisional = await ensureProvisionalOrder();
-      data.orderId = provisional.orderId;
-      data.orderNumber = provisional.orderNumber;
-      data.amountPkr = provisional.quote.totalPayablePkr;
+    if(orderIntentAutomationEnabled&&data.intentId){
+      const transitioned=await setOrderIntentChoiceState(db,data.intentId,"ADVANCE_PENDING",new Date());
+      if(!transitioned){await expireOrderIntent(db,data.intentId,new Date());nextState="EXPIRED";reply=orderIntentReminderText(30,data.language??"en",data.orderNumber);}
+      else{nextState="PAYMENT_METHOD";showAdvanceMethods=true;reply=(await sessionContent("PAYMENT","Choose an enabled advance payment method for order {orderNumber}.",{orderNumber:data.orderNumber??"",amount:data.amountPkr})).text;}
+    }else{
+      if (!data.orderId) {
+        const provisional = await ensureProvisionalOrder();
+        data.orderId = provisional.orderId;
+        data.orderNumber = provisional.orderNumber;
+        data.amountPkr = provisional.quote.totalPayablePkr;
+      }
+      delete data.codQuote;
+      nextState = "PAYMENT_METHOD";
+      showAdvanceMethods = true;
+      reply = (await sessionContent("PAYMENT", "Choose an enabled advance payment method for order {orderNumber}.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text;
     }
-    delete data.codQuote;
-    nextState = "PAYMENT_METHOD";
-    showAdvanceMethods = true;
-    reply = (await sessionContent("PAYMENT", "Choose an enabled advance payment method for order {orderNumber}.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text;
   }
   else if (state === "COD_CONFIRM" && normalized === "CONFIRM_COD_ORDER") {
     let finalized: "CREATED" | "NOT_ELIGIBLE" = "NOT_ELIGIBLE";
@@ -826,7 +1057,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
         data.orderNumber = provisional.orderNumber;
         data.amountPkr = provisional.quote.totalPayablePkr;
       }
-      finalized = codAvailable ? await finalizeCodOrder(db, data.orderId, data.codQuote, event.id, event.from, originalStateData, codTestHoldForAdmission(codRolloutMode)) : "NOT_ELIGIBLE";
+      finalized = codAvailable ? await finalizeCodOrder(db, data.orderId, data.codQuote, event.id, event.from, originalStateData, codTestHoldForAdmission(codRolloutMode), orderIntentAutomationEnabled ? data.intentId : undefined) : "NOT_ELIGIBLE";
     } catch {
       provisionalFailed = true;
       delete data.codQuote;
@@ -838,15 +1069,22 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     } else if (finalized === "CREATED") {
       nextState = "COD_PENDING";
       const total = data.codQuote!.totalPkr;
-      reply = codConfirmationReply(data.orderNumber ?? "", total);
+      reply = orderIntentAutomationEnabled && data.intentId ? orderIntentCodConfirmationText(data.orderNumber ?? "", total, data.language === "ur" ? "ur" : "en") : codConfirmationReply(data.orderNumber ?? "", total);
     } else {
-      delete data.codQuote;
-      nextState = "PAYMENT_METHOD";
-      showPaymentChoice = codAvailable;
-      reply = data.language === "ur" ? "کوٹ یا آرڈر کی حالت تبدیل ہو چکی ہے؛ کوئی COD آرڈر جمع نہیں ہوا۔ نیا کوٹ دیکھ کر دوبارہ تصدیق کریں۔" : "The quote or order eligibility changed; no COD confirmation was applied. Request a fresh quote and confirm it again.";
+      if(orderIntentAutomationEnabled&&data.intentId){
+        const outcome=await expireOrderIntent(db,data.intentId,new Date());
+        if(outcome==="EXPIRED"){nextState="EXPIRED";reply=orderIntentReminderText(30,data.language??"en",data.orderNumber);}
+        else if(outcome==="PAYMENT_REVIEW"){nextState="PAYMENT_REVIEW";reply=data.language==="ur"?"آپ کی رسید ایڈمن کے جائزے میں ہے۔ ادائیگی کی تصدیق تک آرڈر نہیں بھیجا جائے گا۔":"Your receipt is under Admin review. The order will not be dispatched until payment is verified.";}
+        else{nextState="COD_CONFIRM";reply=data.language==="ur"?"COD کی تصدیق محفوظ نہیں ہو سکی۔ موجودہ رقم سے متفق ہوں تو دوبارہ تصدیق کریں یا آرڈر منسوخ کریں۔":"COD confirmation was not recorded. Confirm the displayed total again or cancel the order.";}
+      }else{
+        delete data.codQuote;
+        nextState = "PAYMENT_METHOD";
+        showPaymentChoice = codAvailable;
+        reply = data.language === "ur" ? "کوٹ یا آرڈر کی حالت تبدیل ہو چکی ہے؛ کوئی COD آرڈر جمع نہیں ہوا۔ نیا کوٹ دیکھ کر دوبارہ تصدیق کریں۔" : "The quote or order eligibility changed; no COD confirmation was applied. Request a fresh quote and confirm it again.";
+      }
     }
   }
-  else if (["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(state) && paymentMethodFromAction(normalized) && data.orderId) { const selectedMethod = paymentMethodFromAction(normalized)!; try { const selected = await selectPaymentMethod(db, data.orderId, selectedMethod, data.language ?? "en", event.from, event.id); if (paymentRemindersV2Enabled && paymentAutomationV2Enabled) { const payment = await db.prepare("SELECT id FROM payments WHERE order_id=?").bind(data.orderId).first<{ id: string }>(); if (payment) await createPaymentV2Schedule(db, data.orderId, payment.id, new Date()); } nextState = "PAYMENT_PENDING"; reply = selected.message; paymentSelection = { orderId: data.orderId, orderNumber: selected.orderNumber, amount: selected.amount, method: selectedMethod, locale: data.language ?? "en", message: selected.message, idempotencyKey: selected.idempotencyKey, config: selected.config }; } catch { reply = data.language === "ur" ? "یہ ادائیگی کا طریقہ فی الحال دستیاب نہیں؛ کوئی ادائیگی کی درخواست نہیں بھیجی گئی۔" : "That payment method is not currently available; no payment request was sent."; } }
+  else if (["PAYMENT_METHOD", "PAYMENT_PENDING"].includes(state) && paymentMethodFromAction(normalized) && data.orderId) { const selectedMethod = paymentMethodFromAction(normalized)!; try { const selected = await selectPaymentMethod(db, data.orderId, selectedMethod, data.language ?? "en", event.from, event.id, orderIntentAutomationEnabled ? data.intentId : undefined); if (paymentRemindersV2Enabled && paymentAutomationV2Enabled && !data.intentId) { const payment = await db.prepare("SELECT id FROM payments WHERE order_id=?").bind(data.orderId).first<{ id: string }>(); if (payment) await createPaymentV2Schedule(db, data.orderId, payment.id, new Date()); } nextState = "PAYMENT_PENDING"; reply = selected.message; paymentSelection = { orderId: data.orderId, orderNumber: selected.orderNumber, amount: selected.amount, method: selectedMethod, locale: data.language ?? "en", message: selected.message, idempotencyKey: selected.idempotencyKey, config: selected.config }; } catch { reply = data.language === "ur" ? "یہ ادائیگی کا طریقہ فی الحال دستیاب نہیں؛ کوئی ادائیگی کی درخواست نہیں بھیجی گئی۔" : "That payment method is not currently available; no payment request was sent."; } }
   else if (state === "PAYMENT_PENDING" && /^(HELP|PAYMENT_HELP)$/i.test(normalized)) { reply = (await sessionContent("ORDER_STATUS", "Upload your payment receipt here after payment. Garden Shop will review it manually.", { orderNumber: data.orderNumber ?? "" })).text; }
   else if (state === "PAYMENT_PENDING" && normalized === "START") { const order = await getLatestOrderForWaId(db, event.from, data.orderId); const locale = data.language ?? "en"; reply = order ? formatCustomerOrderStatus(order, locale) : (await sessionContent("ORDER_STATUS", "Your order is still in progress. Upload the receipt or use Check Order.")).text; }
   else if (state === "PAYMENT_REFERENCE" || state === "PAYMENT_REVIEW") {
@@ -867,13 +1105,12 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
   }
   else if (state === "COMPLETE" && normalized === "START") { const order = await getLatestOrderForWaId(db, event.from, data.orderId); reply = order ? `${formatCustomerOrderStatus(order, data.language ?? "en")}\n${noPaymentRequest()}` : noPaymentRequest(); }
   else if (state === "CANCELLED") { reply = cancellationFeedbackComplete(data.language ?? "en"); }
+  if (!reply && state === "LANGUAGE") reply = LANGUAGE_SELECTION_PROMPT;
   if (!reply) {
     const invalidKey: WhatsAppTemplateKey = state === "PAYMENT_METHOD" ? "PAYMENT" : state === "PAYMENT_PENDING" ? "ORDER_STATUS" : state === "LANGUAGE" ? "WELCOME" : "VALIDATION";
     reply = (await sessionContent(invalidKey, invalidKey === "PAYMENT" ? "Choose a verified payment method." : "Please choose one of the listed options.", { orderNumber: data.orderNumber ?? "", amount: data.amountPkr })).text;
   }
-  const [welcomeEn, welcomeUr, offer, fertilizer, province, review, status, support, payment] = await Promise.all([
-    contentFor(db, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.", {}, `CHAT:${event.from}`, "en"),
-    contentFor(db, "WELCOME", "گٹ فری سیڈز میں خوش آمدید!", {}, `CHAT:${event.from}`, "ur"),
+  const [offer, fertilizer, province, review, status, support, payment] = await Promise.all([
     sessionContent("OFFER", "Choose whether to continue your free seed order or cancel this unsubmitted request."),
     sessionContent("FERTILIZER", "Would you like to add Micro Nutrients Fertilizer, or continue with seeds only?"),
     sessionContent("PROVINCE_DELIVERY", "Choose your province for delivery."),
@@ -917,7 +1154,7 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
   if (feedbackOptions) {
     // Cancellation is already effective; these controls collect optional feedback only.
   } else if ((state === "LANGUAGE" && !/^(LANG_EN|LANG_UR)$/.test(normalized)) || (state === "CANCELLED" && normalized === "START") || (state === "NEW" && normalized !== "GET_FREE_PACKS" && Boolean(text))) {
-    options = { buttons: [{ id: "LANG_UR", title: whatsAppActionLabel(welcomeUr, "LANG_UR") }, { id: "LANG_EN", title: whatsAppActionLabel(welcomeEn, "LANG_EN") }] };
+     options = { buttons: [{ id: "LANG_UR", title: "اردو" }, { id: "LANG_EN", title: "English" }] };
   } else if (sessionFlowToken) {
     options = { flow: { id: flowId, token: sessionFlowToken } };
   } else if (nextState === "OFFER") {
@@ -929,6 +1166,8 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     options = { buttons: [{ id: "ADD_FERTILIZER", title: whatsAppActionLabel(fertilizer, "ADD_FERTILIZER") }, { id: "SEEDS_ONLY", title: whatsAppActionLabel(fertilizer, "SEEDS_ONLY") }] };
   } else if (nextState === "PROVINCE" && provinceRows.length) {
     options = { list: { buttonText: province.listButtonLabel!, rows: provinceRows } };
+  } else if (showOrderIntentOptions) {
+    options = { buttons: orderIntentOptionRows(data.language === "ur" ? "ur" : "en", Boolean(data.codQuote)) };
   } else if (nextState === "REVIEW" && data.language === "ur") {
     options = { buttons: [{ id: "CONFIRM_ORDER", title: "آرڈر کی تصدیق" }, { id: "CANCEL_ORDER", title: "آرڈر منسوخ کریں." }] };
   } else if (nextState === "REVIEW") {
@@ -944,9 +1183,11 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
       { id: "CANCEL_ORDER", title: data.language === "ur" ? "آرڈر منسوخ" : "Cancel Order" }
     ] };
   } else if (nextState === "COD_CONFIRM") {
-    options = { buttons: [{ id: "CONFIRM_COD_ORDER", title: data.language === "ur" ? "COD آرڈر کی تصدیق" : "Confirm COD Order" }, { id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }] };
+    options = { buttons: [{ id: "CONFIRM_COD_ORDER", title: data.language === "ur" ? "COD آرڈر کی تصدیق" : "Confirm COD Order" }, { id: "ADVANCE_PAYMENT", title: data.language === "ur" ? "ایڈوانس ادائیگی" : "Advance Payment" }, ...(data.intentId ? [{ id: "CANCEL_ORDER", title: data.language === "ur" ? "آرڈر منسوخ کریں" : "Cancel Order" }] : [])] };
   } else if (nextState === "PAYMENT_METHOD" && paymentOptions.length) {
-    options = { buttons: paymentOptions };
+    options = intentRow && orderIntentAutomationEnabled
+      ? { list: { buttonText: data.language === "ur" ? "ادائیگی کا طریقہ" : "Payment options", rows: [...paymentOptions, ...(Number(intentRow.cod_enabled) === 1 ? [{ id: "PAY_COD", title: data.language === "ur" ? "کیش آن ڈیلیوری" : "Cash on Delivery" }] : []), { id: "CANCEL_ORDER", title: data.language === "ur" ? "آرڈر منسوخ کریں" : "Cancel Order" }] } }
+      : { buttons: paymentOptions };
   } else if (["PAYMENT_PENDING", "PAYMENT_REFERENCE", "PAYMENT_REVIEW", "COD_PENDING"].includes(state) || nextState === "PAYMENT_REVIEW" || nextState === "COD_PENDING" || nextState === "COMPLETE") {
     options = { buttons: [{ id: "CHECK_ORDER", title: whatsAppActionLabel(status, "CHECK_ORDER") }] };
   }
@@ -992,9 +1233,10 @@ else if (state === "CONTACT") { if (!guidedFieldIsValid(state, text)) reply = (a
     return true;
   }
   const association: ConversationOutboundAssociation = data.orderId
-    ? { orderId: data.orderId, kind: nextState === "PAYMENT_METHOD" ? "PAYMENT_CHOICE" : "CONVERSATION_REPLY" }
-    : { kind: nextState === "OFFER" ? "CONVERSATION_OFFER" : nextState === "REVIEW" ? "CONVERSATION_REVIEW" : nextState === "CANCELLED" ? "CANCELLATION_FEEDBACK" : "CONVERSATION_REPLY" };
-  const sent = await sendConversationReply(db, provider, event.from, event.id, reply, options, `conversation_reply:${event.id}`, association);
+    ? { orderId: data.orderId, intentId: showOrderIntentOptions ? data.intentId : undefined, kind: showOrderIntentOptions ? "ORDER_INTENT_OPTIONS" : nextState === "PAYMENT_METHOD" ? "PAYMENT_CHOICE" : "CONVERSATION_REPLY", locale: data.language }
+    : { kind: nextState === "LANGUAGE" ? "LANGUAGE_SELECTION" : nextState === "OFFER" ? "CONVERSATION_OFFER" : nextState === "REVIEW" ? "CONVERSATION_REVIEW" : nextState === "CANCELLED" ? "CANCELLATION_FEEDBACK" : "CONVERSATION_REPLY", locale: data.language ?? (nextState === "LANGUAGE" ? "en" : undefined) };
+  const sendIdempotencyKey = showOrderIntentOptions ? `order_intent_options:${data.intentId}` : `conversation_reply:${event.id}`;
+  const sent = await sendConversationReply(db, provider, event.from, event.id, reply, options, sendIdempotencyKey, association);
   if (!sent.sent && nextState !== "COD_PENDING" && !pendingCancellationEvent && !pendingCancellationFeedback) await db.prepare("UPDATE whatsapp_conversations SET state=?,state_data=?,updated_at=? WHERE wa_id=? AND last_inbound_message_id=? AND state=? AND state_data=? AND (? IS NULL OR NOT EXISTS(SELECT 1 FROM orders o WHERE o.id=? AND o.payment_status IN ('COD_PENDING','PAID')))").bind(state, originalStateData, new Date().toISOString(), event.from, event.id, nextState, JSON.stringify(data), data.orderId ?? null, data.orderId ?? null).run();
   return true;
 }
@@ -1060,7 +1302,7 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
   const receiptText=data.language === "ur" ? `\u0622\u0631\u0688\u0631 ${record.order_number} \u06a9\u06cc \u0631\u0633\u06cc\u062f \u0645\u0648\u0635\u0648\u0644 \u06c1\u0648 \u06af\u0626\u06cc\u06d4 \u0627\u062f\u0627\u0626\u06cc\u06af\u06cc \u0627\u06cc\u0688\u0645\u0646 \u06a9\u06d2 \u062cا\u0626ز\u06d2 \u0645ی\u06ba \u06c1\u06d2\u06d4 \u062a\u0635\u062f\u06cc\u0642 \u06a9\u06d2 \u0628عد \u0627طلاع \u062f\u06cc \u062c\u0627\u0626\u06d2 \u06af\u06cc\u06d4` : `Receipt received for order ${record.order_number}. Your payment is under Admin review. We will notify you after verification.`;
   const orderStatus=await contentFor(db,"ORDER_STATUS","Use Check Order to see the current order and payment status.",{},`CHAT:${event.from}`,data.language??"en");
   const image=await contentImageFor(db,bucket,"RECEIPT",`CHAT:${event.from}`);
-  await sendConversationReply(db,provider,event.from,event.id,receiptText,{image,buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(orderStatus,"CHECK_ORDER")}]});
+  await sendConversationReply(db,provider,event.from,event.id,receiptText,{image,buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(orderStatus,"CHECK_ORDER")}],},`conversation_reply:${event.id}`,{orderId:record.id,kind:"PAYMENT_RECEIPT_ACKNOWLEDGEMENT",locale:data.language});
   return true;
 }
 
@@ -1099,34 +1341,54 @@ app.post("/webhooks/whatsapp", async (c) => {
     c.header("Retry-After", "60");
     return c.json({ error: "WHATSAPP_SENDER_RATE_LIMITED", retryAfterSeconds: 60 }, 429);
   }
-  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId) : 0;
+  const orderIntentAutomationEnabled = c.env.ORDER_INTENT_AUTOMATION_ENABLED === "true";
+  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId, true) : 0;
+  if (c.env.DB) {
+    for (const receipt of parseWhatsAppDeliveryReceipts(payload)) {
+      const intents = await c.env.DB.prepare(`SELECT intent_id FROM order_confirmation_intents
+        WHERE presentation_message_id=? AND workflow_version=?`).bind(receipt.providerMessageId, ORDER_INTENT_VERSION).all<{ intent_id:string }>();
+      for (const intent of intents.results ?? []) {
+        await anchorOrderIntentOnDelivery(c.env.DB, intent.intent_id, receipt.providerMessageId);
+        await c.env.DB.prepare("DELETE FROM whatsapp_delivery_receipts WHERE provider_message_id=? AND EXISTS(SELECT 1 FROM order_confirmation_intents WHERE intent_id=? AND presented_at IS NOT NULL)").bind(receipt.providerMessageId,intent.intent_id).run();
+      }
+    }
+  }
   if (c.env.DB) await persistInboundConversationActivity(c.env.DB, inbound);
   let autoReplies = 0;
   let handledEvents = 0;
   for (const event of inbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) handledEvents += 1; continue; }
-    if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_ROLLOUT_MODE, c.env.COD_TESTER_WA_ID, c.env.PAYMENT_REMINDERS_V2_ENABLED === "true", c.env.PAYMENT_AUTOMATION_V2_ENABLED === "true")) { handledEvents += 1; continue; }
+      if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_ROLLOUT_MODE, c.env.COD_TESTER_WA_ID, c.env.PAYMENT_REMINDERS_V2_ENABLED === "true", c.env.PAYMENT_AUTOMATION_V2_ENABLED === "true", orderIntentAutomationEnabled)) { handledEvents += 1; continue; }
     const activeConversation = c.env.DB ? await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>() : null;
     if (activeConversation) continue;
     const idempotencyKey = `welcome_reply:${event.id}`;
     const existing = c.env.DB ? await c.env.DB.prepare("SELECT status FROM outbound_messages WHERE idempotency_key=?").bind(idempotencyKey).first<{ status: string }>() : null;
     if (existing) continue;
     const now = new Date().toISOString();
-    if (c.env.DB) {
-      const inboundEvent = await c.env.DB.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${event.id}`).first<{ created_at: string }>();
-      if (!isInsideWhatsAppServiceWindow(inboundEvent?.created_at)) {
+     if (c.env.DB) {
+       const inboundEvent = await c.env.DB.prepare("SELECT created_at FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${event.id}`).first<{ created_at: string }>();
+  if (!isInsideWhatsAppServiceWindow(inboundEvent?.created_at)) {
         await c.env.DB.batch([
           c.env.DB.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,last_error,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PERMANENT_FAILURE", 0, "WHATSAPP_SERVICE_WINDOW_CLOSED", now, now),
           c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_SERVICE_WINDOW_BLOCKED", "SYSTEM", "OUTBOUND_MESSAGE", idempotencyKey, crypto.randomUUID(), JSON.stringify({ reason: "WHATSAPP_SERVICE_WINDOW_CLOSED" }), now)
         ]);
-        continue;
-      }
-    }
-    if (c.env.DB) await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PENDING", 0, now, now).run();
-    try {
-      const welcome = await contentFor(c.env.DB, "WELCOME", "Welcome to Get Free Seeds! Tap below to begin your order.", {}, `CHAT:${event.from}`);
-      const image = await contentImageFor(c.env.DB, c.env.RECEIPTS, "WELCOME", `CHAT:${event.from}`);
-      const sent = await provider.sendInteractive(event.from, welcome.text, [{ id: "GET_FREE_PACKS", title: welcome.buttonLabel ?? "Get 5 Free Packs" }], image);
+         continue;
+       }
+     }
+     if (c.env.DB) {
+       const freeDecision = await evaluateConversationFreeMessage(c.env.DB, event.from, "en", new Date());
+       if (!freeDecision.eligible) {
+         const reason = `FREE_MESSAGE_BLOCKED:${freeDecision.reason}`;
+         await c.env.DB.batch([
+           c.env.DB.prepare("INSERT OR IGNORE INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,last_error,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PERMANENT_FAILURE", 0, reason, now, now),
+           c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_FREE_MESSAGE_SUPPRESSED", "SYSTEM", "OUTBOUND_MESSAGE", idempotencyKey, crypto.randomUUID(), JSON.stringify({ reason, kind: "LANGUAGE_SELECTION" }), now)
+         ]);
+         continue;
+       }
+     }
+     if (c.env.DB) await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), idempotencyKey, "WELCOME_REPLY", "PENDING", 0, now, now).run();
+     try {
+       const sent = await provider.sendInteractive(event.from, "Choose your language / اپنی زبان منتخب کریں", [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }]);
       if (c.env.DB) await c.env.DB.prepare("UPDATE outbound_messages SET provider_message_id=?,status='SENT',attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), idempotencyKey).run();
       autoReplies += 1;
       handledEvents += 1;
@@ -1344,6 +1606,83 @@ function clearerReceiptText(orderNumber: string, locale: "en" | "ur", reasonCode
     : `The image submitted for order ${orderNumber} is unclear. Please upload a clear receipt for the correct order. Your payment remains under Admin review.`;
 }
 
+async function suppressOrderIntentStage(env: Env["Bindings"], message: Message<{kind:string;idempotencyKey:string;entityId:string;schemaVersion:1}>, attempt: number, intentId: string | undefined, stageMinutes: number | undefined, reason: string): Promise<void> {
+  const now=new Date().toISOString();
+  const statements=[
+    env.DB.prepare("UPDATE outbox_jobs SET status='PERMANENT_FAILURE',attempts=?,last_error=?,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(attempt,reason,now,message.body.idempotencyKey),
+    ...(intentId&&stageMinutes?[env.DB.prepare("UPDATE order_confirmation_intent_stages SET status='SUPPRESSED',last_error=?,updated_at=? WHERE intent_id=? AND stage_minutes=? AND status IN ('PENDING','QUEUED')").bind(reason,now,intentId,stageMinutes)]:[]),
+    env.DB.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(),"ORDER_INTENT_STAGE_SUPPRESSED","SYSTEM","ORDER",message.body.entityId,crypto.randomUUID(),JSON.stringify({reason,stageMinutes:stageMinutes??null}),now)
+  ];
+  await env.DB.batch(statements);
+  message.ack();
+}
+
+async function handleOrderIntentStageMessage(message: Message<{kind:string;idempotencyKey:string;entityId:string;schemaVersion:1}>, env: Env["Bindings"], attempt: number): Promise<void> {
+  const stored=await env.DB.prepare("SELECT payload_json,status FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{payload_json:string;status:string}>();
+  let payload:{intentId?:string;stageMinutes?:number;workflowVersion?:string;locale?:string|null}|undefined;
+  try{payload=stored?JSON.parse(stored.payload_json) as typeof payload:undefined;}catch{payload=undefined;}
+  const intentId=payload?.intentId;
+  const stageMinutes=Number(payload?.stageMinutes);
+   if(!stored||!intentId||payload?.workflowVersion!==ORDER_INTENT_VERSION||![10,25,30].includes(stageMinutes)||stored.status!=='QUEUED'){
+     await suppressOrderIntentStage(env,message,attempt,intentId,Number.isFinite(stageMinutes)?stageMinutes:undefined,"ORDER_INTENT_STAGE_PAYLOAD_INVALID");return;
+   }
+   if(env.ORDER_INTENT_AUTOMATION_ENABLED!=="true"){
+     await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"ORDER_INTENT_AUTOMATION_DISABLED");return;
+   }
+  const now=new Date(),nowIso=now.toISOString();
+   const current=await env.DB.prepare(`SELECT i.intent_id,i.state AS intent_state,i.deadline_at,i.presented_at,pref.locale,
+      (SELECT t10.due_at FROM order_confirmation_intent_stages t10 WHERE t10.intent_id=i.intent_id AND t10.stage_minutes=10) AS t10_due_at,
+      (SELECT t25.due_at FROM order_confirmation_intent_stages t25 WHERE t25.intent_id=i.intent_id AND t25.stage_minutes=25) AS t25_due_at,
+       s.status AS stage_status,s.due_at,o.id AS order_id,o.order_number,o.state AS order_state,o.payment_status,o.archived_at,i.cod_enabled,
+       p.review_state,p.submitted_at,p.customer_transaction_reference,c.wa_id,wc.state_data,wc.last_inbound_message_id,wc.last_inbound_at,
+      EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id) AS has_receipt,
+      EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id) AS has_cod,
+      EXISTS(SELECT 1 FROM payment_reminder_v2_opt_outs x WHERE x.wa_id=c.wa_id OR x.customer_id=c.id) AS opted_out
+    FROM order_confirmation_intents i JOIN order_confirmation_intent_stages s ON s.intent_id=i.intent_id
+       JOIN orders o ON o.id=i.order_id JOIN payments p ON p.order_id=o.id JOIN customers c ON c.id=o.customer_id
+       LEFT JOIN order_confirmation_intent_preferences pref ON pref.intent_id=i.intent_id
+       JOIN whatsapp_conversations wc ON wc.id=i.conversation_id
+    WHERE i.intent_id=? AND s.stage_minutes=? AND s.idempotency_key=? AND o.id=?`).bind(intentId,stageMinutes,message.body.idempotencyKey,message.body.entityId)
+     .first<{intent_id:string;intent_state:string;deadline_at:string|null;presented_at:string|null;locale:string|null;t10_due_at:string|null;t25_due_at:string|null;stage_status:string;due_at:string;order_id:string;order_number:string;order_state:string;payment_status:string;archived_at:string|null;cod_enabled:number;review_state:string;submitted_at:string|null;customer_transaction_reference:string|null;wa_id:string|null;state_data:string|null;last_inbound_message_id:string|null;last_inbound_at:string|null;has_receipt:number;has_cod:number;opted_out:number}>();
+  if(!current||current.stage_status!=="QUEUED"||!current.wa_id||!/^\d{7,20}$/.test(current.wa_id)||!current.last_inbound_message_id){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"ORDER_INTENT_RECIPIENT_UNAVAILABLE");return;}
+  if(current.opted_out){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"WHATSAPP_OPTED_OUT");return;}
+   if(!isInsideWhatsAppServiceWindow(current.last_inbound_at,now.getTime())){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"WHATSAPP_SERVICE_WINDOW_CLOSED");return;}
+   const presentedAt=Date.parse(current.presented_at??"");
+   const deadlineAt=Date.parse(current.deadline_at??"");
+   const stageDueAt=Date.parse(current.due_at);
+   const t25DueAt=Date.parse(current.t25_due_at??"");
+   const timelineValid=Number.isFinite(presentedAt)&&deadlineAt===presentedAt+30*60_000&&stageDueAt===presentedAt+stageMinutes*60_000&&(stageMinutes!==10||t25DueAt===presentedAt+25*60_000);
+   if(!timelineValid){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"ORDER_INTENT_STAGE_TIMESTAMP_MISMATCH");return;}
+   if(stageMinutes===30){
+    if(current.intent_state!=="EXPIRED"||current.order_state!=="EXPIRED"){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"ORDER_INTENT_EXPIRY_NOT_COMMITTED");return;}
+  }else{
+     const deadline=deadlineAt;
+    const due=Date.parse(current.due_at);
+     const stale=!Number.isFinite(deadline)||now.getTime()>=deadline||(stageMinutes===10&&current.t25_due_at!==null&&now.getTime()>=Date.parse(current.t25_due_at));
+     const unresolved=["AWAITING_DECISION","ADVANCE_PENDING","COD_CONFIRM_PENDING"].includes(current.intent_state)&&["DETAILS_COMPLETED","PAYMENT_PENDING"].includes(current.order_state)&&current.payment_status==="PENDING"&&!current.archived_at&&current.review_state!=="REVIEW"&&!current.submitted_at&&!current.customer_transaction_reference&&!current.has_receipt&&!current.has_cod;
+    if(stale||!unresolved){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,stale?"ORDER_INTENT_STAGE_STALE":"ORDER_INTENT_NO_LONGER_UNRESOLVED");return;}
+  }
+   if((current.locale!=="en"&&current.locale!=="ur")||payload.locale!==current.locale){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"ORDER_INTENT_LOCALE_UNVERIFIED");return;}
+   const locale=current.locale;
+   const remaining=stageMinutes===30?undefined:formatIntentRemainingTime(current.deadline_at??"",now,locale);
+   if(stageMinutes!==30&&!remaining){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"ORDER_INTENT_STAGE_STALE");return;}
+   const text=orderIntentReminderText(stageMinutes as 10|25|30,locale,stageMinutes===30?current.order_number:undefined,remaining??undefined);
+   const options={buttons:stageMinutes===30?[orderIntentNewOrderButton(locale)]:orderIntentOptionRows(locale,Number(current.cod_enabled)===1)};
+   const provider=createWhatsAppProvider("meta",{enabled:env.META_PROVIDER_ENABLED==="true",graphVersion:env.META_GRAPH_VERSION??"v26.0",accessToken:env.META_ACCESS_TOKEN,phoneNumberId:env.META_PHONE_NUMBER_ID,verifyToken:env.WEBHOOK_VERIFY_TOKEN,appSecret:env.META_APP_SECRET});
+   const sent=await sendConversationReply(env.DB,provider,current.wa_id,current.last_inbound_message_id,text,options,message.body.idempotencyKey,{orderId:current.order_id,kind:`ORDER_INTENT_T${stageMinutes}`,locale});
+  if(!sent.sent){
+    const outbound=await env.DB.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{status:string;last_error:string|null}>();
+    if(!outbound||isTerminalOutboxStatus(outbound.status)||outbound.last_error==="WHATSAPP_SERVICE_WINDOW_CLOSED"){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,outbound?.last_error??"ORDER_INTENT_MESSAGE_SUPPRESSED");return;}
+    await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',attempts=?,last_error='ORDER_INTENT_MESSAGE_RETRY',available_at=?,updated_at=? WHERE idempotency_key=? AND status='QUEUED'").bind(attempt,new Date(now.getTime()+retryDelaySeconds(attempt)*1000).toISOString(),nowIso,message.body.idempotencyKey).run();
+    message.retry({delaySeconds:retryDelaySeconds(attempt)});return;
+  }
+  await env.DB.batch([
+    env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(attempt,nowIso,message.body.idempotencyKey),
+    env.DB.prepare("UPDATE order_confirmation_intent_stages SET status='SENT',last_error=NULL,updated_at=? WHERE intent_id=? AND stage_minutes=? AND status='QUEUED'").bind(nowIso,intentId,stageMinutes)
+  ]);
+  message.ack();
+}
+
 app.all("*", (c) => c.json({ error: "NOT_FOUND" }, 404));
 
 export default {
@@ -1351,8 +1690,23 @@ export default {
   async scheduled(controller: ScheduledController, env: Env["Bindings"]): Promise<void> {
     const remindersEnabled = env.PAYMENT_REMINDERS_V2_ENABLED === "true" && env.PAYMENT_AUTOMATION_V2_ENABLED === "true";
     const recoveryEnabled = env.PAYMENT_CHOICE_RECOVERY_ENABLED === "true";
+     const orderIntentAutomationEnabled = env.ORDER_INTENT_AUTOMATION_ENABLED === "true";
     const now = new Date(controller.scheduledTime).toISOString();
     const stale = new Date(Date.parse(now) - 5 * 60_000).toISOString();
+     const intentNow=new Date(controller.scheduledTime);
+      await expireDueOrderIntents(env.DB,intentNow);
+      if(orderIntentAutomationEnabled){
+      await queueDueOrderIntentReminders(env.DB,intentNow);
+      const intentJobs=await env.DB.prepare(`SELECT idempotency_key,entity_id FROM outbox_jobs WHERE kind='WHATSAPP_ORDER_INTENT_STAGE'
+        AND ((status IN ('PENDING','RETRY') AND available_at<=?) OR (status='QUEUED' AND updated_at<=?)) ORDER BY available_at,id LIMIT 100`).bind(now,stale).all<{idempotency_key:string;entity_id:string}>();
+     for(const job of intentJobs.results??[]){
+       const claimed=await env.DB.prepare(`UPDATE outbox_jobs SET status='QUEUED',updated_at=? WHERE idempotency_key=?
+         AND ((status IN ('PENDING','RETRY') AND available_at<=?) OR (status='QUEUED' AND updated_at<=?))`).bind(now,job.idempotency_key,now,stale).run();
+       if(Number(claimed.meta.changes)!==1)continue;
+       try{await env.EVENTS.send({kind:"WHATSAPP_ORDER_INTENT_STAGE",idempotencyKey:job.idempotency_key,entityId:job.entity_id,schemaVersion:1});}
+        catch{await env.DB.prepare("UPDATE outbox_jobs SET status='RETRY',last_error='QUEUE_DISPATCH_FAILED',available_at=?,updated_at=? WHERE idempotency_key=? AND status='QUEUED'").bind(new Date(Date.parse(now)+60_000).toISOString(),now,job.idempotency_key).run();}
+      }
+      }
     // The five-stage reminder ledger is disabled in the current release. Do not
     // rescan its outbound history on every minute tick; recovery reconciliation
     // remains independent and is still run when its flag is enabled.
@@ -1372,7 +1726,7 @@ export default {
     }
     }
     if (recoveryEnabled) {
-      await enqueueDuePaymentChoiceRecoveryStages(env.DB, new Date(controller.scheduledTime), true, env.PAYMENT_CHOICE_RECOVERY_START_AT);
+     await enqueueDuePaymentChoiceRecoveryStages(env.DB, new Date(controller.scheduledTime), true, env.PAYMENT_CHOICE_RECOVERY_START_AT, true);
       const recoveryJobs = await env.DB.prepare(`SELECT idempotency_key,entity_id FROM outbox_jobs
         WHERE kind='WHATSAPP_PAYMENT_CHOICE_RECOVERY' AND ((status IN ('PENDING','RETRY') AND available_at<=?) OR (status='QUEUED' AND updated_at<=?))
         ORDER BY available_at,id LIMIT 100`).bind(now, stale).all<{ idempotency_key: string; entity_id: string }>();
@@ -1396,6 +1750,10 @@ export default {
         if (message.body.kind.startsWith("WHATSAPP_") && (env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_AUTHORIZED_PENDING_ONBOARDING" || env.DEPLOYMENT_STATE === "WHATSAPP_PHONE_VERIFICATION_PENDING" || env.DEPLOYMENT_STATE === "WHATSAPP_OTP_REQUIRED" || env.DEPLOYMENT_STATE === "WHATSAPP_NUMBER_SLOT_BLOCKED" || env.DEPLOYMENT_STATE === "META_ASSETS_PENDING")) {
           await env.DB.prepare("UPDATE outbox_jobs SET status='DEFERRED', last_error=?, updated_at=? WHERE idempotency_key=?").bind("WHATSAPP_ONBOARDING_PENDING", new Date().toISOString(), message.body.idempotencyKey).run();
           message.ack();
+          continue;
+        }
+        if (message.body.kind === "WHATSAPP_ORDER_INTENT_STAGE") {
+          await handleOrderIntentStageMessage(message, env, nextAttempt);
           continue;
         }
         if (message.body.kind === "META_INSTANT_FORM_LEAD") {
@@ -1443,6 +1801,8 @@ export default {
             const stored = await env.DB.prepare("SELECT payload_json FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ payload_json: string }>();
             const payload = stored ? JSON.parse(stored.payload_json) as { stageId?: string; stageMinutes?: number; scheduleId?: string; orderId?: string; paymentId?: string; customerId?: string } : undefined;
             if (!payload?.stageId || !payload.scheduleId || payload.orderId !== message.body.entityId || payload.stageId !== message.body.idempotencyKey) { await blockReminder("PAYMENT_REMINDER_PAYLOAD_INVALID", "SKIPPED"); continue; }
+            const ownedByIntent = await env.DB.prepare("SELECT 1 AS present FROM order_confirmation_intents WHERE order_id=? AND workflow_version=? LIMIT 1").bind(payload.orderId, ORDER_INTENT_VERSION).first<{ present:number }>();
+            if (ownedByIntent) { await blockReminder("ORDER_INTENT_030_OWNS_ORDER", "SKIPPED"); continue; }
             const current = await env.DB.prepare(`SELECT st.id,st.stage_minutes,st.status AS stage_status,st.locale AS pinned_locale,st.template_version AS pinned_template_version,
                 s.status AS schedule_status,s.phase,s.source_created_at,o.order_number,o.state,o.archived_at,o.payment_status,o.total_payable,
                 p.id AS payment_id,p.review_state,p.method,c.id AS customer_id,c.wa_id,wc.last_inbound_message_id,wc.last_inbound_at,wc.state_data,
@@ -1471,8 +1831,9 @@ export default {
             const rendered = template.body.replace(/\{(orderNumber|amount|items|delivery|codFee|codTotal)\}/g, (_match, name: string) => values[name] ?? "");
             const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
             const send = Number(payload.stageMinutes) === 240 ? () => provider.sendInteractive(current.wa_id!, rendered, [{ id:"CONFIRM_COD", title: locale === "ur" ? "COD کی تصدیق" : "Confirm COD" }, { id:"KEEP_ADVANCE", title: locale === "ur" ? "ایڈوانس برقرار" : "Keep Advance" }, { id:"CANCEL_ORDER", title: locale === "ur" ? "آرڈر منسوخ" : "Cancel Order" }]) : () => provider.sendText(current.wa_id!, rendered);
-            const delivered = await sendPaymentPart(env.DB, current.wa_id, payload.orderId!, message.body.idempotencyKey, "WHATSAPP_PAYMENT_REMINDER", send);
-            if (delivered !== "SENT") throw new Error("PAYMENT_REMINDER_SEND_FAILED");
+             const delivered = await sendPaymentPart(env.DB, current.wa_id, payload.orderId!, message.body.idempotencyKey, "WHATSAPP_PAYMENT_REMINDER", send, locale);
+             if (delivered === "BLOCKED") { await blockReminder("FREE_MESSAGE_BLOCKED", "SKIPPED"); continue; }
+             if (delivered !== "SENT") throw new Error("PAYMENT_REMINDER_SEND_FAILED");
             const sentAt = new Date().toISOString();
             await env.DB.batch([
               env.DB.prepare("UPDATE payment_reminder_v2_stages SET status='SENT',template_name='SERVICE_WINDOW',locale=?,template_version=?,rendered_text=?,sent_at=?,last_error=NULL,updated_at=? WHERE id=? AND status='QUEUED'").bind(locale, template.version, rendered, sentAt, sentAt, payload.stageId),
@@ -1510,6 +1871,8 @@ export default {
             const payload = outbox ? JSON.parse(outbox.payload_json) as { orderId?: string; orderNumber?: string; stageMinutes?: number } : undefined;
             if (!payload?.orderId || payload.orderId !== message.body.entityId) { await failRecovery("PAYMENT_CHOICE_RECOVERY_PAYLOAD_INVALID", "SKIPPED"); continue; }
             recoveryStageMinutes = payload.stageMinutes === 15 || payload.stageMinutes === 210 ? payload.stageMinutes : undefined;
+            const intentOwned = await env.DB.prepare("SELECT 1 AS present FROM order_confirmation_intents WHERE order_id=? AND workflow_version=? LIMIT 1").bind(payload.orderId, ORDER_INTENT_VERSION).first<{present:number}>();
+            if (intentOwned) { await failRecovery("ORDER_INTENT_030_OWNS_ORDER", "SKIPPED"); continue; }
             const current = await env.DB.prepare(`SELECT o.id AS order_id,o.order_number,o.state,o.payment_status,o.archived_at,o.total_payable,o.delivery_fee,
                 p.id AS payment_id,p.method,p.review_state,c.id AS customer_id,c.wa_id,wc.state AS conversation_state,wc.state_data,wc.last_inbound_message_id,wc.last_inbound_at,
                 EXISTS(SELECT 1 FROM payment_receipts r WHERE r.order_id=o.id AND r.payment_id=p.id) AS has_receipt,

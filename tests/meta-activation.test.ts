@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import admin from "../apps/admin/src/index";
-import { createMetaActivationService, META_SEND_TEST_MESSAGE, META_SEND_TEST_RECIPIENT } from "@gfs/core";
+import { createMetaActivationService, META_SEND_TEST_RECIPIENT } from "@gfs/core";
 
 const accessHeaders = { "cf-access-authenticated-user-email": "admin@example.test" };
 
@@ -119,7 +119,7 @@ describe("Meta activation safety boundary", () => {
     });
     const service = createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", wabaId: "waba-id", appId: "app-id", fetcher });
 
-    const result = await service.action("send-test");
+    const result = await service.action("send-test", { locale: "en", freeMessageEligibilityVerified: true });
     const post = fetcher.mock.calls.find(([, init]) => init?.method === "POST");
 
     expect(result).toMatchObject({ action: "send-test", executed: true, reason: "META_TEST_MESSAGE_SENT", messageId: "wamid.test-message-1", httpStatus: 200 });
@@ -130,7 +130,7 @@ describe("Meta activation safety boundary", () => {
       recipient_type: "individual",
       to: META_SEND_TEST_RECIPIENT,
       type: "text",
-      text: { preview_url: false, body: META_SEND_TEST_MESSAGE }
+      text: { preview_url: false, body: "This is a Garden Shop WhatsApp test message." }
     });
     expect(JSON.stringify(result)).not.toContain(token);
   });
@@ -141,11 +141,19 @@ describe("Meta activation safety boundary", () => {
       if (init?.method === "POST") return new Response(JSON.stringify({ error: { code: "131000", message: `secret ${token} must not escape` }, access_token: token }), { status: 400 });
       return new Response(JSON.stringify({ id: "phone-id", access_token: token }), { status: 200 });
     });
-    const result = await createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", fetcher }).action("send-test");
+    const result = await createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", fetcher }).action("send-test", { locale: "ur", freeMessageEligibilityVerified: true });
 
     expect(result).toMatchObject({ action: "send-test", executed: false, reason: "META_GRAPH_REQUEST_FAILED", error: { code: "131000", status: 400 } });
     expect(JSON.stringify(result)).not.toContain(token);
     expect(JSON.stringify(result)).not.toContain("must not escape");
+  });
+
+  it("fails closed for send-test without verified free-message evidence or a selected locale", async () => {
+    const fetcher = vi.fn<typeof fetch>();
+    const service = createMetaActivationService({ accessToken: "synthetic-token", providerEnabled: true, phoneNumberId: "synthetic-phone-id", fetcher });
+    expect(await service.action("send-test")).toMatchObject({ executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED" });
+    expect(await service.action("send-test", { freeMessageEligibilityVerified: true })).toMatchObject({ executed: false, reason: "CUSTOMER_LOCALE_UNKNOWN" });
+    expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
   });
 
   it("rejects an arbitrary recipient at the Access-protected endpoint", async () => {

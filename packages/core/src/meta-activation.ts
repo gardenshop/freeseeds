@@ -37,6 +37,7 @@ export type MetaActivationActionInput = {
   otp?: string;
   pin?: string;
   locale?: string;
+  freeMessageEligibilityVerified?: boolean;
 };
 
 export type MetaActivationActionResult = {
@@ -204,8 +205,11 @@ export function createMetaActivationService(config: MetaActivationConfig) {
          path = `${encodeURIComponent(config.wabaId)}/subscribed_apps`;
        } else if (action === "send-test") {
          if (!config.phoneNumberId) return { action, executed: false, reason: "META_PHONE_NUMBER_ID_REQUIRED", status: await service.status() };
+         if (input.freeMessageEligibilityVerified !== true) return { action, executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", status: await service.status() };
+         if (input.locale !== "en" && input.locale !== "ur") return { action, executed: false, reason: "CUSTOMER_LOCALE_UNKNOWN", status: await service.status() };
          path = `${encodeURIComponent(config.phoneNumberId)}/messages`;
-         body = { messaging_product: "whatsapp", recipient_type: "individual", to: META_SEND_TEST_RECIPIENT, type: "text", text: { preview_url: false, body: META_SEND_TEST_MESSAGE } };
+         const message = input.locale === "ur" ? "یہ گارڈن شاپ کا واٹس ایپ آزمائشی پیغام ہے۔" : "This is a Garden Shop WhatsApp test message.";
+         body = { messaging_product: "whatsapp", recipient_type: "individual", to: META_SEND_TEST_RECIPIENT, type: "text", text: { preview_url: false, body: message } };
        } else if (action === "flow-key") {
          if (!config.phoneNumberId || !config.flowPublicKey) return { action, executed: false, reason: "META_FLOW_PUBLIC_KEY_REQUIRED", status: await service.status() };
          path = `${encodeURIComponent(config.phoneNumberId)}/whatsapp_business_encryption`;

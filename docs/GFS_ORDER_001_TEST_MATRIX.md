@@ -27,9 +27,25 @@ Executed2026-11-25 in the approved checkout with locked dependencies and synthet
 
 Skipped test is not passed. Legacy rollback script requires a separately authorized external source fixture and was NOT RUN. An accidental `node --test --experimental-sqlite` with no explicit paths auto-discovered the Vitest suite under the wrong Node test runner and produced harness failures (plus one timing-sensitive lock test); it is a FAILED, unsupported invocation, not the repository test command. Final Vitest410/1 skipped and documented Node52/52 passed. No files or fixtures were changed by the invalid invocation. These tests do not claim the revised order workflow is implemented.
 
+## INTENT-030 closeout acceptance (2026-11-26)
+
+| Gate | Actual command/evidence | Result |
+|---|---|---|
+| Focused lifecycle/free gate/activation | `npm.cmd test -- --run tests/order-intent.test.ts tests/free-messaging.test.ts tests/meta-activation.test.ts` | 36 synthetic tests covering bilingual stages/buttons, immutable locale in delayed worker, dynamic remaining time, duplicate/delayed/missing status callbacks, no invented T0, 0049→0050→0051, COD/expiry/cancel/payment/receipt/TID races, late-TID non-reopen, duplicate jobs/retry-after-FEP-expiry, old schedule isolation, unconfirmed-dispatch exclusion, opt-out, free pricing, service-window, CTWA/mobile/expiry and template gates. |
+| Full suite after local source change | `npm.cmd test -- --reporter=dot --maxWorkers=2` | PASS436 passed,1 skipped. |
+| Full API journey fixture | `npm.cmd test -- --run tests/guided-lead-only.test.ts` | PASS104,1 skipped with synthetic verified CTWA/pricing evidence in the D1 fixture; no live provider. |
+| Documented Node suites | Explicit eight-script `node --test` command in the closeout | PASS52/52. |
+| Types/lint | `npm.cmd run build`; `npm.cmd run lint` | PASS. |
+| Production dependency audit | `npm.cmd audit --omit=dev` | PASS0 production vulnerabilities. Full dev-tree audit was not rerun; preserve the existing six moderate dev-tool findings. |
+| Migration compatibility | Synthetic SQLite executes migration0049, unchanged `0050_order_confirmation_intents.sql`, then local `0051_order_confirmation_intent_state_guards.sql`; full guided harness also executes sorted migrations | PASS for local schema/state/lock paths only. None applied remotely. `0050` SHA-256 recorded in the report. |
+| Protected checkout | 923-file Label Printer before-manifest compared SHA-256 against current files | PASS923/923 unchanged; no protected workspace edits. |
+| External/release boundary | Scoped local source/test changes only; browser `list_pages` used first | No account mutation, hosted D1 write, migration apply, message, payment/order update, deployment or traffic action. No page navigation/identity assertion. New-number WhatsApp lock and Hoja Seeds zero-connection preserved. |
+
+INT01-21 local acceptance is **complete**. Live per-contact FEP expiry/pricing evidence, sender display/template quality, A10 rollback rehearsal and production parity remain release gates, not local-development blockers. Physical stock management/reservation is not required; the household eligibility lock is only a cooldown. No inventory table/counter/warehouse dependency exists. All live customer sends fail closed until authoritative free evidence is supplied; no paid fallback.
+
 ## Required staged acceptance
 
-All below **NOT TESTED for REV.2**. Existing related tests are reusable, not proof of new cases. Per stage: baseline -> focused failing reproduction -> minimal change -> focused/full regression -> repair/retest -> document -> scoped commit. Use synthetic real SQLite for transaction semantics, fake clocks and mocked providers.
+Rows below S2-S9 are **not yet accepted in full for REV.2**. INT01-21/S1 acceptance evidence is recorded above. Existing related tests are reusable, not proof of remaining stages. Per stage: baseline -> focused failing reproduction -> minimal change -> focused/full regression -> repair/retest -> document -> scoped commit. Use synthetic real SQLite for transaction semantics, fake clocks and mocked providers.
 
 | IDs/stage | Required cases | Reuse |
 |---|---|---|
@@ -37,7 +53,7 @@ All below **NOT TESTED for REV.2**. Existing related tests are reusable, not pro
 | INT05-08/S1 | +10/+25 once; no24/48h reminders; delayed/stale job suppression; +30 dispatch exclusion | recovery/V2 tests and ledgers |
 | INT09-12/S1 | Method switches preserve deadline; selection unresolved; explicitCOD gross/no-advance copy; cancel/restart | payment-flow/COD tests |
 | INT13-18/S1 | TimelyreceiptORstandaloneTID protects review; evidence upload race; expiry/COD/approval concurrency; late reconciliation; duplicate webhook/retry | guided/COD SQLite harnesses |
-| INT19-21/S1 | Actual stock authority/reservation/release once; no false scarcity; household lock not stock | stock currently missing |
+| INT19-21/S1 | Expiry/cancellation release only the matching household cooldown lock; no physical stock claim/dependency; no historic-order mutation | PASS local; no inventory/stock/warehouse schema or service |
 | HIST01-06/S2 | DisjointA-G with evidence/precedence; F/conflict protection; only eligibleA/B; C review; D one authorized sequence; E excluded/no bulk rewrite | cod-admin history tests |
 | HIST07-08/S2 | Event-denominated abandonment/confirmation; verifiedRTO/failure rates or UNKNOWN | outcome history absent |
 | PAY01-05/S3 | All advance methods; textualTID/leadingzeros; provider scope; authorized duplicate warning/conflicting order; rejection audit | payment-reference.test.ts; migrations0027/0029 |
