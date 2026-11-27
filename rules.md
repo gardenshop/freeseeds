@@ -1,5 +1,15 @@
 # GFS ORDERFLOW / Get Free Seeds Binding Rules
 
+## GFS-ORDERFLOW-FINAL-VERIFICATION-001 (2026-11-27)
+
+- Local/remote branch baseline `a8057a5174c552570e7d98feeaf714cf6e0b6a7b` was verified before documentation changes. Chrome DevTools MCP `list_pages` is mandatory first; this task inventoried existing tabs without navigating/mutating them.
+- Canonical production resource confirmation, Meta operator authorization and both historical bank-credit confirmations are complete decisions; do not request them again. Preserve machine-evidence holds and six test-held COD records. Never fabricate historical financial audit evidence.
+- Owner approved the WhatsApp test ceiling of10 outbound messages to one owner-controlled contact in30 minutes, mobile CTWA initiated, bilingual and free-only, contingent on private number delivery. No customer/campaign traffic or paid fallback. Current old Workers cannot provide acceptance of undeployed candidate behavior.
+- Database export is explicitly withheld pending destination/target approval. `F:\GFS-Backups` failed preflight because encryption could not be verified and ACL grants `Authenticated Users` modify. No approved encrypted location is recorded. The owner must designate an enterprise encrypted private vault or explicitly approve preparation of a new encrypted owner-only location. `getfreeseeds-v2-restore-check` is a historical target candidate only and requires current isolation verification. Export requires explicit follow-on authorization. Verify canonical account/D1 before export. Never Git, public R2, unprotected storage or production restore; never expose rows, backup bytes or recovery IDs in reports/Git.
+- No migration/deployment/activation is automatic. Follow backup and migration preflight then targeted0049→unchanged0050→0051;0049 is forward-only. Deploy current-schema RECOVERY_MODE candidate only after separate authorization, preserve financial history/COD totals/receipts and stop unsafe operations; do not treat V1 as a safe post-COD rollback. Keep DLQ/data intact and never blind-replay.
+- Reuse previously recorded tests/hashes when source is unchanged. After any correction, run focused test, regression, repair and retest; full regression after source change. Preserve six registered dev findings, Label Printer, standalone MO, new-number WhatsApp lock, Hoja zero-connection, payments/COD125, bilingual/financial protections, Access and CAPI.
+- Do not prepare LAUNCH-001-RELEASE until mandatory live evidence and separate release authorization pass. Current disposition is local-preparation PASS, live acceptance partial, WhatsApp NO-GO.
+
 ## GFS ORDERFLOW master project identity
 
 Permanent project reference: **GFS ORDERFLOW**. It covers GFS-ORDER-001 REV.2, stages S0-S9, historical decisions and future subtasks. Keep existing filenames, branch, task IDs and referenced project names for history. The separately protected Garden Shop Label Printer, standalone Money Order Printing and Hoja Seeds projects are not part of GFS ORDERFLOW and remain unchanged/separate.

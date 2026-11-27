@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-ORDERFLOW-FINAL-VERIFICATION-001 local evidence (2026-11-27)
+
+- Verified repo `gardenshop/freeseeds`, branch `codex/gfs-order-001-rev2`, local and origin SHA `a8057a5174c552570e7d98feeaf714cf6e0b6a7b` before this documentation-only update. No resource created or mutated.
+- Chrome DevTools MCP `list_pages` succeeded first. Existing Admin, Cloudflare D1, Meta Business Suite, WhatsApp, Ads Manager and WhatsApp Manager tabs were inventoried; no tab navigation or mutation. No customer-data snapshot was taken in this task.
+- Protected Label Printer checksum baseline `.audit-local/label-printer-before.json`:923 identical,0 changed,0 missing on 2026-11-27. Manifest remains inherited/untracked and excluded from publication.
+- Proposed backup destination `F:\GFS-Backups` was read-only checked and rejected: BitLocker/encryption status could not be verified, and ACL grants `Authenticated Users` modify. Disk had ample free space, but that does not remedy the security failure. No existing approved encrypted destination is evidenced; owner approval of a restricted encrypted vault/location is required. No D1 file was exported. Conditional isolated target `getfreeseeds-v2-restore-check` is historically recorded inert; current identity/bindings/routes/isolation/quota are NOT VERIFIED. Owner withheld export pending approval; do not use target before fresh verification and explicit authorization.
+- Owner approved the bounded WhatsApp message count/window contingent on privately supplying the test number. No message/WAMID or candidate acceptance resulted. Current Workers predate the source candidate.
+
 ## LAUNCH-001 preflight local artifacts (2026-11-27)
 
 - Source candidate commit: `90cb57d9e13e87d6778f028e7f1fbbf4ba4ec93e`, branch `codex/gfs-order-001-rev2`, origin verified as `gardenshop/freeseeds`; local/remote branch SHA matched before this documentation-only preflight update.

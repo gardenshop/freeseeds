@@ -1,5 +1,9 @@
 # GFS ORDERFLOW / Get Free Seeds Status
 
+## GFS-ORDERFLOW-FINAL-VERIFICATION-001 (2026-11-27)
+
+Verified local branch `codex/gfs-order-001-rev2`, HEAD and origin SHA `a8057a5174c552570e7d98feeaf714cf6e0b6a7b`. Chrome MCP `list_pages` succeeded first; existing tabs were inventoried without navigation or mutation. Recovery candidate, migrations and tests are local evidence only; current Workers predate the candidate. Owner approved the bounded test ceiling (10 outbound messages/30 minutes) contingent on privately supplying the owner-controlled number; no message yet. Owner withheld database export pending destination/target approval. `F:\GFS-Backups` fails preflight: encryption could not be verified and ACL allows `Authenticated Users` modify. No approved encrypted location is evidenced. Existing `getfreeseeds-v2-restore-check` is only a historical candidate pending current isolation readback. No export/restore/deployment/migration/activation occurred. Full499/1, focused143, Node52/52, build/lint PASS and production audit0 reused. Protected Label Printer hashes rechecked:923 identical,0 changed,0 missing. S0 80%; S1/S3 local100%; S2/S4-S9 exit0%; overall2/10 exits. WhatsApp/LAUNCH-001-RELEASE NO-GO. See `GFS_ORDERFLOW_FINAL_VERIFICATION_001.md`.
+
 ## RELEASE-BLOCKER-CLOSE-001 (2026-11-27)
 
 Owner confirmations now obtained separately: canonical staging-named Production resources, authorized Meta operator, and each of the two actual bank credits. No order/audit change or dispatch is authorized; machine-evidence holds remain and must not be fabricated away. Test contact/send scope and private backup/isolated restore destination are promised but not supplied. Do not repeat the four resolved owner questions. No live send/export/restore/deployment follows automatically.
