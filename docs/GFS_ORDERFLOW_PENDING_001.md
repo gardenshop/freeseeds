@@ -4,6 +4,16 @@
 
 PENDING-001 adds a read-only, paginated `Order Reconciliation` tab to the existing authenticated Admin Orders view. It defaults to active and archived orders and shows an as-of timestamp, filtered aggregate counts, and per-order payment/COD/sequence/fulfillment dispositions. The report performs no DML, does not enqueue or replay messages, hides CSV export on the reconciliation tab and rejects its export route, and never writes customer row data to source/tests/docs.
 
+## LAUNCH-001 live aggregate follow-up (2026-11-27)
+
+The existing authenticated Admin and its active D1 binding were read without loading row details into this report. D1 has **2,213 total orders** (**2,212 active,1 archived**). State aggregates: `DETAILS_COMPLETED`752, `PAYMENT_PENDING`199 (198 active,1 archived), `PAYMENT_REVIEW`59, `PAYMENT_REJECTED`5, `PAID`1, `PACKING`4, `DISPATCHED`1 and `COD_PENDING`1,192. COD sidecars total1,196 (1,192 pending,3 packing,1 dispatched); all1,196 have the customer-origin exact-quote audit and0 are unconfirmed. No order is converted/updated.
+
+Two payment-status-PAID/APPROVED records have exact expected/approved/order totals and stored receipts, but their legacy `PAYMENT_APPROVED` audit metadata contains only the existing order/event keys, with no settlement-evidence reference or TID hash. One is already in `PACKING`. Under the new PENDING guard these are **2 payment-state conflicts**, with **1 fulfillment conflict**; the strict `PAID_RECORDED` predicate matches0. This does **not** assert that no bank funds were received. Preserve both states/receipts, block further dispatch, and require an authorized operator to reconcile actual bank credit before any future guard rollout. No IDs, names, phone numbers, TIDs or receipts are stored here.
+
+Admin/Analytics also showed submitted orders364 in the UTC 7-day window and2,000 in 30 days; the exact rolling24-hour total is unavailable from the date-only Admin filter (last full UTC date62; current UTC date-to-date7). Other existing filter counts: `COD_PENDING`1,196, `PAYMENT_REVIEW`59, active Admin payment-pending filter950, approved-payment candidates2, `COD_PAID`0, instruction `NOT_SENT`0, and cancelled0. Counts are overlapping, with the old Admin filtering active by default; use D1 all-record state counts above for total/historical splits. Analytics lifecycle snapshots show `ADVANCE_PENDING`42/214 and `COD_CONFIRMED`190/1,095 over7/30 days; they are not proof of per-order funds or consent.
+
+This reads from the active Cloudflare `Production` environment of staging-named Workers/D1; owner confirmation that the staging-named data binding is the canonical production dataset remains required. The deployed Admin is still the old four-tab UI with no Reconciliation view, and no historical-intent sequence is created. The per-contact, paid-evidence and dispatch-conflict rows cannot be closed solely from aggregate counts.
+
 ## Classification
 
 The primary order/payment classifications are exclusive per row; sequence and fulfillment are separate axes:
@@ -31,9 +41,9 @@ Aggregate counts are overlapping evidence dimensions, not a partition, unique-cu
 
 ## Live Data Boundary
 
-No supported authenticated Chrome/Admin connector was exposed in this session, so no fresh production/current or historical order counts or customer-row classifications were obtained. The 2026-11-25 cohort totals and WABA aggregates remain historical and were not presented as current. Direct D1, Cloudflare, Meta, or alternate API access was not used as a substitute. No live per-contact FEP/pricing evidence was read and no identity audit was repeated.
+The 2026-11-27 MCP recovery provided current Admin aggregate counts and authenticated D1-console aggregate status/evidence counts; details are in `GFS_ORDERFLOW_MCP_RECOVERY_001.md`. No row IDs, names, addresses, TIDs, receipts, WAMIDs or individual records were copied into this report. The 2026-11-25 cohort totals remain historical. Per-contact FEP/referral/expiry/pricing is still unknown; the visible Meta user principal was not matched to the owner-reported profile, while account/business assets matched. Existing Orders UI fields are insufficient for individual A-G/dispatch acceptance.
 
-No migrations `0049`, `0050`, or `0051` were applied remotely. No deployment, live message, campaign, payment, COD/order transition, traffic/routing, billing/template/account mutation, or parcel action occurred. The separately protected Label Printer set was verified against its existing 923-entry manifest; no Label Printer file or manifest is an implementation dependency or commit target.
+No migrations `0049`, `0050`, or `0051` were applied. No deployment, live message, campaign, payment, COD/order transition, traffic/routing, billing/template/account or parcel change occurred. One current D1 Time Travel bookmark was created as recovery metadata; no D1 row/schema change or full export backup was made. The protected Label Printer set remains923/923 unchanged and is not a commit target.
 
 ## Local Verification
 
@@ -41,4 +51,4 @@ The final local results are: **218 passed/1 skipped** in the eight-file PENDING/
 
 The PENDING/Admin integration tests use synthetic SQLite/D1 fixtures and assert the active+archived query, exact COD audit match, strict Advance evidence, missing-migration degradation, no message enqueue, and no DML from the report. `migrations/0050_order_confirmation_intents.sql` remains unchanged at SHA-256 `d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4`; no migration was applied. The protected Label Printer set was rehashed: **923 identical, 0 changed, 0 missing**. Whitespace/diff validation is recorded before the authorized commit. See [TEST_MATRIX](TEST_MATRIX.md) for the complete evidence matrix.
 
-PENDING-001 local source/synthetic acceptance is complete. S2 operational exit remains **PARTIAL** until a supported read-only Admin refresh produces current row-level evidence, the A-G review is completed with valid denominators, and separate live/release gates pass. LAUNCH-001 preflight is now active but blocked on the same supported live-read gate.
+PENDING-001 local source/synthetic acceptance is complete; aggregate live status was refreshed. S2 operational exit remains **PARTIAL**: confirmed COD audits match1196/1196, but two legacy PAID/APPROVED records lack the new settlement/TID-hash audit and one is already PACKING; actual bank credit must be independently reconciled before new guard deployment. No state was changed. Final A-G/event denominators and other per-order decisions remain open. LAUNCH-001 preflight remains NO-GO pending the account/user, sender/template, migration, backup, rollback, test-contact and per-contact FEP gates.

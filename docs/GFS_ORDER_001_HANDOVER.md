@@ -2,15 +2,15 @@
 
 ## LAUNCH-001 preflight (2026-11-27)
 
-**PARTIAL / NO-GO.** HEAD `90cb57d9e13e87d6778f028e7f1fbbf4ba4ec93e` matches the specified remote branch. Local FEP/PENDING code, synthetic tests, staging Wrangler dry-runs, full tests, production-only audit and protected hashes pass. The tool runtime exposes no Chrome DevTools MCP; `list_pages` was not callable, so no fresh live counts, account identities, production versions, current migration markers, template/sender status, per-contact price/expiry, D1 backup/Time Travel reference or live rollback target is claimed. No direct D1/API substitute or production action occurred. The two local dry-run bundles target staging configs only.
+**PARTIAL / NO-GO.** Runtime source candidate is commit `90cb57d9e13e87d6778f028e7f1fbbf4ba4ec93e`; the MCP recovery/documentation commit is tracked separately. Chrome DevTools recovery PASS: `list_pages` succeeded first in the existing profile. Cloudflare account and Meta Business/Page/WABA/ad assets match; the visible Meta user principal does not match the owner-reported profile context and remains unverified. Current Worker settings and aggregate Admin/WABA data were read. Exact per-order COD/payment/dispatch classification, contact-level FEP evidence and production data-plane naming remain open. One Time Travel bookmark was created; no D1 rows, migrations or Worker code were changed. See [MCP recovery report](GFS_ORDERFLOW_MCP_RECOVERY_001.md) and [preflight](GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md).
 
-Next owner action: restore the **existing** authorized Chrome DevTools MCP in the existing Kilo/VS Code session; call `list_pages` first. Owner resolves any ordinary login challenge. After that, refresh existing Admin orders and verify identities/current production metadata read-only. Do not deploy the reconciliation view just to get counts. Historical orders without a presented INTENT-030 still have no fresh confirmation sequence. See [LAUNCH-001 preflight](GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md); do not authorize LAUNCH-001-RELEASE until the live gates close.
+Next task: resolve the staging-name/Production data-plane authority and the missing order-state/consent fields without exporting customer rows, obtain separate authorization for a synthetic test-contact send, and identify a COD-compatible intake-off rollback target. Do not deploy the Reconciliation view solely to obtain counts; do not authorize LAUNCH-001-RELEASE until these gates pass.
 
 ## PENDING-001 local closeout (2026-11-26)
 
 Local code and synthetic acceptance are complete; see [PENDING-001 report](GFS_ORDERFLOW_PENDING_001.md). The read-only Admin Orders Reconciliation tab includes active and archived orders, overlapping as-of counts, and per-row payment/COD/review/unresolved/conflict, sequence, and fulfillment dispositions. Advance fulfillment now requires exact approved amounts, stored receipt, and matching settlement/TID-hash audit; COD requires explicit customer consent matched to its quote in the atomic state update. No migration, order update, send, backfill, bulk action, export-specific report or deployment was added.
 
-The supported authenticated browser connector was not exposed, so **no fresh live current/historical counts or row-by-row production classifications are claimed**. The 2026-11-25 totals remain historical. The ordinary INTENT-030 worker still sends only individual eligible jobs through the free-only guard; the new report cannot trigger it. Local acceptance is not LAUNCH-001 approval. WhatsApp remains NO-GO, and S2's operational exit is partial pending authorized live read-only reconciliation, complete A-G evidence and release gates.
+Local acceptance is not LAUNCH-001 approval. Current Admin aggregates were refreshed in the MCP recovery; exact row-level A-G/dispatch evidence remains unavailable from the deployed Admin. The 2026-11-25 totals remain historical. The ordinary INTENT-030 worker still sends only individual eligible jobs through the free-only guard; no historic sequence is backfilled. WhatsApp remains NO-GO and S2's operational exit is partial.
 
 ## INTENT-030 closeout update (2026-11-26)
 
@@ -36,7 +36,7 @@ The owner supplied original O01-O23 in this task. All23 are individually mapped 
 
 Numeric owner notifications “2” and “5” cannot be mapped to a source identifier. The +15/+210 no-method recovery, separate +15/+30/+60/+210/+240 Advance V2, manual Admin action, two Meta reminders and live D1 stage outcomes are all documented with flags, trigger/source/body/delivery conditions. No false equivalence is claimed. Proposed S1 behavior supersedes both decision-reminder purposes for newly versioned eligible orders: T0 on successful actionable presentation, +10, +25, guarded +30 expiry; no24/48h and no auto COD. Preserve historic rows and do not enable before gates.
 
-## Current operational evidence
+## Historical operational evidence (2026-11-25; not current)
 
 Fresh aggregate cohort cutoff12:47Z: all2,129 /24h56 /7d421 /30d2,078. Order states COD_PENDING1,149; DETAILS_COMPLETED724; PAYMENT_PENDING191; PAYMENT_REVIEW54; PAYMENT_REJECTED5; PACKING4; PAID1; DISPATCHED1; stored DELIVERED/COLLECTION_PENDING/CANCELLED/EXPIRED0. Payment PAID2 includes one paid PACKING. Explicit COD confirmations1,153; paid Advance2; neither-confirmed-nor-paid aggregate candidate974 (724 no-method+250 advance pending/review/rejected). No customer reconciliation list/export created.
 

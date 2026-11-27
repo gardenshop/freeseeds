@@ -87,6 +87,14 @@ The official Meta pricing/webhook references confirm that a qualifying mobile Cl
 - A release rollback target must be the exact currently observed, compatible deployed Worker/source/config and must preserve COD totals/records. Historical version IDs and the old V1 source are not automatically safe for COD intake; prove the target independently before activation. Stop on any identity mismatch, unknown pricing, duplicate message, financial conflict, unexpected charge, DLQ/error increase or failed readback.
 - No campaign, sender/template mutation, live message, payment, migration, deployment, CAPI activation, postal polling, traffic shift, or parcel action is authorized by this preflight. Preserve new-number WhatsApp, Hoja Seeds zero connection, FIN-ATOMIC-001, Rs.125 COD fee, all O01-O23/REV.2, protected Label Printer, standalone MO, and no-customer-data rules.
 
+## LAUNCH-001 MCP recovery/current hold (2026-11-27)
+
+- The existing Chrome DevTools MCP now exposes `list_pages`; it must still be the first browser call in a resumed session. Do not modify global MCP configuration, launch a replacement browser, or extract credentials to diagnose the earlier session-level outage.
+- For Admin/Meta row-data pages, do not take full-page accessibility snapshots or export bodies. Use authorized aggregate UI filters and return only sanitized counts/labels. If a tool response exposes row data, do not copy/store/repost it; disclose the exposure without repeating identifiers and continue only with aggregate views.
+- Current GFS account/page/WABA assets are read-only verified; the visible Meta user principal is not matched to owner-reported profile context, so no Meta change/send is allowed. Active Workers run the Production environment with staging-named resources; confirm the canonical D1 data plane before release.
+- Current Admin/D1 aggregate indicates two PAID/APPROVED records lack matched settlement/TID-hash audit and one is in PACKING. Preserve both rows and receipts; do not dispatch or rewrite until actual bank credit is independently confirmed. All COD quote-consent audits match the sidecars; `test_hold` rows remain blocked. No historical intent backfill.
+- A Time Travel bookmark may be created only as explicit release-preparation metadata after re-verifying the correct Cloudflare account; keep its opaque reference out of public Git documentation. A bookmark is not a secure backup export.
+
 ## GFS-COD-MO-113 Chrome MCP initialization gate (2026-11-16 UTC)
 
 - D `.kilo/kilo.json` readback confirms the existing project registration is enabled and pinned to official `chrome-devtools-mcp@1.13.0`, Node/npm/cache/temp on E:, `--autoConnect`, and input/network/JavaScript/file-navigation plus telemetry/update checks disabled. No unrelated MCP setting was changed.

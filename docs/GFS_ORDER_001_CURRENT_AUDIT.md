@@ -1,8 +1,10 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Current Audit
 
-## LAUNCH-001 preflight update (2026-11-27)
+## LAUNCH-001 / MCP recovery update (2026-11-27)
 
-No new live audit occurred: Chrome DevTools MCP is absent from this task runtime and `list_pages` could not be called. The GitHub branch/HEAD were verified against the requested source commit; the local Cloudflare account identifier matches the owner-provided value, but the active signed-in identity was not verified. Wrangler dry-runs compiled the current API/Admin code from staging-named configs only. Therefore the existing 2026-11-25 order cohort, WABA analytics, sender/template states, runtime Worker IDs and account checks remain **historical**. Do not reuse them as current counts or deployment parity. No remote D1 query, Cloudflare/Meta API, migration, Worker release, message or account mutation was performed. See [LAUNCH-001 preflight](GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md) for the blocked metrics/identities, exact local artifact manifest and owner reconnect step.
+Chrome DevTools MCP recovery **PASS**: `list_pages` succeeded first using the existing authenticated profile. Cloudflare Get Free Seeds, Meta/Garden Shop assets, active Worker deployments, current flags, WABA sender/templates/limits and Admin aggregates were read-only checked. The visible Meta user principal could not be matched to the owner-reported login, so user-level identity remains PARTIAL. Current Admin aggregate counts are in `GFS_ORDERFLOW_MCP_RECOVERY_001.md`; the 2026-11-25 cohort remains historical. Current Cloudflare Workers are staging-named in the `Production` environment and bind staging-named D1/R2/Queue resources; owner must confirm that this is the canonical production data plane. The active versions predate source commit90cb and the deployed Admin has no PENDING Reconciliation tab.
+
+Cloudflare D1 metadata was read only: `cod_schema_migrations` runs through0048, Wrangler `d1_migrations` is empty, new0049-0051 tables/markers are absent, and the aggregate0049 duplicate-group preflight returned0. One current Time Travel bookmark was created after matching the Cloudflare account; no D1 rows, DDL/DML, migration, Worker, Meta, payment/order, message, campaign, routing or postal action occurred. The separate full backup export was not created. The exact bookmark is deliberately kept out of Git. See [MCP recovery report](GFS_ORDERFLOW_MCP_RECOVERY_001.md) and [LAUNCH preflight](GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md).
 
 ## Local PENDING-001 follow-up (2026-11-26)
 

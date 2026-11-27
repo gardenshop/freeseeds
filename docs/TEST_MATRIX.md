@@ -73,9 +73,9 @@ PENDING-001 local implementation/test acceptance passes. S2 operational exit rem
 | Node/build/lint | PASS52/52 / PASS | Eight documented Node scripts; TypeScript build and lint pass. |
 | Dependency audit | PASS production / OPEN dev | 0 production findings; six registered moderate development-tool findings remain. |
 | Release artifact | PASS local dry-run only | Wrangler4.149.0 API/Admin staging bundles hash-recorded; no upload/deployment. |
-| Live preflight | BLOCKED | No Chrome MCP/list_pages; no fresh counts/identities/production versions/billing/template/migration/backup/rollback status. |
+| Live preflight | PARTIAL | `list_pages` passed; Cloudflare account and Meta assets match. Visible Meta user principal remains unmatched to owner-reported profile. Read-only Admin aggregates/Worker settings verified. Row-level PENDING/FEP, migration-history gaps, separate backup and COD-safe rollback remain open. |
 
-No deployment or activation is authorized by these local passes. S0 remains80%; A06/A10 remain partial; S2 live order acceptance remains open; WhatsApp is NO-GO. See the linked LAUNCH-001 report for owner reconnect instructions and release/rollback sequence.
+No deployment or activation is authorized by these passes. S0 remains80%; A06/A10 remain partial; S2 row-level order acceptance remains open; WhatsApp is NO-GO. See the LAUNCH-001/MCP recovery reports for the refreshed aggregates and remaining gates.
 
 INT01-21/S1 local acceptance is complete. The timer is customer-confirmation policy only. No stock/warehouse schema or dependency; eligibility locks are cooldown-only. Per-contact live FEP expiry/pricing, display-name/template quality and release-specific rollback remain production gates; no paid fallback and no WhatsApp launch authorization.
 
