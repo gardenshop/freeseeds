@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import admin from "../apps/admin/src/index";
-import { createMetaActivationService, formatWhatsAppText, META_SEND_TEST_RECIPIENT } from "@gfs/core";
+import { createMetaActivationService, createWhatsAppTestOutboundGuard, formatWhatsAppText } from "@gfs/core";
 
 const accessHeaders = { "cf-access-authenticated-user-email": "admin@example.test" };
 
@@ -117,7 +117,7 @@ describe("Meta activation safety boundary", () => {
       if (init?.method === "POST") return new Response(JSON.stringify({ messages: [{ id: "wamid.test-message-1" }], access_token: token }), { status: 200 });
       return new Response(JSON.stringify({ id: "phone-id", status: "CONNECTED", access_token: token }), { status: 200 });
     });
-    const service = createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", wabaId: "waba-id", appId: "app-id", fetcher });
+    const service = createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", wabaId: "waba-id", appId: "app-id", sendTestRecipient: "+15555550123", fetcher });
 
     const result = await service.action("send-test", { locale: "en", freeMessageEligibilityVerified: true });
     const post = fetcher.mock.calls.find(([, init]) => init?.method === "POST");
@@ -128,7 +128,7 @@ describe("Meta activation safety boundary", () => {
     expect(JSON.parse(String(post?.[1]?.body))).toEqual({
       messaging_product: "whatsapp",
       recipient_type: "individual",
-      to: META_SEND_TEST_RECIPIENT,
+      to: "+15555550123",
       type: "text",
       text: { preview_url: false, body: formatWhatsAppText("This is a Garden Shop WhatsApp test message.", "en") }
     });
@@ -141,7 +141,7 @@ describe("Meta activation safety boundary", () => {
       if (init?.method === "POST") return new Response(JSON.stringify({ error: { code: "131000", message: `secret ${token} must not escape` }, access_token: token }), { status: 400 });
       return new Response(JSON.stringify({ id: "phone-id", access_token: token }), { status: 200 });
     });
-    const result = await createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", fetcher }).action("send-test", { locale: "ur", freeMessageEligibilityVerified: true });
+    const result = await createMetaActivationService({ accessToken: token, providerEnabled: true, phoneNumberId: "phone-id", sendTestRecipient: "+15555550123", fetcher }).action("send-test", { locale: "ur", freeMessageEligibilityVerified: true });
 
     expect(result).toMatchObject({ action: "send-test", executed: false, reason: "META_GRAPH_REQUEST_FAILED", error: { code: "131000", status: 400 } });
     expect(JSON.stringify(result)).not.toContain(token);
@@ -154,6 +154,41 @@ describe("Meta activation safety boundary", () => {
     expect(await service.action("send-test")).toMatchObject({ executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED" });
     expect(await service.action("send-test", { freeMessageEligibilityVerified: true })).toMatchObject({ executed: false, reason: "CUSTOMER_LOCALE_UNKNOWN" });
     expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+  });
+
+  it("requires a runtime recipient instead of a compiled test number", async () => {
+    const fetcher = vi.fn<typeof fetch>();
+    const result = await createMetaActivationService({ accessToken: "synthetic-token", providerEnabled: true, phoneNumberId: "synthetic-phone-id", fetcher }).action("send-test", { locale: "en", freeMessageEligibilityVerified: true });
+    expect(result).toMatchObject({ executed: false, reason: "META_TEST_RECIPIENT_REQUIRED" });
+    expect(fetcher.mock.calls.some(([, init]) => init?.method === "POST")).toBe(false);
+  });
+
+  it("applies the shared atomic test budget to the Admin direct-Graph send path", async () => {
+    const db = {
+      prepare(_sql: string) {
+        const statement = {
+          bind(..._values: unknown[]) { return statement; },
+          async run() { return { meta: { changes: 1 } }; },
+          async first() { return { created_at: "2026-11-27T13:00:00.000Z" }; }
+        };
+        return statement;
+      }
+    } as unknown as D1Database;
+    const now = new Date("2026-11-27T13:00:01.000Z");
+    const outboundGuard = createWhatsAppTestOutboundGuard(db, { enabled: "true", deploymentState: "ISOLATED_WHATSAPP_TEST", recipient: "+15555550123", windowStart: "2026-11-27T13:00:00.000Z" }, () => now);
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(async (_input, init) => init?.method === "POST"
+      ? new Response(JSON.stringify({ messages: [{ id: "synthetic-admin-provider-id" }] }), { status: 200 })
+      : new Response(JSON.stringify({ id: "synthetic-phone-id", status: "CONNECTED" }), { status: 200 }));
+    const service = createMetaActivationService({ accessToken: "synthetic-token", providerEnabled: true, phoneNumberId: "synthetic-phone-id", sendTestRecipient: "+15555550123", outboundGuard, fetcher });
+    const result = await service.action("send-test", { locale: "en", freeMessageEligibilityVerified: true });
+    expect(result).toMatchObject({ executed: true, reason: "META_TEST_MESSAGE_SENT" });
+    expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);
+  });
+
+  it("restricts an isolated Admin Worker to the budgeted send-test action", async () => {
+    const env = { ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true" } as never;
+    const response = await admin.fetch(new Request("https://admin.example.test/api/payment-configuration", { method: "POST", headers: accessHeaders }), env);
+    expect(response.status).toBe(404);
   });
 
   it("rejects an arbitrary recipient at the Access-protected endpoint", async () => {

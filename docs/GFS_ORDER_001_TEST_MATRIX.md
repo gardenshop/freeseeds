@@ -1,5 +1,16 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Test Matrix
 
+## TEST-ISOLATION-001 (2026-11-27)
+
+- **Full:** Vitest520 passed/1 skipped; TypeScript build PASS; lint PASS; production dependency audit0.
+- **Focused:** test budget, relay split/signature, isolated input, Admin Graph send, FEP/free gates, ordinary guided API/payment/COD and locale tests PASS.
+- **Budget evidence:** ten allowed,11th blocked; 24 concurrent provider sends admit10; API/Admin guard instances share one D1 anchor; mismatched windows rejected; duplicate payloads suppressed; unknown acceptance blocks; other recipient/deadline/wrong deployment rejected; blocked media send never uploads.
+- **End-to-end synthetic:** signed CTWA opening and synthetic nonbillable FEP status yield EN/UR localized sample messages; duplicate locale webhook suppressed; Orders/Payments/CAPI remain0. No live phone/Meta evidence claimed.
+- **Node:** safe synthetic/regression scripts72/72; credential bridge1/1 with dummy values. Not run: live monitoring probe (would contact production), V1 rollback harness (`GFS_LEGACY_ROOT` unavailable), temp Git-staging preflight harness. Six development findings retained.
+- **Vault:** DPAPI CurrentUser and recovery-wrapped AES-256-GCM roundtrips, synthetic SQL memory restore, CHECK constraint and tamper detection PASS; after fixing a no-data pipe metadata-open race, five consecutive named-pipe/Wrangler two-open read checks PASS; no plaintext file retained.
+- **Protected files:** final Label Printer manifest check923 identical,0 changed,0 missing. No Label Printer/MO/Hoja code or data path changed.
+- No real outbound message, export/restore, deployment, migration, routing change or campaign.
+
 ## LIVE-TEST-001 (2026-11-27)
 
 Live controlled test safely stopped before initiation:0 outbound/10; no test window. Current API old Worker has per-minute Cron and Queue consumer without verified recipient-specific cap. CTWA/FEP/pricing, expiry, English/Urdu rendering, localized buttons, payment/COD content and Utility routing are NOT TESTED. No source change and no regression run. Reused baseline full499 passed/1 skipped, focused143, Node52/52, build/lint PASS, production audit0. No export or restore; candidate D1 metrics were read-only only. Protected Label Printer hashes verified:923 identical,0 changed,0 missing. See `GFS_ORDERFLOW_LIVE_TEST_001.md`.

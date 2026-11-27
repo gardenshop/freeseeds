@@ -1,0 +1,61 @@
+# GFS-ORDERFLOW-TEST-ISOLATION-001
+
+## Result
+
+**Local implementation and synthetic acceptance PASS. Live CTWA test, production export/restore, deployment and launch remain NO-GO pending separate approvals.** Live outbound count is **0/10** and the 30-minute timer was not started. Verified starting checkout: `gardenshop/freeseeds`, `codex/gfs-order-001-rev2`, local and origin SHA `80706543de9d33a174b2c7370c51882ce49e40a3`. The approved private test contact is intentionally absent from source, test fixtures, logs and this report. Chrome DevTools MCP `list_pages` was called first. Visible Cloudflare account matched Get Free Seeds. No production message, route, setting, Worker, D1, payment, order, CAPI or campaign was changed.
+
+## Test-Mode Contract
+
+`WHATSAPP_TEST_MODE` defaults off (unset/`false`). Enabling it requires `DEPLOYMENT_STATE=ISOLATED_WHATSAPP_TEST`, a runtime-secret `WHATSAPP_TEST_RECIPIENT`, and a fixed canonical UTC `WHATSAPP_TEST_WINDOW_START`; the 30-minute deadline is derived, not extendable. A singleton anchor in the existing `outbound_messages` table pins the first start time across API/Admin Worker instances; a different start is rejected. No schema migration was added.
+
+Every Meta send passes the same `WhatsAppOutboundGuard`, including text, interactive/button/list, template, flow, image and payment QR sends; media upload is inside the reservation callback, so a blocked message cannot upload media first. Admin's direct Graph `send-test` path uses that same guard and D1 store. In isolated Admin mode every other Admin path is denied. No compiled test recipient exists; the former fixed recipient constant and hardcoded Admin test-route recipient were removed in favor of the runtime secret.
+
+Before any provider POST, a single D1 `INSERT ... SELECT` atomically reserves a unique payload fingerprint only while the fixed-window count is below10. Reservations persist all states and count conservatively. The phone and body are not stored in the reservation key; only the window start and SHA-256 payload fingerprint are stored. Duplicate payload retries collide on the unique key and are suppressed. Unknown provider acceptance marks the reservation `UNKNOWN` and blocks all later test sends for the window; no retry or paid fallback. D1 errors fail closed. A final deadline check occurs after hashing and immediately before the network call.
+
+API test mode accepts only `/webhooks/whatsapp`, a CTWA ad opening for the exact secret recipient, and English/Urdu locale button replies. It does not call general order/payment/dispatch handlers, does not bind R2/Queue/Cron, and the isolated config disables COD, payment automation, templates, CAPI and instant forms. Scheduled work is a no-op; an accidentally delivered Queue batch is retried without processing or acknowledgement. Existing stored free-eligibility checks remain authoritative; unknown/closed FEP or service-window/pricing evidence blocks sends.
+
+## Genuine CTWA Routing
+
+The existing Meta WABA callback remains the production API. A second Worker does not receive it automatically, and Meta callback retargeting would redirect ordinary customers. The new production API relay is disabled by default. If separately authorized and deployed, it verifies the original signed callback, splits only the configured test contact's messages/statuses from ordinary events, strips test events from the production D1 payload, signs the filtered subset with the existing app secret, and forwards it only to the exact `getfreeseeds-api-wa-test.get-free-seeds.workers.dev/webhooks/whatsapp` host. Ordinary events stay on the existing production API path. A relay failure returns a retryable error after normal events are processed; existing webhook/outbox dedupe protects retries. The candidate independently verifies the signature and rejects unrelated recipients.
+
+This task did not configure the relay, change the Meta callback, deploy a Worker, or start the test timer. `apps/api/wrangler.whatsapp-test.jsonc` was dry-run validated only. It binds existing `getfreeseeds-v2-staging`, has no route/Cron/Queue/R2 binding, and defaults both test mode and Meta sending off. The test Worker has no configured Meta secrets or private recipient. The current production API remains old version `b426ba47` at100% with its per-minute Cron and Queue consumer; local source guards do not constrain that deployed Worker. Candidate acceptance still requires separate deployment and routing authorization.
+
+## Synthetic Acceptance
+
+- Budget unit tests allow reservations1–10 and block11;24 concurrent distinct provider attempts against one D1 admit exactly10.
+- Separate API/Admin guard instances share the same D1 anchor/cap; a mismatched second Worker window is rejected.
+- Duplicate identical provider/webhook/job payloads are suppressed. Unknown acceptance consumes the reservation, blocks subsequent sends, and cannot retry. Other recipients, wrong deployment state and expired windows fail before network send.
+- Meta Provider boundary test confirms only10 HTTP POSTs occur. Admin direct-Graph send test uses the same budget guard. Image upload is inside the guarded provider operation.
+- End-to-end synthetic CTWA callback used signed fake provider data and `sent`/`delivered` nonbillable `free_entry_point` status evidence. It generated the opening language prompt plus English and Urdu samples through the ordinary send/free guard. Budget rows=3; synthetic Orders, Payments and CAPI rows remained0. Duplicate button webhook generated no second send. Unrelated-recipient and order/payment commands were rejected.
+- Existing free-message, FEP, locale, payment/COD formatting, COD Rs.125, ordinary-customer, duplicate-job and financial atomicity suites passed in the full regression. No synthetic test is live sender/pricing/template acceptance.
+- 30 minutes cannot prove seven-day delivery behavior or Utility routing after24 hours. Those require separately authorized follow-up evidence and the existing exact free-pricing/template guard; do not infer a 168-hour entitlement.
+
+## Encrypted Backup Vault
+
+Dedicated vault: `%LOCALAPPDATA%\GFS-Orderflow-D1Vault` (on this host, under the current user's C: profile). It is not on a shared project/backup volume. Directory inheritance is disabled; verified ACL allows Full Control only to the current owner, SYSTEM and Administrators. Available free space was approximately62.9GB; the utility requires at least1GiB free. The vault was empty after self-tests.
+
+Windows DPAPI CurrentUser roundtrip works. EFS was unsupported on this host and BitLocker status was not available without admin rights; no elevation or software install is required. Vault files use streaming AES-256-GCM with random key/nonce, and the key is wrapped both by CurrentUser DPAPI and by a scrypt-derived AES-GCM recovery envelope. Real backup recovery requires an owner-managed passphrase of at least24 characters from the password manager; it is supplied to the process environment only, never committed, printed, or passed to Wrangler. Loss of both the Windows profile and recovery passphrase makes the file unrecoverable.
+
+`scripts/gfs-d1-encrypted-vault.mjs` writes ciphertext only. Its Wrangler export mode feeds Wrangler's file-only output through a Windows named pipe directly into the AES-GCM writer; no plaintext SQL file is created. Wrangler identity/config/database IDs are checked before export; stdout/stderr are suppressed to avoid signed export URLs or SQL in logs. The command also requires explicit export, destination, target/isolation approvals and a Time Travel reference created within30 minutes. It verifies the encrypted artifact by decrypting to memory and outputs only its SHA-256 and byte count. No production export was run.
+
+Synthetic SQL roundtrip PASS: 2 rows, PKR375 aggregate, CHECK constraint enforced, AES-GCM tamper rejected, DPAPI and recovery-passphrase unwrap both PASS, ciphertext SHA-256 computed, and zero plaintext files retained. The first named-pipe probe exposed an intermittent empty metadata-open before the writer; the pipe handler now ignores no-data opens and begins encryption only on the first data-bearing connection. Five consecutive synthetic named-pipe export/restore-read runs then passed, including Wrangler's two-open file-read pattern. This is not a production D1 export or remote restore.
+
+## Restore Target Readback
+
+`getfreeseeds-v2-restore-check` was reverified in the expected account. D1 `PRAGMA quick_check` returned `ok`; last-24-hour metrics show0 queries/rows read/rows written. Read-only binding checks show the current API/Admin production Workers bind `getfreeseeds-staging`, not this target; the inspected isolated GFS Workers had no target binding. No target data was changed and no customer row content was read.
+
+Aggregate-only target contents: customers, orders, payments, receipts, leads, outbox jobs, conversations, webhook events, audit and order-request rows were all0. The target is **not empty**: it contains the existing migration/schema and static configuration/content records (33 migration rows,3 payment methods,16 content templates/versions and10 action labels). A full restore into it requires a separately approved reset/restore procedure or another approved empty isolated D1. Do not clear its current contents or attach it to any production Worker, Queue, Cron or WhatsApp path.
+
+## Release and Rollback
+
+No production migrations or deployment occurred. Keep RECOVERY_MODE and the existing machine-evidence holds, six test-held COD sidecars, financial records and DLQ unchanged. Preserve0049→unchanged0050→0051;0049 is forward-only. Preserve payment methods, COD Rs.125, no physical-stock dependency, no unauthorized Pakistan Post polling, Access/CAPI, Label Printer, standalone MO and Hoja isolation.
+
+Separately authorized future order: (1) owner approves exact vault path, passphrase recovery custody, fresh Time Travel reference, export execution and restore target/reset; (2) read back account and exact production D1, encrypt-stream export/checksum; (3) verify/reset only the approved isolated target and restore/compare schema, constraints, aggregate counts and financial invariants; (4) separately deploy the isolated API candidate with test secrets/windows, no Cron/Queue/R2; (5) separately authorize production API selective relay settings/deployment without changing Meta's callback; (6) owner initiates from an already-running CTWA ad, then stop at10 sends/30 minutes/unknown eligibility; (7) disable relay and preserve normal production routes. Any ordinary flow regression restores the old production Worker route/config; do not restore production D1 automatically. No campaign activation.
+
+## Validation and Gates
+
+Final full Vitest: **520 passed,1 skipped (521 total)**. Safe Node regression scripts: **72 passed**; credential-env test **1 passed** with synthetic dummy values. TypeScript build, ESLint, isolated Worker Wrangler dry-run, DPAPI/AES vault self-test and named-pipe self-test PASS. Production dependency audit: **0**. Six registered development dependency findings remain. Label Printer protected manifest: **923 identical,0 changed,0 missing**. Live monitoring probe, legacy V1 rollback harness (no authorized `GFS_LEGACY_ROOT`) and the temporary Git-staging preflight harness were not run; no production probe was needed.
+
+Git starting/remote SHA was `80706543de9d33a174b2c7370c51882ce49e40a3`. Final scoped commit and remote readback are recorded in the task closeout. Inherited `docs/CHANGELOG.md`, `docs/COD_SETTLEMENT_SOP.md`, `docs/FINAL_REPORT.md` and `.audit-local/` remain untouched and excluded from the commit.
+
+S0 remains80% complete (20% open; A06/A10 partial); S1/S3 remain100% locally accepted; S2 and S4-S9 remain0% accepted exit. Overall2/10 exits accepted (20%),8/10 remaining. Local test-isolation source acceptance is complete; live CTWA acceptance, production backup/restore, migrations, deployment, canary, INTENT-030 activation and WhatsApp leads launch remain NO-GO. Preserve O01-O23/REV.2, FIN-MO-002, historical fresh-intent recovery, authorized postal integration and six development dependency findings.

@@ -1,5 +1,13 @@
 # Resource Registry
 
+## GFS-ORDERFLOW-TEST-ISOLATION-001 local vault and target (2026-11-27)
+
+- New local vault path `%LOCALAPPDATA%\GFS-Orderflow-D1Vault`; no production/financial backup file is present. Directory inheritance disabled; ACL verified to current owner, SYSTEM and Administrators only; free capacity approximately62.9GB. Cipher and self-test files were removed after verification; vault directory is empty.
+- EFS enabling is unsupported on this host; BitLocker state cannot be checked without admin. Per-file AES-256-GCM with CurrentUser DPAPI and scrypt recovery-key wrap is verified. Named-pipe export/restore-read synthetic roundtrip and SQL memory restore pass; production D1 export not performed. Wrangler export tool requires fresh Time Travel reference, matching Cloudflare account/source D1, exact approved vault and target, isolation attestation, owner authorization and owner-sourced recovery passphrase.
+- D1 `getfreeseeds-v2-restore-check` verified in Get Free Seeds account. `PRAGMA quick_check=ok`; metrics0 queries/read/writes last24h. Read-only aggregate counts found0 rows in checked customer/order/payment/receipt/lead/outbox/conversation/webhook/audit/order-request tables; migration/schema and static configuration/content remain. No table row values were queried. It is not blank; no reset/restore performed.
+- Current API/Admin Production bindings point to `getfreeseeds-staging`, not restore-check. Isolated GFS Workers inspected show no restore-check binding; no target routes/Queue/Cron/WhatsApp connection was observed. No D1, Worker or route mutated.
+- Protected Label Printer manifest remains inherited in `.audit-local/`; final task recheck is required and the manifest must stay excluded from Git.
+
 ## GFS-ORDERFLOW-FINAL-VERIFICATION-001 local evidence (2026-11-27)
 
 - Verified repo `gardenshop/freeseeds`, branch `codex/gfs-order-001-rev2`, local and origin SHA `a8057a5174c552570e7d98feeaf714cf6e0b6a7b` before this documentation-only update. No resource created or mutated.

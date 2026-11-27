@@ -1,5 +1,11 @@
 # GFS-ORDERFLOW-LAUNCH-001-PREFLIGHT
 
+## TEST-ISOLATION-001 Update (2026-11-27)
+
+Local code implements a disabled test-mode, one-secret recipient, atomic ten-attempt/30-minute D1 budget and signed selective relay; relay remains off. The production Meta callback is unchanged. Candidate API Wrangler dry-run passes, binds only `getfreeseeds-v2-staging`, has no Cron/Queue/R2/routes, and defaults test/provider/COD/payment/CAPI flags off. Genuine CTWA can reach it only after separately authorized production API relay setup; never redirect Meta's callback directly.
+
+Vault `%LOCALAPPDATA%\GFS-Orderflow-D1Vault` has owner/SYSTEM/Admin ACL; AES-GCM, DPAPI and recovery passphrase wrap are tested. Export requires fresh Time Travel reference, verified account/source D1/target, approved exact vault path, recovery passphrase and explicit authorization. Restore-check target passes quick_check but is nonempty with schema/static config; owner must separately approve reset/restore. No export/restore/deploy/migration/message/campaign action occurred. WhatsApp and LAUNCH-001 remain NO-GO. See `GFS_ORDERFLOW_TEST_ISOLATION_001.md`.
+
 ## LIVE-TEST-001 Update (2026-11-27)
 
 Owner authorized a capped one-contact test; private contact is not recorded. Stopped before initiation (0 sends) because existing API Production version `b426ba47` is100% with `PAYMENT_CHOICE_RECOVERY_ENABLED=true`, per-minute Cron and EVENTS Queue consumer, no verified10/30 cap; no unrelated sends can be excluded. No production switch changed. Read-only D1 target `getfreeseeds-v2-restore-check` showed0 last24h queries/rows read/written and no binding from inspected API/Admin/test workers; schema and backup/restore remain unverified. F backup path denied: `Authenticated Users` Modify, EFS off, BitLocker unknown (admin denied). No approved encrypted location. No source or production changes; WhatsApp and launch NO-GO. See `GFS_ORDERFLOW_LIVE_TEST_001.md`.

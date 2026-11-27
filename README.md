@@ -16,6 +16,10 @@ The [blocker-close report](docs/GFS_ORDERFLOW_RELEASE_BLOCKER_CLOSE_001.md) reco
 
 See [final verification](docs/GFS_ORDERFLOW_FINAL_VERIFICATION_001.md) for the verified branch/remote SHA, bounded WhatsApp test, secure backup/isolated restore controls, migration/deployment sequence, rollback and remaining gates. The two resolved owner decisions and both bank-credit confirmations are not reopened. The test ceiling is owner-approved, pending private delivery of the owner-controlled number; database export is withheld pending storage/target approval. No send, export, restore, deploy, migration or activation occurred.
 
+### Test Isolation (2026-11-27)
+
+`GFS_ORDERFLOW_TEST_ISOLATION_001` implements a disabled-by-default isolated CTWA test path with an atomic ten-message/30-minute D1 budget, shared API/Admin send guard, candidate-only webhook routing and a private AES-256-GCM/DPAPI vault. Local synthetic acceptance passes; the isolated Worker dry-run is not a deployment. No WABA callback/production route changed, no live message was sent, and no D1 export/restore occurred. The restore-check D1 contains schema/static configuration, so reset/restore needs separate approval. WhatsApp and `LAUNCH-001-RELEASE` remain NO-GO.
+
 Permanent master project reference: **GFS ORDERFLOW** (GFS-ORDER-001 REV.2, stages S0-S9, historical decisions and future subtasks). Keep existing file names, branch and task IDs. Label Printer, standalone Money Order Printing and Hoja Seeds remain entirely separate.
 
 Owner-provided Facebook profile context for future operator identity checks: `ayesha.butt55@hotmail.com`. This identifies the profile email the owner reports using; it is not a credential or independent proof of the active Meta session. Never store or request authentication factors. The owner completes any Meta authenticity challenge personally in the existing profile.

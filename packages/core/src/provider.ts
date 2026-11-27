@@ -4,6 +4,11 @@ export type OutboundImage = { body: ArrayBuffer; mimeType: "image/jpeg" | "image
 export type InteractiveButton = { id: string; title: string };
 export type TemplateLanguageCode = "en_US" | "ur";
 
+export type WhatsAppOutboundGuard = {
+  assertRecipient(to: string): void;
+  send<T>(to: string, payload: unknown, performSend: () => Promise<T>, providerMessageId?: (result: T) => string | undefined): Promise<T>;
+};
+
 export interface WhatsAppProvider {
   verifyWebhook(challenge: string, verifyToken: string, configuredToken?: string): string | null;
   validateSignature(rawBody: ArrayBuffer, signature: string | null, appSecret?: string): Promise<boolean>;
@@ -37,7 +42,7 @@ export class MockWhatsAppProvider implements WhatsAppProvider {
   async downloadMedia(mediaId: string): Promise<MediaResult> { return { mediaId, mimeType: "image/png", size: 4, body: new Uint8Array([137, 80, 78, 71]).buffer }; }
 }
 
-export type MetaWhatsAppConfig = { enabled: boolean; graphVersion: string; phoneNumberId?: string; accessToken?: string; verifyToken?: string; appSecret?: string };
+export type MetaWhatsAppConfig = { enabled: boolean; graphVersion: string; phoneNumberId?: string; accessToken?: string; verifyToken?: string; appSecret?: string; outboundGuard?: WhatsAppOutboundGuard };
 
 export class MetaWhatsAppProvider implements WhatsAppProvider {
   constructor(private readonly config: MetaWhatsAppConfig) {}
@@ -81,10 +86,36 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
     return result;
   }
 
-  async sendText(to: string, body: string) { return this.send({ messaging_product: "whatsapp", to, type: "text", text: { body } }); }
-  async sendImage(to: string, body: string, image: OutboundImage) { const id = await this.uploadMedia(image); return this.send({ messaging_product: "whatsapp", to, type: "image", image: { id, caption: body.slice(0, 1024) } }); }
-  async sendInteractive(to: string, body: string, buttons: InteractiveButton[], image?: OutboundImage) { const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined; return this.send({ messaging_product: "whatsapp", to, type: "interactive", ...(header ? { interactive: { type: "button", header, body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button) => ({ type: "reply", reply: button })) } } } : { interactive: { type: "button", body: { text: body }, action: { buttons: buttons.slice(0, 3).map((button) => ({ type: "reply", reply: button })) } } }) }); }
-  async sendList(to: string, body: string, buttonText: string, rows: Array<{ id: string; title: string; description?: string }>, image?: OutboundImage) { const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined; return this.send({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "list", ...(header ? { header } : {}), body: { text: body }, action: { button: buttonText, sections: [{ title: buttonText, rows: rows.slice(0, 10) }] } } }); }
+  async sendText(to: string, body: string) { this.assertRecipient(to); return this.send({ messaging_product: "whatsapp", to, type: "text", text: { body } }); }
+  async sendImage(to: string, body: string, image: OutboundImage) {
+    const caption = body.slice(0, 1024);
+    const identity = { messaging_product: "whatsapp", to, type: "image", image: { caption, mimeType: image.mimeType, filename: image.filename, sha256: await this.imageFingerprint(image) } };
+    return this.sendWithGuard(to, identity, async () => {
+      const id = await this.uploadMedia(image);
+      return this.performSend({ messaging_product: "whatsapp", to, type: "image", image: { id, caption } });
+    });
+  }
+  async sendInteractive(to: string, body: string, buttons: InteractiveButton[], image?: OutboundImage) {
+    this.assertRecipient(to);
+    const replies = buttons.slice(0, 3).map((button) => ({ type: "reply", reply: button }));
+    const imageHash = image ? await this.imageFingerprint(image) : undefined;
+    const identity = { messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "button", ...(imageHash ? { header: { type: "image", sha256: imageHash } } : {}), body: { text: body }, action: { buttons: replies } } };
+    return this.sendWithGuard(to, identity, async () => {
+      const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined;
+      const interactive = { type: "button", ...(header ? { header } : {}), body: { text: body }, action: { buttons: replies } };
+      return this.performSend({ messaging_product: "whatsapp", to, type: "interactive", interactive });
+    });
+  }
+  async sendList(to: string, body: string, buttonText: string, rows: Array<{ id: string; title: string; description?: string }>, image?: OutboundImage) {
+    this.assertRecipient(to);
+    const listRows = rows.slice(0, 10);
+    const imageHash = image ? await this.imageFingerprint(image) : undefined;
+    const identity = { messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "list", ...(imageHash ? { header: { type: "image", sha256: imageHash } } : {}), body: { text: body }, action: { button: buttonText, sections: [{ title: buttonText, rows: listRows }] } } };
+    return this.sendWithGuard(to, identity, async () => {
+      const header = image ? { type: "image", image: { id: await this.uploadMedia(image) } } : undefined;
+      return this.performSend({ messaging_product: "whatsapp", to, type: "interactive", interactive: { type: "list", ...(header ? { header } : {}), body: { text: body }, action: { button: buttonText, sections: [{ title: buttonText, rows: listRows }] } } });
+    });
+  }
   async sendTemplate(to: string, template: string, parameters: string[], languageCode: TemplateLanguageCode = "en_US", quickReplyPayloads: string[] = []) {
     const components: Array<Record<string, unknown>> = [];
     if (parameters.length) components.push({ type: "body", parameters: parameters.map((text) => ({ type: "text", text })) });
@@ -94,6 +125,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
     return this.send({ messaging_product: "whatsapp", to, type: "template", template: { name: template, language: { policy: "deterministic", code: languageCode }, components: components.length ? components : undefined } });
   }
   async sendFlow(to: string, flowId: string, flowToken: string) {
+    this.assertRecipient(to);
     return this.send({
       messaging_product: "whatsapp",
       to,
@@ -121,15 +153,20 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
     return this.sendPaymentQr(to, qr);
   }
   async sendPaymentQr(to: string, qr: { body: ArrayBuffer; mimeType: string }) {
-    this.requireEnabled();
-    const form = new FormData();
-    form.append("messaging_product", "whatsapp");
-    form.append("file", new Blob([qr.body], { type: qr.mimeType }), "payment-qr");
-    const upload = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/media`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}` }, body: form });
-    if (!upload.ok) throw new Error(`META_MEDIA_UPLOAD_${upload.status}`);
-    const uploaded = await upload.json() as { id?: string };
-    if (!uploaded.id) throw new Error("META_MEDIA_UPLOAD_ID_MISSING");
-    return this.send({ messaging_product: "whatsapp", to, type: "image", image: { id: uploaded.id, caption: "Payment QR" } });
+    this.assertRecipient(to);
+    const imageHash = await this.bytesFingerprint(qr.body);
+    const identity = { messaging_product: "whatsapp", to, type: "image", image: { caption: "Payment QR", mimeType: qr.mimeType, sha256: imageHash } };
+    return this.sendWithGuard(to, identity, async () => {
+      this.requireEnabled();
+      const form = new FormData();
+      form.append("messaging_product", "whatsapp");
+      form.append("file", new Blob([qr.body], { type: qr.mimeType }), "payment-qr");
+      const upload = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/media`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}` }, body: form });
+      if (!upload.ok) throw new Error(`META_MEDIA_UPLOAD_${upload.status}`);
+      const uploaded = await upload.json() as { id?: string };
+      if (!uploaded.id) throw new Error("META_MEDIA_UPLOAD_ID_MISSING");
+      return this.performSend({ messaging_product: "whatsapp", to, type: "image", image: { id: uploaded.id, caption: "Payment QR" } });
+    });
   }
   async sendConfirmation(to: string, body: string) { return this.sendText(to, body); }
 
@@ -159,6 +196,19 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
 
   private async send(payload: unknown): Promise<{ providerMessageId: string }> {
     this.requireEnabled();
+    const recipient = (payload as { to?: unknown })?.to;
+    if (typeof recipient !== "string") throw new Error("META_MESSAGE_RECIPIENT_REQUIRED");
+    return this.sendWithGuard(recipient, payload, () => this.performSend(payload));
+  }
+
+  private async sendWithGuard(to: string, identityPayload: unknown, performSend: () => Promise<{ providerMessageId: string }>): Promise<{ providerMessageId: string }> {
+    this.requireEnabled();
+    this.assertRecipient(to);
+    return this.config.outboundGuard ? this.config.outboundGuard.send(to, identityPayload, performSend) : performSend();
+  }
+
+  private async performSend(payload: unknown): Promise<{ providerMessageId: string }> {
+    this.requireEnabled();
     const response = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/messages`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (!response.ok) throw new Error(`META_MESSAGE_SEND_${response.status}`);
     const data = await response.json() as { messages?: Array<{ id?: string }> };
@@ -166,6 +216,15 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
     if (!providerMessageId) throw new Error("META_MESSAGE_ID_MISSING");
     return { providerMessageId };
   }
+
+  private async imageFingerprint(image: OutboundImage): Promise<string> { return this.bytesFingerprint(image.body); }
+
+  private async bytesFingerprint(bytes: ArrayBuffer): Promise<string> {
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+    return [...digest].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
+  private assertRecipient(to: string): void { this.config.outboundGuard?.assertRecipient(to); }
 }
 
 function constantTimeEqual(left: string, right: string): boolean {

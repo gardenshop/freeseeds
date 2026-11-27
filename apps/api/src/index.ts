@@ -1,12 +1,13 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatNeutralLanguagePrompt, formatPaymentMessage, formatWhatsAppText, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, parseWhatsAppDeliveryReceipts, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage, type FreeMessagingDecision, type OrderIntentPersistence } from "@gfs/core";
+import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, createWhatsAppTestOutboundGuard, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatNeutralLanguagePrompt, formatPaymentMessage, formatWhatsAppText, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, parseWhatsAppDeliveryReceipts, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage, type FreeMessagingDecision, type OrderIntentPersistence } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 import { createPaymentV2Schedule, enqueueDuePaymentV2Stages, isPaymentReminderV2ServiceWindowOpen, resolvePaymentReminderCodFallback, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
 import { enqueueDuePaymentChoiceRecoveryStages, paymentChoiceRecoveryCopy } from "./payment-choice-recovery";
 import { anchorOrderIntentOnDelivery, cancelOrderIntent, expireDueOrderIntents, expireOrderIntent, formatIntentRemainingTime, ORDER_INTENT_VERSION, orderIntentCodConfirmationText, orderIntentNewOrderButton, orderIntentOptionRows, orderIntentOptionsText, orderIntentReminderText, queueDueOrderIntentReminders, setOrderIntentChoiceState, switchIntentAdvanceToCod } from "./order-intent";
 import { paymentReceivedText } from "./payment-confirmation";
+import { isolatedTestRelayUrl, signMetaWebhook, splitTestWebhookPayload } from "./whatsapp-test-relay";
 
 type Env = {
   Bindings: {
@@ -40,12 +41,64 @@ type Env = {
     PAYMENT_UTILITY_TEMPLATES_APPROVED?: string;
     PAYMENT_CHOICE_RECOVERY_ENABLED?: string;
     PAYMENT_CHOICE_RECOVERY_START_AT?: string;
+    WHATSAPP_TEST_MODE?: string;
+    WHATSAPP_TEST_RECIPIENT?: string;
+    WHATSAPP_TEST_WINDOW_START?: string;
+    WHATSAPP_TEST_RELAY_ENABLED?: string;
+    WHATSAPP_TEST_RELAY_URL?: string;
      ORDER_INTENT_AUTOMATION_ENABLED?: string;
     CF_VERSION_METADATA?: { id: string; tag?: string; timestamp?: string };
   };
 };
 
 const app = new Hono<Env>();
+
+function whatsappProvider(env: Env["Bindings"], kind = env.WHATSAPP_PROVIDER, enabled = env.META_PROVIDER_ENABLED === "true") {
+  return createWhatsAppProvider(kind, {
+    enabled,
+    graphVersion: env.META_GRAPH_VERSION ?? "v26.0",
+    accessToken: env.META_ACCESS_TOKEN,
+    phoneNumberId: env.META_PHONE_NUMBER_ID,
+    verifyToken: env.WEBHOOK_VERIFY_TOKEN,
+    appSecret: env.META_APP_SECRET,
+    outboundGuard: createWhatsAppTestOutboundGuard(env.DB, {
+      enabled: env.WHATSAPP_TEST_MODE,
+      deploymentState: env.DEPLOYMENT_STATE,
+      recipient: env.WHATSAPP_TEST_RECIPIENT,
+      windowStart: env.WHATSAPP_TEST_WINDOW_START
+    })
+  });
+}
+
+function normalizedTestWaId(value: string): string { return value.replace(/\D/g, ""); }
+
+export function resolveIsolatedWhatsAppTestInput(event: { kind: string; payload: unknown; referral?: { ctwaClid?: string; sourceType?: string } }): "CTWA_OPENING" | "LANG_EN" | "LANG_UR" | undefined {
+  const payload = event.payload && typeof event.payload === "object" ? event.payload as { text?: { body?: string }; interactive?: { button_reply?: { id?: string }; list_reply?: { id?: string } } } : {};
+  if (event.kind === "text" && event.referral?.sourceType?.toLowerCase() === "ad" && event.referral.ctwaClid && typeof payload.text?.body === "string") {
+    const body = payload.text.body.trim();
+    return body.length > 0 && body.length <= 250 && !/^(START|GET_FREE_PACKS|PLACE_ORDER|CONFIRM|PAY_|COD|SUBMIT)/i.test(body) ? "CTWA_OPENING" : undefined;
+  }
+  const action = payload.interactive?.button_reply?.id ?? payload.interactive?.list_reply?.id;
+  return event.kind === "interactive" && (action === "LANG_EN" || action === "LANG_UR") ? action : undefined;
+}
+
+function statusRecipientIds(payload: unknown): string[] {
+  const root = payload && typeof payload === "object" ? payload as { entry?: Array<{ changes?: Array<{ value?: { statuses?: Array<{ recipient_id?: unknown }> } }> }> } : {};
+  return (root.entry ?? []).flatMap((entry) => (entry.changes ?? []).flatMap((change) => (change.value?.statuses ?? []).flatMap((status) => typeof status.recipient_id === "string" ? [status.recipient_id] : [])));
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const result = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(result).set(bytes);
+  return result;
+}
+
+app.use("*", async (c, next) => {
+  if (c.env.DEPLOYMENT_STATE === "ISOLATED_WHATSAPP_TEST" && c.req.path !== "/webhooks/whatsapp") return c.json({ error: "ISOLATED_WHATSAPP_TEST_PATH_ONLY" }, 404);
+  if (c.env.WHATSAPP_TEST_MODE === "true" && c.env.DEPLOYMENT_STATE !== "ISOLATED_WHATSAPP_TEST") return c.json({ error: "WHATSAPP_TEST_ISOLATION_REQUIRED" }, 503);
+  if (c.env.WHATSAPP_TEST_MODE === "true" && c.req.path !== "/webhooks/whatsapp") return c.json({ error: "ISOLATED_WHATSAPP_TEST_PATH_ONLY" }, 404);
+  await next();
+});
 
 function isRecoveryMode(env: Env["Bindings"]): boolean {
   // Only omission or an explicit false resumes normal operation.
@@ -1363,7 +1416,7 @@ app.get("/privacy", (c) => c.html("<!doctype html><html><head><meta charset='utf
 app.get("/data-deletion", (c) => c.html("<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Get Free Seeds Data Deletion</title></head><body><main><h1>Data Deletion Instructions</h1><p>To request deletion of information held by Get Free Seeds, contact the Get Free Seeds Facebook Page or send the request through the same official WhatsApp conversation used for the seed request. Include only the information needed to identify the request. Garden Shop will verify the requester and delete or anonymise eligible records, subject to legal, fraud-prevention, and accounting retention requirements.</p></main></body></html>"));
 
 app.get("/webhooks/whatsapp", (c) => {
-  const provider = createWhatsAppProvider(c.env.WHATSAPP_PROVIDER, { enabled: c.env.META_PROVIDER_ENABLED === "true", graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, phoneNumberId: c.env.META_PHONE_NUMBER_ID, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET });
+  const provider = whatsappProvider(c.env);
   const challenge = provider.verifyWebhook(c.req.query("hub.challenge") ?? "", c.req.query("hub.verify_token") ?? "", c.env.WEBHOOK_VERIFY_TOKEN);
   return challenge === null ? c.text("Forbidden", 403) : c.text(challenge);
 });
@@ -1372,7 +1425,7 @@ app.post("/webhooks/whatsapp", async (c) => {
   if (c.env.META_PROVIDER_ENABLED !== "true") return c.json({ error: "WHATSAPP_ONBOARDING_PENDING", state: c.env.DEPLOYMENT_STATE }, 503);
   const raw = await c.req.arrayBuffer();
   const signature = c.req.header("x-hub-signature-256") ?? null;
-  const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, phoneNumberId: c.env.META_PHONE_NUMBER_ID, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET });
+  const provider = whatsappProvider(c.env, "meta", true);
   if (!(await provider.validateSignature(raw, signature, c.env.META_APP_SECRET))) return c.text("Forbidden", 403);
   let payload: unknown;
   try {
@@ -1387,7 +1440,36 @@ app.post("/webhooks/whatsapp", async (c) => {
     if (c.env.DB) await c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at) VALUES (?,?,?,?,?,?,?,?)").bind(crypto.randomUUID(), "WHATSAPP_CALLBACK_REJECTED", "SYSTEM", "WEBHOOK", "whatsapp", correlationId, JSON.stringify({ reason: "WHATSAPP_PHONE_NUMBER_MISMATCH", callbackPhoneIdsPresent: callbackPhoneIds.length > 0 }), new Date().toISOString()).run();
     return c.json({ error: "WHATSAPP_PHONE_NUMBER_MISMATCH" }, 403);
   }
+  let testRelayBody: ArrayBuffer | undefined;
+  let testRelayUrl: string | undefined;
+  let processingRaw = raw;
+  if (c.env.WHATSAPP_TEST_RELAY_ENABLED === "true") {
+    const recipient = c.env.WHATSAPP_TEST_RECIPIENT;
+    testRelayUrl = c.env.WHATSAPP_TEST_RELAY_URL ? isolatedTestRelayUrl(c.env.WHATSAPP_TEST_RELAY_URL) : undefined;
+    if (!recipient || !/^\+?\d{8,15}$/.test(recipient) || !testRelayUrl || !c.env.META_APP_SECRET) return c.json({ error: "WHATSAPP_TEST_RELAY_NOT_CONFIGURED" }, 503);
+    const split = splitTestWebhookPayload(payload, recipient);
+    if (split.test) {
+      testRelayBody = toArrayBuffer(new TextEncoder().encode(JSON.stringify(split.test)));
+      payload = split.production ?? { object: "whatsapp_business_account", entry: [] };
+      processingRaw = toArrayBuffer(new TextEncoder().encode(JSON.stringify(payload)));
+    }
+  }
   const inbound = provider.parseInboundEvent(payload);
+  const testMode = c.env.WHATSAPP_TEST_MODE === "true";
+  if (testMode) {
+    const recipient = c.env.WHATSAPP_TEST_RECIPIENT;
+    if (!recipient) return c.json({ error: "WHATSAPP_TEST_RECIPIENT_NOT_CONFIGURED" }, 503);
+    const allowedRecipient = normalizedTestWaId(recipient);
+    const statusRecipients = statusRecipientIds(payload);
+    if (statusRecipients.some((value) => normalizedTestWaId(value) !== allowedRecipient)) return c.json({ error: "WHATSAPP_TEST_RECIPIENT_REJECTED" }, 403);
+    if (inbound.some((event) => normalizedTestWaId(event.from) !== allowedRecipient || !resolveIsolatedWhatsAppTestInput(event))) return c.json({ error: "WHATSAPP_TEST_INPUT_REJECTED" }, 403);
+    for (const event of inbound) {
+      if (event.kind !== "interactive") continue;
+      const conversation = await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>();
+      if (!conversation || !["NEW", "TEST_COMPLETE"].includes(conversation.state)) return c.json({ error: "WHATSAPP_TEST_FLOW_STATE_REJECTED" }, 409);
+    }
+    if (!inbound.length && !statusRecipients.length) return c.json({ accepted: true, ignored: true });
+  }
   const recoveryMode = isRecoveryMode(c.env);
   if (c.env.DB && !(await admitWhatsAppSenders(c.env.DB, inbound))) {
     c.header("Retry-After", "60");
@@ -1395,7 +1477,7 @@ app.post("/webhooks/whatsapp", async (c) => {
   }
   const orderIntentAutomationEnabled = c.env.ORDER_INTENT_AUTOMATION_ENABLED === "true";
   const captureIntentReceipts = !recoveryMode || Boolean(c.env.DB && await c.env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='whatsapp_delivery_receipts'").first());
-  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId, captureIntentReceipts) : 0;
+  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, processingRaw, correlationId, captureIntentReceipts) : 0;
   if (recoveryMode) {
     if (c.env.DB) for (const event of inbound) {
       if (event.kind === "media") {
@@ -1433,6 +1515,26 @@ app.post("/webhooks/whatsapp", async (c) => {
   if (c.env.DB) await persistInboundConversationActivity(c.env.DB, activeInbound);
   let autoReplies = 0;
   let handledEvents = 0;
+  if (testMode) {
+    for (const event of activeInbound) {
+      const testAction = resolveIsolatedWhatsAppTestInput(event);
+      if (testAction === "CTWA_OPENING") {
+        const result = await sendConversationReply(c.env.DB, provider, event.from, event.id, formatNeutralLanguagePrompt(), { buttons: [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }] }, `welcome_reply:${event.id}`, { kind: "LANGUAGE_SELECTION", locale: "en" });
+        if (result.sent) autoReplies += 1;
+        handledEvents += 1;
+        continue;
+      }
+      const locale = testAction === "LANG_UR" ? "ur" : "en";
+      const stateSaved = await c.env.DB.prepare("UPDATE whatsapp_conversations SET state='TEST_COMPLETE',state_data=json_set(COALESCE(state_data,'{}'),'$.language',?),updated_at=? WHERE wa_id=? AND state IN ('NEW','TEST_COMPLETE')").bind(locale, new Date().toISOString(), event.from).run();
+      if (Number(stateSaved.meta?.changes ?? 0) !== 1) continue;
+      const sample = locale === "ur" ? "یہ محدود آزمائشی گفتگو ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔" : "This is a bounded test conversation. No order or payment was created.";
+      const result = await sendConversationReply(c.env.DB, provider, event.from, event.id, sample, { buttons: [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }] }, `whatsapp_test_locale:${event.id}`, { kind: "TEST_LOCALE_SAMPLE", locale });
+      if (result.sent) autoReplies += 1;
+      handledEvents += 1;
+    }
+    await recordWebhookRuntimeObservation(c.env.DB, c.env.CF_VERSION_METADATA, correlationId, eventCount, handledEvents, autoReplies);
+    return c.json({ accepted: true, testMode: true, eventCount, handledEvents, autoReplies });
+  }
   for (const event of activeInbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) handledEvents += 1; continue; }
       if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_ROLLOUT_MODE, c.env.COD_TESTER_WA_ID, c.env.PAYMENT_REMINDERS_V2_ENABLED === "true", c.env.PAYMENT_AUTOMATION_V2_ENABLED === "true", orderIntentAutomationEnabled)) { handledEvents += 1; continue; }
@@ -1444,6 +1546,15 @@ app.post("/webhooks/whatsapp", async (c) => {
     handledEvents+=1;
   }
   await recordWebhookRuntimeObservation(c.env.DB, c.env.CF_VERSION_METADATA, correlationId, eventCount, handledEvents, autoReplies);
+  if (testRelayBody) {
+    try {
+      const signature = await signMetaWebhook(testRelayBody, c.env.META_APP_SECRET as string);
+      const relayResponse = await fetch(testRelayUrl as string, { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": signature }, body: testRelayBody });
+      if (!relayResponse.ok) return c.json({ error: "WHATSAPP_TEST_RELAY_UNAVAILABLE" }, 503);
+    } catch {
+      return c.json({ error: "WHATSAPP_TEST_RELAY_UNAVAILABLE" }, 503);
+    }
+  }
   return c.json({ accepted: true, eventCount, autoReplies });
 });
 
@@ -1486,7 +1597,7 @@ app.post("/webhooks/whatsapp/flows", async (c) => {
 
 app.get("/webhooks/meta/instant-form", (c) => {
   if (c.env.META_INSTANT_FORM_ENABLED !== "true") return c.text("Forbidden", 403);
-  const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", appSecret: c.env.META_APP_SECRET, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN });
+  const provider = whatsappProvider(c.env, "meta", true);
   const challenge = provider.verifyWebhook(c.req.query("hub.challenge") ?? "", c.req.query("hub.verify_token") ?? "", c.env.WEBHOOK_VERIFY_TOKEN);
   return challenge === null ? c.text("Forbidden", 403) : c.text(challenge);
 });
@@ -1494,7 +1605,7 @@ app.get("/webhooks/meta/instant-form", (c) => {
 app.post("/webhooks/meta/instant-form", async (c) => {
   if (c.env.META_INSTANT_FORM_ENABLED !== "true") return c.json({ error: "META_INSTANT_FORM_DISABLED" }, 503);
   const raw = await c.req.arrayBuffer();
-  const provider = createWhatsAppProvider("meta", { enabled: true, graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", appSecret: c.env.META_APP_SECRET });
+  const provider = whatsappProvider(c.env, "meta", true);
   if (!(await provider.validateSignature(raw, c.req.header("x-hub-signature-256") ?? null, c.env.META_APP_SECRET))) return c.text("Forbidden", 403);
   let payload: { entry?: Array<{ changes?: Array<{ field?: string; value?: Record<string, unknown> }> }> };
   try { payload = JSON.parse(new TextDecoder().decode(raw)); } catch { return c.json({ error: "INVALID_META_LEAD_WEBHOOK" }, 400); }
@@ -1626,7 +1737,7 @@ app.post("/receipts/ingest", async (c) => {
   const existingReceipt = await c.env.DB.prepare("SELECT r2_object_key, sha256 FROM payment_receipts WHERE provider_media_id=? AND payment_id=? AND order_id=?").bind(body.mediaId, body.paymentId, body.orderId).first<{ r2_object_key: string; sha256: string }>();
   if (existingReceipt) return c.json({ ok: true, alreadyAssociated: true, reviewState: "REVIEW", receiptKey: existingReceipt.r2_object_key, sha256: existingReceipt.sha256 });
   try {
-    const media = await createWhatsAppProvider(c.env.WHATSAPP_PROVIDER, { enabled: c.env.META_PROVIDER_ENABLED === "true", graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", accessToken: c.env.META_ACCESS_TOKEN, phoneNumberId: c.env.META_PHONE_NUMBER_ID, verifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET }).downloadMedia(body.mediaId);
+    const media = await whatsappProvider(c.env).downloadMedia(body.mediaId);
     const stored = await storeReceipt(c.env.RECEIPTS, record.order_number, media);
     const now = new Date().toISOString();
     await c.env.DB.batch([
@@ -1714,7 +1825,7 @@ async function handleOrderIntentStageMessage(message: Message<{kind:string;idemp
    if(stageMinutes!==30&&!remaining){await suppressOrderIntentStage(env,message,attempt,intentId,stageMinutes,"ORDER_INTENT_STAGE_STALE");return;}
    const text=orderIntentReminderText(stageMinutes as 10|25|30,locale,stageMinutes===30?current.order_number:undefined,remaining??undefined);
    const options={buttons:stageMinutes===30?[orderIntentNewOrderButton(locale)]:orderIntentOptionRows(locale,Number(current.cod_enabled)===1)};
-   const provider=createWhatsAppProvider("meta",{enabled:env.META_PROVIDER_ENABLED==="true",graphVersion:env.META_GRAPH_VERSION??"v26.0",accessToken:env.META_ACCESS_TOKEN,phoneNumberId:env.META_PHONE_NUMBER_ID,verifyToken:env.WEBHOOK_VERIFY_TOKEN,appSecret:env.META_APP_SECRET});
+   const provider=whatsappProvider(env,"meta");
    const sent=await sendConversationReply(env.DB,provider,current.wa_id,current.last_inbound_message_id,text,options,message.body.idempotencyKey,{orderId:current.order_id,kind:`ORDER_INTENT_T${stageMinutes}`,locale});
   if(!sent.sent){
     const outbound=await env.DB.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{status:string;last_error:string|null}>();
@@ -1757,7 +1868,7 @@ async function handlePaymentConfirmedMessage(message: Message<{kind:string;idemp
     if(!current.wa_id||!/^\d{7,20}$/.test(current.wa_id)||!current.last_inbound_message_id){await suppress("PAYMENT_CONFIRMATION_RECIPIENT_UNVERIFIED");return;}
     const text=paymentReceivedText(Number(current.approved_amount),current.order_number,payload.locale);
     const buttons=[{id:"CHECK_ORDER",title:payload.locale==="ur"?"آرڈر دیکھیں":"View Order"}];
-    const provider=createWhatsAppProvider("meta",{enabled:env.META_PROVIDER_ENABLED==="true",graphVersion:env.META_GRAPH_VERSION??"v26.0",accessToken:env.META_ACCESS_TOKEN,phoneNumberId:env.META_PHONE_NUMBER_ID,verifyToken:env.WEBHOOK_VERIFY_TOKEN,appSecret:env.META_APP_SECRET});
+     const provider=whatsappProvider(env,"meta");
     const sent=await sendConversationReply(env.DB,provider,current.wa_id,current.last_inbound_message_id,text,{buttons},message.body.idempotencyKey,{orderId:current.order_id,customerId:current.customer_id,kind:"PAYMENT_RECEIVED",locale:payload.locale});
     if(sent.sent){await env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=? AND status NOT IN ('SENT','DEAD_LETTER')").bind(attempt,new Date().toISOString(),message.body.idempotencyKey).run();message.ack();return;}
     const outbound=await env.DB.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{status:string;last_error:string|null}>();
@@ -1778,6 +1889,7 @@ app.all("*", (c) => c.json({ error: "NOT_FOUND" }, 404));
 export default {
   fetch: app.fetch,
   async scheduled(controller: ScheduledController, env: Env["Bindings"]): Promise<void> {
+    if (env.WHATSAPP_TEST_MODE === "true") return;
     if (isRecoveryMode(env)) return;
     const remindersEnabled = env.PAYMENT_REMINDERS_V2_ENABLED === "true" && env.PAYMENT_AUTOMATION_V2_ENABLED === "true";
     const recoveryEnabled = env.PAYMENT_CHOICE_RECOVERY_ENABLED === "true";
@@ -1841,6 +1953,7 @@ export default {
     }
   },
   async queue(batch: MessageBatch<{ kind: string; idempotencyKey: string; entityId: string; schemaVersion: 1 }>, env: Env["Bindings"]): Promise<void> {
+    if (env.WHATSAPP_TEST_MODE === "true") { for (const message of batch.messages) message.retry({ delaySeconds: 60 }); return; }
     for (const message of batch.messages) {
       if (isRecoveryMode(env)) {
         // Keep durable jobs/attempts intact, including unknown future kinds.
@@ -1939,7 +2052,7 @@ export default {
             const items = (itemRows.results ?? []).map((item) => `${item.description} PKR ${Number(item.line_total_pkr)}`).join("; ") || `order total PKR ${Number(current.total_payable)}`;
             const values: Record<string,string> = { orderNumber: current.order_number, amount: String(current.total_payable), items, delivery: String((await env.DB.prepare("SELECT delivery_fee FROM orders WHERE id=?").bind(payload.orderId).first<{ delivery_fee:number }>())?.delivery_fee ?? 0), codFee: "125", codTotal: String(Number(current.total_payable) + 125) };
             const rendered = template.body.replace(/\{(orderNumber|amount|items|delivery|codFee|codTotal)\}/g, (_match, name: string) => values[name] ?? "");
-            const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
+             const provider = whatsappProvider(env, "meta");
              const send = Number(payload.stageMinutes) === 240 ? (text?:string) => provider.sendInteractive(current.wa_id!, text ?? "", [{ id:"CONFIRM_COD", title: locale === "ur" ? "COD کی تصدیق" : "Confirm COD" }, { id:"KEEP_ADVANCE", title: locale === "ur" ? "ایڈوانس برقرار" : "Keep Advance" }, { id:"CANCEL_ORDER", title: locale === "ur" ? "آرڈر منسوخ" : "Cancel Order" }]) : (text?:string) => provider.sendText(current.wa_id!, text ?? "");
              const delivered = await sendPaymentPart(env.DB, current.wa_id, payload.orderId!, message.body.idempotencyKey, "WHATSAPP_PAYMENT_REMINDER", send, locale, rendered);
              if (delivered === "BLOCKED") { await blockReminder("FREE_MESSAGE_BLOCKED", "SKIPPED"); continue; }
@@ -2003,7 +2116,7 @@ export default {
             const payment = recoveryStageMinutes
               ? await paymentChoiceRecoveryCopy(env.DB, recoveryStageMinutes as 15 | 210, locale, { orderNumber: current.order_number, amount: current.total_payable, deliveryFee: current.delivery_fee, codFee: codSettings?.fee_pkr })
               : await contentFor(env.DB, "PAYMENT", "Your order details have been saved. To process order {orderNumber} for PKR {amount}, please choose Advance Payment or Cash on Delivery below.{codFee}", { orderNumber: current.order_number, amount: current.total_payable, codFee: codSettings ? ` COD orders include an additional PKR ${codSettings.fee_pkr} cash collection fee.` : "" }, `CHAT:${recipient}`, locale);
-            const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
+             const provider = whatsappProvider(env, "meta");
             const status = recoveryStageMinutes
               ? await env.DB.prepare("UPDATE payment_choice_recovery_stages SET status='SENDING',updated_at=? WHERE order_id=? AND stage_minutes=? AND status='QUEUED'").bind(new Date().toISOString(), current.order_id, recoveryStageMinutes).run()
               : await env.DB.prepare("UPDATE payment_choice_recoveries SET status='SENDING',updated_at=? WHERE order_id=? AND status='PENDING'").bind(new Date().toISOString(), current.order_id).run();
@@ -2059,7 +2172,7 @@ export default {
             }
             const row = await env.DB.prepare("SELECT * FROM payment_methods WHERE method=?").bind(payload.method).first<Record<string, unknown>>();
             if (!row) throw new Error("PAYMENT_METHOD_NOT_CONFIGURED");
-            const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
+             const provider = whatsappProvider(env, "meta");
             const delivery = await deliverPaymentInstructions(env.DB, env.RECEIPTS, provider, payload.recipient, payload.orderId, payload.orderNumber, Number(payload.amount), payload.method, payload.locale ?? "en", payload.message, payload.requestKey ?? message.body.idempotencyKey, normalizePaymentMethodRow(row));
             if (!delivery.textSent || delivery.qrStatus === "FAILED") throw new Error(delivery.textSent ? "PAYMENT_QR_DELIVERY_BLOCKED" : "PAYMENT_TEXT_DELIVERY_FAILED");
             await env.DB.prepare("UPDATE outbox_jobs SET status='SENT',attempts=?,last_error=NULL,updated_at=? WHERE idempotency_key=?").bind(nextAttempt, new Date().toISOString(), message.body.idempotencyKey).run();
@@ -2098,7 +2211,7 @@ export default {
               message.ack();
               continue;
             }
-            const provider=createWhatsAppProvider("meta",{enabled:env.META_PROVIDER_ENABLED==="true",graphVersion:env.META_GRAPH_VERSION??"v26.0",accessToken:env.META_ACCESS_TOKEN,phoneNumberId:env.META_PHONE_NUMBER_ID,verifyToken:env.WEBHOOK_VERIFY_TOKEN,appSecret:env.META_APP_SECRET});
+             const provider=whatsappProvider(env,"meta");
             const receipt=await contentFor(env.DB,"RECEIPT","Receipt received for order {orderNumber}. Reply with the transaction/reference ID from your payment app.",{orderNumber:payload.orderNumber},`CHAT:${payload.waId}`,payload.locale);
             const status=await contentFor(env.DB,"ORDER_STATUS","Use Check Order to see your current order and payment status.",{},`CHAT:${payload.waId}`,payload.locale);
             const sent=await sendConversationReply(env.DB,provider,payload.waId,current.last_inbound_message_id!,receipt.text,{buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(status,"CHECK_ORDER")}]},message.body.idempotencyKey,{orderId:payload.orderId,kind:"TRANSACTION_REFERENCE_REQUEST"});
@@ -2148,7 +2261,7 @@ export default {
             }
             let locale: "en" | "ur" = "en";
             try { locale = JSON.parse(conversation.state_data).language === "ur" ? "ur" : "en"; } catch { /* default to English */ }
-            const provider = createWhatsAppProvider("meta", { enabled: env.META_PROVIDER_ENABLED === "true", graphVersion: env.META_GRAPH_VERSION ?? "v26.0", accessToken: env.META_ACCESS_TOKEN, phoneNumberId: env.META_PHONE_NUMBER_ID, verifyToken: env.WEBHOOK_VERIFY_TOKEN, appSecret: env.META_APP_SECRET });
+             const provider = whatsappProvider(env, "meta");
             const reasonCode = payload.reasonCode as ClearerReceiptReasonCode;
             const sent = await sendConversationReply(env.DB, provider, recipient, conversation.last_inbound_message_id, clearerReceiptText(current.order_number, locale, reasonCode), {}, message.body.idempotencyKey, { orderId: current.order_id, customerId: current.customer_id, kind: "CLEARER_RECEIPT_REQUEST" });
             if (sent.sent) {

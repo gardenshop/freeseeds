@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, customerTransactionReferenceHash, evaluateStoredFreeWhatsAppOutbound, formatWhatsAppText, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, META_SEND_TEST_RECIPIENT, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, runtimeWhatsAppActionId, storedWhatsAppActionId, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, createWhatsAppTestOutboundGuard, customerTransactionReferenceHash, evaluateStoredFreeWhatsAppOutbound, formatWhatsAppText, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, runtimeWhatsAppActionId, storedWhatsAppActionId, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 import { analyticsCsv, AnalyticsInputError, parseAnalyticsFilters, readInboundAnalytics } from "./analytics";
 import { ConversationInputError, parseConversationFilters, readConversation, readConversations, readConversationSummary } from "./conversations";
 import { conversationsDashboardPageHtml } from "./conversations-dashboard";
@@ -8,7 +8,7 @@ import { CancellationInputError, cancellationDashboardPageHtml, parseCancellatio
 import { readAttributionReport } from "./attribution";
 import { classifyOrderReconciliation } from "./order-reconciliation";
 
-  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; RECOVERY_MODE?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
+  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; RECOVERY_MODE?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string; WHATSAPP_TEST_MODE?: string; WHATSAPP_TEST_RECIPIENT?: string; WHATSAPP_TEST_WINDOW_START?: string } };
 const app = new Hono<Env>();
 app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
 app.use("/api/orders", async (c, next) => { c.header("Cache-Control", "private, no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
@@ -705,11 +705,25 @@ app.onError((error, c) => {
 });
 
 function metaActivation(c: { env: Env["Bindings"] }) {
-  return createMetaActivationService({ accessToken: c.env.META_ACCESS_TOKEN, graphVersion: c.env.META_GRAPH_VERSION, phoneNumberId: c.env.META_PHONE_NUMBER_ID, wabaId: c.env.META_WABA_ID, appId: c.env.META_APP_ID, callbackUrl: c.env.META_CALLBACK_URL, providerEnabled: c.env.META_PROVIDER_ENABLED === "true", webhookVerifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET, flowPrivateKey: c.env.FLOW_PRIVATE_KEY, flowPublicKey: c.env.FLOW_PUBLIC_KEY });
+  return createMetaActivationService({ accessToken: c.env.META_ACCESS_TOKEN, graphVersion: c.env.META_GRAPH_VERSION, phoneNumberId: c.env.META_PHONE_NUMBER_ID, wabaId: c.env.META_WABA_ID, appId: c.env.META_APP_ID, callbackUrl: c.env.META_CALLBACK_URL, providerEnabled: c.env.META_PROVIDER_ENABLED === "true", webhookVerifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET, flowPrivateKey: c.env.FLOW_PRIVATE_KEY, flowPublicKey: c.env.FLOW_PUBLIC_KEY, sendTestRecipient: c.env.WHATSAPP_TEST_RECIPIENT, outboundGuard: createWhatsAppTestOutboundGuard(c.env.DB, { enabled: c.env.WHATSAPP_TEST_MODE, deploymentState: c.env.DEPLOYMENT_STATE, recipient: c.env.WHATSAPP_TEST_RECIPIENT, windowStart: c.env.WHATSAPP_TEST_WINDOW_START }) });
+}
+
+function adminWhatsAppProvider(env: Env["Bindings"]) {
+  return createWhatsAppProvider("meta", {
+    enabled: env.META_PROVIDER_ENABLED === "true",
+    graphVersion: env.META_GRAPH_VERSION ?? "v26.0",
+    phoneNumberId: env.META_PHONE_NUMBER_ID,
+    accessToken: env.META_ACCESS_TOKEN,
+    appSecret: env.META_APP_SECRET,
+    outboundGuard: createWhatsAppTestOutboundGuard(env.DB, { enabled: env.WHATSAPP_TEST_MODE, deploymentState: env.DEPLOYMENT_STATE, recipient: env.WHATSAPP_TEST_RECIPIENT, windowStart: env.WHATSAPP_TEST_WINDOW_START })
+  });
 }
 
 app.use("*", async (c, next) => {
   if (!authorizedForAdmin(c)) return c.json({ error: "ADMIN_ACCESS_REQUIRED" }, 403);
+  const isolatedTestWorker = c.env.DEPLOYMENT_STATE === "ISOLATED_WHATSAPP_TEST";
+  if (c.env.WHATSAPP_TEST_MODE === "true" && !isolatedTestWorker) return c.json({ error: "WHATSAPP_TEST_ISOLATION_REQUIRED" }, 503);
+  if (isolatedTestWorker && !(c.req.method === "POST" && c.req.path === "/api/meta-activation/actions/send-test")) return c.json({ error: "ISOLATED_WHATSAPP_TEST_PATH_ONLY" }, 404);
   if (c.env.RECOVERY_MODE !== undefined && c.env.RECOVERY_MODE !== "false" && c.req.method === "POST"
     && (c.req.path.startsWith("/api/meta-activation/") || /\/request-(transaction-reference|clearer-receipt)$/.test(c.req.path))) {
     return c.json({ error: "RECOVERY_MODE_MESSAGING_PAUSED" }, 503);
@@ -1648,26 +1662,28 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
   const rawAction = c.req.param("action");
   if (rawAction === "send-welcome-media-test") {
     if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
-    const key = "welcome_media_test:923034901810:v6";
+    const recipient = c.env.WHATSAPP_TEST_RECIPIENT;
+    if (!recipient) return c.json({ executed: false, reason: "META_TEST_RECIPIENT_REQUIRED" }, 409);
+    const key = "welcome_media_test:v7";
     const existing = await c.env.DB.prepare("SELECT status,provider_message_id FROM outbound_messages WHERE idempotency_key=?").bind(key).first<{ status: string; provider_message_id: string | null }>();
     if (existing) return c.json({ executed: false, status: existing.status, messageId: existing.provider_message_id });
-    const recipient = "+923034901810";
     const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, recipient.replace(/\D/g, ""));
     if (!decision.eligible) return c.json({ executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", detail: decision.reason }, 409);
     const content = await publishedWhatsAppContent(c.env.DB, "WELCOME", decision.locale, `WELCOME_TEST:${recipient}`);
     if (!content || !content.mediaR2Key || !content.mediaMimeType || !["image/jpeg", "image/png"].includes(content.mediaMimeType)) return c.json({ executed: false, reason: "WELCOME_PUBLISHED_MEDIA_REQUIRED" }, 409);
     const object = await c.env.RECEIPTS.get(content.mediaR2Key);
     if (!object) return c.json({ executed: false, reason: "WELCOME_R2_MEDIA_MISSING" }, 409);
-    const provider = createWhatsAppProvider("meta", { enabled: c.env.META_PROVIDER_ENABLED === "true", graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
+    const provider = adminWhatsAppProvider(c.env);
     const now = new Date().toISOString();
     await c.env.DB.prepare("INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), key, "WELCOME_MEDIA_TEST", "PENDING", 0, now, now).run();
     try { const sent = await provider.sendInteractive(recipient, formatWhatsAppText(content.text,decision.locale), [{ id: "GET_FREE_PACKS", title: content.buttonLabel ?? (decision.locale === "ur" ? "بیجوں کے پیک حاصل کریں" : "Get seed packs") }], { body: await object.arrayBuffer(), mimeType: content.mediaMimeType as "image/jpeg" | "image/png", filename: "welcome.jpg" }); await c.env.DB.prepare("UPDATE outbound_messages SET status='SENT',provider_message_id=?,attempt_count=1,updated_at=? WHERE idempotency_key=?").bind(sent.providerMessageId, new Date().toISOString(), key).run(); return c.json({ executed: true, messageId: sent.providerMessageId }); } catch (error) { const safe = error instanceof Error ? error.message.slice(0, 160) : "WELCOME_MEDIA_SEND_FAILED"; await c.env.DB.prepare("UPDATE outbound_messages SET status='FAILED',attempt_count=1,last_error=?,updated_at=? WHERE idempotency_key=?").bind(safe, new Date().toISOString(), key).run(); return c.json({ executed: false, reason: safe }, 502); }
   }
   if (rawAction === "retry-failed-reply") {
     if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
+    const recipient = c.env.WHATSAPP_TEST_RECIPIENT;
+    if (!recipient) return c.json({ executed: false, reason: "META_TEST_RECIPIENT_REQUIRED" }, 409);
     const row = await c.env.DB.prepare("SELECT id,idempotency_key FROM outbound_messages WHERE idempotency_key LIKE 'welcome_reply:%' AND status='FAILED' AND provider_message_id IS NULL ORDER BY updated_at ASC LIMIT 1").first<{ id: string; idempotency_key: string }>();
     if (!row) return c.json({ executed: false, reason: "NO_FAILED_REPLY_ELIGIBLE" });
-    const recipient = "+923034901810";
     const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, recipient.replace(/\D/g, ""));
     if (!decision.eligible) {
       const reason = `FREE_MESSAGE_BLOCKED:${decision.reason}`;
@@ -1676,7 +1692,7 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
     }
     const claim = await c.env.DB.prepare("UPDATE outbound_messages SET status='RETRYING',attempt_count=attempt_count+1,updated_at=? WHERE id=? AND status='FAILED' AND provider_message_id IS NULL").bind(new Date().toISOString(), row.id).run();
     if (!claim.meta.changes) return c.json({ executed: false, reason: "REPLY_ALREADY_CLAIMED" });
-    const provider = createWhatsAppProvider("meta", { enabled: c.env.META_PROVIDER_ENABLED === "true", graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
+    const provider = adminWhatsAppProvider(c.env);
     try {
       const text = decision.locale === "ur" ? "گارڈن شاپ میں خوش آمدید۔ آرڈر شروع کرنے کے لیے START لکھیں۔" : "Welcome to Garden Shop. Reply START to begin your order.";
       const sent = await provider.sendText(recipient, formatWhatsAppText(text,decision.locale));
@@ -1690,11 +1706,14 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
   }
   if (rawAction === "send-flow-test") {
     if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
-    const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, "+923034901810".replace(/\D/g, ""));
+    const recipient = c.env.WHATSAPP_TEST_RECIPIENT;
+    if (!recipient) return c.json({ executed: false, reason: "META_TEST_RECIPIENT_REQUIRED" }, 409);
+    const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, recipient.replace(/\D/g, ""));
     if (!decision.eligible) return c.json({ executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", detail: decision.reason }, 409);
     return c.json({ executed: false, reason: "FLOW_LOCALE_VARIANT_UNVERIFIED" }, 409);
   }
   const action = rawAction as MetaActivationAction;
+  if ((c.env.WHATSAPP_TEST_MODE === "true" || c.env.DEPLOYMENT_STATE === "ISOLATED_WHATSAPP_TEST") && action !== "send-test") return c.json({ error: "ISOLATED_WHATSAPP_TEST_PATH_ONLY" }, 404);
   const allowed: MetaActivationAction[] = ["phone-state", "waba-subscription", "webhook", "provider", "flow-key", "controlled-test", "send-test", "request-code", "request_code", "verify-code", "verify_code", "register", "subscribe-app"];
   if (!allowed.includes(action)) return c.json({ error: "META_ACTIVATION_ACTION_NOT_FOUND" }, 404);
   let body: Record<string, unknown> = {};
@@ -1708,7 +1727,9 @@ app.post("/api/meta-activation/actions/:action", async (c) => {
   if (action === "send-test" && (Object.prototype.hasOwnProperty.call(body, "to") || Object.prototype.hasOwnProperty.call(body, "recipient"))) return c.json({ error: "META_SEND_TEST_RECIPIENT_FIXED" }, 400);
   let messageLocale: "en" | "ur" | undefined;
   if (action === "send-test") {
-    const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, META_SEND_TEST_RECIPIENT.replace(/\D/g, ""));
+    const recipient = c.env.WHATSAPP_TEST_RECIPIENT;
+    if (!recipient) return c.json({ error: "META_TEST_RECIPIENT_REQUIRED" }, 409);
+    const decision = await evaluateStoredFreeWhatsAppOutbound(c.env.DB, recipient.replace(/\D/g, ""));
     if (!decision.eligible) return c.json({ error: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", reason: decision.reason }, 409);
     messageLocale = decision.locale;
   }
@@ -1730,7 +1751,8 @@ app.post("/api/meta-activation/actions/retry-failed-reply", async (c) => {
   if (!authorized(c)) return c.json({ error: "UNAUTHORIZED" }, 401);
   const row = await c.env.DB.prepare("SELECT id,idempotency_key FROM outbound_messages WHERE idempotency_key LIKE 'welcome_reply:%' AND status='FAILED' AND provider_message_id IS NULL ORDER BY updated_at ASC LIMIT 1").first<{ id: string; idempotency_key: string }>();
   if (!row) return c.json({ executed: false, reason: "NO_FAILED_REPLY_ELIGIBLE" });
-  const recipient=META_SEND_TEST_RECIPIENT;
+   const recipient=c.env.WHATSAPP_TEST_RECIPIENT;
+   if(!recipient)return c.json({executed:false,reason:"META_TEST_RECIPIENT_REQUIRED"},409);
   const decision=await evaluateStoredFreeWhatsAppOutbound(c.env.DB,recipient.replace(/\D/g,""));
   if(!decision.eligible){
     const reason=`FREE_MESSAGE_BLOCKED:${decision.reason}`;
@@ -1739,7 +1761,7 @@ app.post("/api/meta-activation/actions/retry-failed-reply", async (c) => {
   }
   const claim = await c.env.DB.prepare("UPDATE outbound_messages SET status='RETRYING',attempt_count=attempt_count+1,updated_at=? WHERE id=? AND status='FAILED' AND provider_message_id IS NULL").bind(new Date().toISOString(), row.id).run();
   if (!claim.meta.changes) return c.json({ executed: false, reason: "REPLY_ALREADY_CLAIMED" });
-  const provider = createWhatsAppProvider("meta", { enabled: c.env.META_PROVIDER_ENABLED === "true", graphVersion: c.env.META_GRAPH_VERSION ?? "v26.0", phoneNumberId: c.env.META_PHONE_NUMBER_ID, accessToken: c.env.META_ACCESS_TOKEN, appSecret: c.env.META_APP_SECRET });
+   const provider = adminWhatsAppProvider(c.env);
   try {
     const body=decision.locale==="ur"?"گارڈن شاپ میں خوش آمدید۔ آرڈر شروع کرنے کے لیے START لکھیں۔":"Welcome to Garden Shop. Reply START to begin your order.";
     const sent = await provider.sendText(recipient, formatWhatsAppText(body,decision.locale));

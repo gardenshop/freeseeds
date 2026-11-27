@@ -1,5 +1,11 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Handover
 
+## TEST-ISOLATION-001 (2026-11-27)
+
+Local test guard, relay splitter, isolated API config and encrypted vault are implemented and synthetically tested; no production deploy, route/config change, test message, export or restore. Candidate API config is `apps/api/wrangler.whatsapp-test.jsonc`; it is disabled by default, no routes/Cron/Queue/R2 and uses staging D1 only. For a genuine referral, preserve Meta's current callback and separately authorize the production API recipient-selective relay to the exact candidate URL. Owner must initiate only through an already-running Get Free Seeds CTWA ad after the relay/candidate guards are separately approved.
+
+Vault is `%LOCALAPPDATA%\GFS-Orderflow-D1Vault`; current user ACL, DPAPI+AES-GCM and recovery wrapper verified. Real export still requires approved path, passphrase custody, fresh Time Travel bookmark, account/D1 readback and explicit export approval. `getfreeseeds-v2-restore-check` is isolated in inspected bindings and has zero business rows, but existing schema/static rows mean reset/restore needs explicit approval. Preserve the shared F: backup tree and six test-held COD sidecars. S0-S9 and release gates remain as reported; WhatsApp/LAUNCH-001 NO-GO.
+
 ## LIVE-TEST-001 (2026-11-27)
 
 Owner supplied test number/authorization; number omitted from all records. Do not initiate: current old API Production version has per-minute Cron and Queue consumer with no verified per-contact10/30 cap. Count0, window not started. Exact future mobile CTWA instructions and candidate-isolation requirements are in `GFS_ORDERFLOW_LIVE_TEST_001.md`. Existing `getfreeseeds-v2-restore-check` is a read-only isolated target candidate; no restore. Shared F backup root is unsafe (broad ACL, EFS off, BitLocker unverified); preserve it and other project backups. Owner/admin must identify/provision a dedicated encrypted owner-only vault. No production change. Keep all migration/deployment/activation separately authorized and LAUNCH-001-RELEASE NO-GO.

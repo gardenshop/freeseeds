@@ -1,5 +1,15 @@
 # GFS ORDERFLOW / Get Free Seeds Binding Rules
 
+## GFS-ORDERFLOW-TEST-ISOLATION-001 (2026-11-27)
+
+- Test mode defaults off. Enable only on `DEPLOYMENT_STATE=ISOLATED_WHATSAPP_TEST` with runtime-secret `WHATSAPP_TEST_RECIPIENT` and fixed ISO `WHATSAPP_TEST_WINDOW_START`; use exactly one owner-approved contact, max10 attempts, one30-minute window. Never commit/log/render the contact or recovery passphrase.
+- Shared D1 singleton anchor plus unique pre-send payload reservation is atomic; API/Admin share one ten-attempt budget. The reservation precedes network/media upload, counts SENDING/SENT/UNKNOWN/BLOCKED, deduplicates retries, and fail-closes on unknown acceptance or storage errors. No retries, paid fallback or alternate-recipient send. The same fixed start must be configured on every candidate Worker.
+- Preserve existing per-contact CSW/FEP/pricing/template/free-only gates. Isolated API handles only signed CTWA openings and LANG_EN/LANG_UR inputs; it cannot create orders, approve payments, COD, dispatch, or CAPI. Admin isolated mode allows only guarded send-test. Cron is a no-op; Queue retries without acknowledgement; isolated Wrangler config has no Cron/Queue/R2/routes and provider/test flags disabled by default.
+- Meta retains the existing production callback. Optional production API selective relay is disabled by default and only forwards the exact secret test recipient to the exact isolated candidate host; ordinary events remain on the production Worker. Never set the relay or change callback/production routes without separate approval and post-deploy identity/binding readback.
+- Secure D1 vault is `%LOCALAPPDATA%\GFS-Orderflow-D1Vault`, owner/SYSTEM/Administrators ACL, streaming AES-256-GCM, DPAPI CurrentUser plus scrypt-AES-GCM recovery envelope. Owner recovery passphrase stays in an approved password manager and process-only environment; no plaintext file. Production export requires fresh Time Travel reference, exact account/D1/destination/target readback and explicit authorization. F: shared backup root remains prohibited.
+- `getfreeseeds-v2-restore-check` remains unbound from the inspected production Workers but is not empty: schema/migrations/static configuration remain. Never reset/restore it without explicit target-reset/restore approval. No production export/restore/migration/deploy in this task.
+- Preserve Label Printer, standalone MO, Hoja zero-connection, payments/COD125, financial evidence/holds, six test COD sidecars, Access, CAPI, O01-O23/REV.2, FIN-MO-002, history and postal integration. `0049→unchanged0050→0051`;0049 forward-only. LAUNCH-001 and WhatsApp leads remain NO-GO until live evidence and separate release authorization.
+
 ## GFS-ORDERFLOW-LIVE-TEST-001 (2026-11-27)
 
 - Owner has authorized one owner-controlled CTWA test contact, at most10 outbound messages within30 minutes, English/Urdu, free-only, no paid fallback/no unknown-acceptance retry/no other customer sends/campaign activation. Keep the number out of Git, permanent docs, logs, screenshots and test output.

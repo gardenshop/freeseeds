@@ -80,12 +80,12 @@ function env() {
   return { DB: db, RECEIPTS: { get: vi.fn(async () => { qrReads++; return qrAvailable ? { httpMetadata: { contentType: "image/png" }, arrayBuffer: async () => syntheticQrBytes.buffer } : null; }), put: vi.fn(async () => { receiptPuts++; }), delete: vi.fn(async () => undefined) }, EVENTS: { send: queueSend }, DEPLOYMENT_STATE: "LOCAL", WHATSAPP_PROVIDER: "meta", META_PROVIDER_ENABLED: "true", META_PHONE_NUMBER_ID: phoneId, META_ACCESS_TOKEN: "synthetic-token", META_APP_SECRET: secret, META_CAPI_ENABLED: "false", WHATSAPP_CHECKOUT_MODE: "guided", COD_V1_ENABLED: codEnabled ? "true" : "false", COD_ROLLOUT_MODE: codRolloutMode, COD_TESTER_WA_ID: codTesterWaId, COD_REFERENCE_HMAC_KEY: codRuntimeHmacKey, PAYMENT_REMINDERS_V2_ENABLED: remindersEnabled ? "true" : "false", PAYMENT_AUTOMATION_V2_ENABLED: reminderAutomationEnabled ? "true" : "false", PAYMENT_UTILITY_TEMPLATES_APPROVED: "false", PAYMENT_CHOICE_RECOVERY_ENABLED: recoveryEnabled ? "true" : "false", CF_VERSION_METADATA: { id: "synthetic-worker-version" } } as never;
 }
 
-async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = []) {
+async function callback(messages: Record<string, unknown>[], extraChanges: unknown[] = [], runtime = env()) {
   const payload = JSON.stringify({ object: "whatsapp_business_account", entry: [{ changes: [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, messages } }, ...extraChanges] }] });
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   const signature = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), env());
+  return api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${signature}` }, body: payload }), runtime);
 }
 
 async function adminPost(path: string, body: Record<string, unknown>, referenceRequestsEnabled = "true", events: { send: typeof queueSend } = { send: vi.fn(async () => undefined) }) {
@@ -169,6 +169,42 @@ async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: s
 }
 
 describe("frozen V1 receipt hotfix", () => {
+  it("keeps isolated CTWA test turns on the allowlisted bilingual path with no order, payment, or CAPI writes", async () => {
+    const testRuntime = { ...(env() as unknown as Record<string, unknown>), DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true", WHATSAPP_TEST_RECIPIENT: sender, WHATSAPP_TEST_WINDOW_START: new Date(Date.now() - 1_000).toISOString() } as never;
+    const opening = { from: sender, id: "synthetic-isolated-ctwa-opening", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hello from the synthetic ad" }, referral: { ctwa_clid: "synthetic-isolated-click", source_type: "ad", platform: "android" } };
+    const openingResponse = await callback([opening], [], testRuntime);
+    expect(openingResponse.status).toBe(200);
+    expect(sends).toHaveLength(1);
+    expect(buttonTitles()).toEqual(["English", "اردو"]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
+
+    const fepStatus = { field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: ["sent", "delivered"].map((status) => ({ id: "synthetic-outbound-1", recipient_id: sender, status, timestamp: String(Math.floor(Date.now() / 1000)), conversation: { expiration_timestamp: String(Math.floor(Date.now() / 1000) + 6 * 24 * 60 * 60), origin: { type: "referral_conversion" } }, pricing: { billable: false, pricing_model: "PMP", type: "free_entry_point", category: "referral_conversion" } })) } };
+    expect((await callback([], [fepStatus], testRuntime)).status).toBe(200);
+
+    const chooseEnglish = { from: sender, id: "synthetic-isolated-language-en", timestamp: String(Math.floor(Date.now() / 1000)), type: "interactive", interactive: tap("LANG_EN") };
+    expect((await callback([chooseEnglish], [], testRuntime)).status).toBe(200);
+    expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE idempotency_key=?").get("whatsapp_test_locale:synthetic-isolated-language-en")).toEqual({ status: "SENT", last_error: null });
+    expect(visibleWhatsAppText(String((sends.at(-1)?.interactive as { body: { text: string } }).body.text))).toContain("No order or payment was created");
+    const sendsAfterEnglish = sends.length;
+    expect((await callback([chooseEnglish], [], testRuntime)).status).toBe(200);
+    expect(sends).toHaveLength(sendsAfterEnglish);
+
+    const chooseUrdu = { from: sender, id: "synthetic-isolated-language-ur", timestamp: String(Math.floor(Date.now() / 1000)), type: "interactive", interactive: tap("LANG_UR") };
+    expect((await callback([chooseUrdu], [], testRuntime)).status).toBe(200);
+    expect(visibleWhatsAppText(String((sends.at(-1)?.interactive as { body: { text: string } }).body.text))).toContain("کوئی آرڈر یا ادائیگی نہیں بنائی گئی");
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET'").get()).toEqual({ count: 3 });
+
+    const unrelated = { from: "923009999999", id: "synthetic-unrelated-recipient", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hi" }, referral: { ctwa_clid: "synthetic-other-click", source_type: "ad", platform: "android" } };
+    expect((await callback([unrelated], [], testRuntime)).status).toBe(403);
+    expect(sends).toHaveLength(3);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
+  });
+
   it("allows one synthetic mobile-CTWA first response without preexisting FEP expiry or pricing evidence", async () => {
     const id="synthetic-ctwa-opening-response";
     const timestamp=String(Math.floor(Date.now()/1000));

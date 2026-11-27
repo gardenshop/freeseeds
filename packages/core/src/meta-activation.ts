@@ -1,4 +1,5 @@
 import { formatWhatsAppText } from "./whatsapp-formatting";
+import type { WhatsAppOutboundGuard } from "./provider";
 
 export type MetaActivationConfig = {
   accessToken?: string;
@@ -12,10 +13,11 @@ export type MetaActivationConfig = {
   appSecret?: string;
   flowPrivateKey?: string;
   flowPublicKey?: string;
+  sendTestRecipient?: string;
+  outboundGuard?: WhatsAppOutboundGuard;
   fetcher?: typeof fetch;
 };
 
-export const META_SEND_TEST_RECIPIENT = "+923354299783";
 export const META_SEND_TEST_MESSAGE = "Get Free Seeds E2E test. WhatsApp integration is active. Please reply OK.";
 
 type GraphObject = Record<string, unknown>;
@@ -205,13 +207,14 @@ export function createMetaActivationService(config: MetaActivationConfig) {
        } else if (action === "subscribe-app") {
          if (!config.wabaId) return { action, executed: false, reason: "META_WABA_ID_REQUIRED", status: await service.status() };
          path = `${encodeURIComponent(config.wabaId)}/subscribed_apps`;
-       } else if (action === "send-test") {
-         if (!config.phoneNumberId) return { action, executed: false, reason: "META_PHONE_NUMBER_ID_REQUIRED", status: await service.status() };
-         if (input.freeMessageEligibilityVerified !== true) return { action, executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", status: await service.status() };
-         if (input.locale !== "en" && input.locale !== "ur") return { action, executed: false, reason: "CUSTOMER_LOCALE_UNKNOWN", status: await service.status() };
-         path = `${encodeURIComponent(config.phoneNumberId)}/messages`;
-         const message = input.locale === "ur" ? "یہ گارڈن شاپ کا واٹس ایپ آزمائشی پیغام ہے۔" : "This is a Garden Shop WhatsApp test message.";
-         body = { messaging_product: "whatsapp", recipient_type: "individual", to: META_SEND_TEST_RECIPIENT, type: "text", text: { preview_url: false, body: formatWhatsAppText(message, input.locale) } };
+        } else if (action === "send-test") {
+          if (!config.phoneNumberId) return { action, executed: false, reason: "META_PHONE_NUMBER_ID_REQUIRED", status: await service.status() };
+          if (input.freeMessageEligibilityVerified !== true) return { action, executed: false, reason: "WHATSAPP_FREE_MESSAGE_SUPPRESSED", status: await service.status() };
+          if (input.locale !== "en" && input.locale !== "ur") return { action, executed: false, reason: "CUSTOMER_LOCALE_UNKNOWN", status: await service.status() };
+          if (!config.sendTestRecipient) return { action, executed: false, reason: "META_TEST_RECIPIENT_REQUIRED", status: await service.status() };
+          path = `${encodeURIComponent(config.phoneNumberId)}/messages`;
+          const message = input.locale === "ur" ? "یہ گارڈن شاپ کا واٹس ایپ آزمائشی پیغام ہے۔" : "This is a Garden Shop WhatsApp test message.";
+          body = { messaging_product: "whatsapp", recipient_type: "individual", to: config.sendTestRecipient, type: "text", text: { preview_url: false, body: formatWhatsAppText(message, input.locale) } };
        } else if (action === "flow-key") {
          if (!config.phoneNumberId || !config.flowPublicKey) return { action, executed: false, reason: "META_FLOW_PUBLIC_KEY_REQUIRED", status: await service.status() };
          path = `${encodeURIComponent(config.phoneNumberId)}/whatsapp_business_encryption`;
@@ -220,7 +223,16 @@ export function createMetaActivationService(config: MetaActivationConfig) {
         return { action, executed: false, reason: "META_ACTIVATION_ACTION_NOT_FOUND", status: await service.status() };
       }
 
-      const result = await postGraph(fetcher, baseUrl, config.accessToken, path, body);
+      let result: GraphMutationResult;
+      try {
+        const performSend = () => postGraph(fetcher, baseUrl, config.accessToken as string, path, body);
+        result = action === "send-test" && config.outboundGuard
+          ? await config.outboundGuard.send(config.sendTestRecipient as string, body, performSend, (sent) => sent.ok ? sent.data?.messageId ?? sent.data?.id : undefined)
+          : await performSend();
+      } catch (error) {
+        const reason = error instanceof Error && error.message.startsWith("WHATSAPP_TEST_") ? error.message : "META_GRAPH_REQUEST_FAILED";
+        return { action, executed: false, reason, status: await service.status() };
+      }
       const reread = await service.status();
        if (!result.ok) return { action, executed: false, reason: "META_GRAPH_REQUEST_FAILED", error: result.error ? { code: result.error.code, ...(result.status === undefined ? {} : { status: result.status }) } : graphError(result.status), status: reread };
        if (result.data?.success === false) return { action, executed: false, reason: "META_GRAPH_REPORTED_FAILURE", status: reread };
