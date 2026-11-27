@@ -42,6 +42,7 @@ type Env = {
     PAYMENT_CHOICE_RECOVERY_ENABLED?: string;
     PAYMENT_CHOICE_RECOVERY_START_AT?: string;
     WHATSAPP_TEST_MODE?: string;
+    WHATSAPP_TEST_MOBILE_ATTESTED?: string;
     WHATSAPP_TEST_RECIPIENT?: string;
     WHATSAPP_TEST_WINDOW_START?: string;
     WHATSAPP_TEST_RELAY_ENABLED?: string;
@@ -216,7 +217,7 @@ function codTestHoldForAdmission(rolloutMode: string | undefined): 0 | 1 | undef
 }
 
 type ConversationReplyOptions = { buttons?: InteractiveButton[]; list?: { buttonText: string; rows: Array<{ id: string; title: string; description?: string }> }; image?: OutboundImage; flow?: { id: string; token: string } };
-type ConversationOutboundAssociation = { orderId?: string; customerId?: string; kind?: string; intentId?: string; locale?: "en" | "ur" };
+type ConversationOutboundAssociation = { orderId?: string; customerId?: string; kind?: string; intentId?: string; locale?: "en" | "ur"; ownerMobileTestAttestation?: boolean };
 
 const LOCALE_FALLBACKS: Partial<Record<WhatsAppTemplateKey, { en: string; ur: string }>> = {
   WELCOME: { en: "Welcome to Get Free Seeds! Tap below to begin your order.", ur: "گٹ فری سیڈز میں خوش آمدید! آرڈر شروع کرنے کے لیے نیچے دبائیں۔" },
@@ -371,8 +372,8 @@ async function linkOrderIntentPresentation(db: D1Database, intentId: string, pro
   await db.prepare("DELETE FROM whatsapp_delivery_receipts WHERE provider_message_id=? AND EXISTS(SELECT 1 FROM order_confirmation_intents WHERE intent_id=? AND presented_at IS NOT NULL)").bind(providerMessageId,intentId).run();
 }
 
-async function evaluateConversationFreeMessage(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date(), allowFepOpeningResponse = false): Promise<FreeMessagingDecision> {
-  return evaluateStoredFreeWhatsAppOutbound(db,waId,localeHint,now,{allowFepOpeningResponse});
+async function evaluateConversationFreeMessage(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date(), allowFepOpeningResponse = false, allowOwnerMobileTestAttestation = false): Promise<FreeMessagingDecision> {
+  return evaluateStoredFreeWhatsAppOutbound(db,waId,localeHint,now,{allowFepOpeningResponse,allowOwnerMobileTestAttestation});
 }
 
 async function hashSourceEvidence(value:string):Promise<string>{
@@ -400,7 +401,7 @@ async function sendConversationReply(db: D1Database, provider: ReturnType<typeof
     ]);
     return { sent: false };
   }
-  const freeDecision = await evaluateConversationFreeMessage(db, to, association.locale, new Date(), association.kind === "LANGUAGE_SELECTION" || association.kind === "WELCOME_REPLY");
+  const freeDecision = await evaluateConversationFreeMessage(db, to, association.locale, new Date(), association.kind === "LANGUAGE_SELECTION" || association.kind === "WELCOME_REPLY", association.ownerMobileTestAttestation === true);
   if (!freeDecision.eligible) {
     const reason = `FREE_MESSAGE_BLOCKED:${freeDecision.reason}`;
     await db.batch([
@@ -1513,14 +1514,14 @@ app.post("/webhooks/whatsapp", async (c) => {
       }
     }
   }
-  if (c.env.DB) await persistInboundConversationActivity(c.env.DB, activeInbound);
+  if (c.env.DB) await persistInboundConversationActivity(c.env.DB, activeInbound, { ownerMobileTestAttestation: testMode && c.env.WHATSAPP_TEST_MOBILE_ATTESTED === "true" });
   let autoReplies = 0;
   let handledEvents = 0;
   if (testMode) {
     for (const event of activeInbound) {
       const testAction = resolveIsolatedWhatsAppTestInput(event);
       if (testAction === "CTWA_OPENING") {
-        const result = await sendConversationReply(c.env.DB, provider, event.from, event.id, formatNeutralLanguagePrompt(), { buttons: [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }] }, `welcome_reply:${event.id}`, { kind: "LANGUAGE_SELECTION", locale: "en" });
+        const result = await sendConversationReply(c.env.DB, provider, event.from, event.id, formatNeutralLanguagePrompt(), { buttons: [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }] }, `welcome_reply:${event.id}`, { kind: "LANGUAGE_SELECTION", locale: "en", ownerMobileTestAttestation: c.env.WHATSAPP_TEST_MOBILE_ATTESTED === "true" });
         if (result.sent) autoReplies += 1;
         handledEvents += 1;
         continue;
@@ -1529,7 +1530,7 @@ app.post("/webhooks/whatsapp", async (c) => {
       const stateSaved = await c.env.DB.prepare("UPDATE whatsapp_conversations SET state='TEST_COMPLETE',state_data=json_set(COALESCE(state_data,'{}'),'$.language',?),updated_at=? WHERE wa_id=? AND state IN ('NEW','TEST_COMPLETE')").bind(locale, new Date().toISOString(), event.from).run();
       if (Number(stateSaved.meta?.changes ?? 0) !== 1) continue;
       const sample = locale === "ur" ? "یہ محدود آزمائشی گفتگو ہے۔ کوئی آرڈر یا ادائیگی نہیں بنائی گئی۔" : "This is a bounded test conversation. No order or payment was created.";
-      const result = await sendConversationReply(c.env.DB, provider, event.from, event.id, sample, { buttons: [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }] }, `whatsapp_test_locale:${event.id}`, { kind: "TEST_LOCALE_SAMPLE", locale });
+      const result = await sendConversationReply(c.env.DB, provider, event.from, event.id, sample, { buttons: [{ id: "LANG_EN", title: "English" }, { id: "LANG_UR", title: "اردو" }] }, `whatsapp_test_locale:${event.id}`, { kind: "TEST_LOCALE_SAMPLE", locale, ownerMobileTestAttestation: c.env.WHATSAPP_TEST_MOBILE_ATTESTED === "true" });
       if (result.sent) autoReplies += 1;
       handledEvents += 1;
     }

@@ -77,8 +77,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
         campaignId: message.referral.campaign_id,
         adSetId: message.referral.adset_id,
         adId: message.referral.ad_id,
-        sourceType: message.referral.source_type,
-        platform: message.referral.platform ?? message.referral.source_platform
+        sourceType: message.referral.source_type
       } : undefined;
       const providerTimestamp=normalizeMetaTimestamp(message.timestamp);
       result.push({ id: message.id, from: message.from, kind, payload: message, ...(providerTimestamp?{providerTimestamp}:{}), ...(referral ? { referral } : {}) });

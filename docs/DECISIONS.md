@@ -1,3 +1,12 @@
+## GFS-ORDERFLOW-FEP-LIVE-002 (2026-11-27)
+
+- Current Meta developer pricing supersedes legacy public72-hour guidance: actual eligible FEP may last up to7 days, but only provider `conversation.expiration_timestamp` proves an individual expiry. CTWA first response inside CSW opens FEP; no pre-existing FEP receipt required when policy conditions are proven. CSW, FEP, monthly free-service tier and template eligibility are distinct.
+- Latest WABA Insights are approximate aggregate: rolling30d FEP66,349/free service981, paid0/$0; MTD FEP57,489/free service892, paid0/$0. Prior supplied30d 61,254/924 is a separate snapshot. Aggregates/past free delivery do not authorize a next message. Meta Business Agent remains in Setup/off; custom Cloud API is used.
+- Meta status read-only: Graph v26.0, WABA subscribed/permissions granted, GREEN quality, sender name DECLINED, registration EXPIRED. No settings changed; this phone state blocks live send until separately resolved.
+- No historical per-contact FEP/expiry/pricing persisted in production conversation state; webhook table stores only hashes/status. No duration >72h can be credited. Referral schema has no device OS field; source_platform is not OS. The single test uses owner mobile attestation only in the isolated candidate; normal production remains fail-closed on unknown mobile proof.
+- Webhook FEP evidence now merges status fields matched by provider-message hash, hashes optional conversation.id, requires SENT+DELIVERED/READ, actual expiry, referral origin and free type/category. `billable` may be absent/deprecated; explicit true denies. No expiration is synthesized.
+- Owner's existing test contact and 10/30 authorization remain valid and are not requested again. No live message/test timer, export, restore, Worker deploy, callback/relay change or campaign occurred. The test waits for separate deployment/routing and sender-registration approvals. Prefer a new empty isolated restore target named `getfreeseeds-v2-restore-fep-002`; it is proposed only and requires resource/quota authorization.
+
 ## GFS-ORDERFLOW-LIVE-TEST-001 (2026-11-27)
 
 - Test contact and bounded authorization were supplied by the owner but are omitted from persistent records. Stop before initiation because the active old API Worker has per-minute Cron and Queue processing with no observed10-outbound/30-minute recipient cap. Record0 outbound; no test window started; do not disable jobs or mutate production under this task.

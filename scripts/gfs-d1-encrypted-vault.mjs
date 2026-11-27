@@ -18,8 +18,6 @@ const MIN_FREE_BYTES = 1024 ** 3;
 const EXPECTED_CF_ACCOUNT_ID = "cb5066a6d71ecdee0bd7ed8aacb4d3c2";
 const EXPECTED_PRODUCTION_D1_NAME = "getfreeseeds-staging";
 const EXPECTED_PRODUCTION_D1_ID = "17b7e9f6-e08b-4bff-a756-10de30b49ab1";
-const EXPECTED_RESTORE_D1_NAME = "getfreeseeds-v2-restore-check";
-const EXPECTED_RESTORE_D1_ID = "0a9ae021-64c9-4591-ac3c-aadd29ce13b6";
 const DPAPI_SCRIPT = `$ErrorActionPreference='Stop';$mode='__MODE__';$text=[Console]::In.ReadToEnd().Trim();$bytes=[Convert]::FromBase64String($text);if($mode -eq 'protect'){$secret=[Convert]::ToBase64String($bytes);$secure=ConvertTo-SecureString -String $secret -AsPlainText -Force;$result=ConvertFrom-SecureString -SecureString $secure}else{$wrapped=[Text.Encoding]::UTF8.GetString($bytes);$secure=ConvertTo-SecureString -String $wrapped;$pointer=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure);try{$result=[Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)}finally{[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)}};[Console]::Out.Write($result)`;
 const ACL_SCRIPT = `$ErrorActionPreference='Stop';$inputText=[Console]::In.ReadToEnd().Trim();$path=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($inputText));$acl=Get-Acl -LiteralPath $path;$userSid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value;$allowed=@($userSid,'S-1-5-18','S-1-5-32-544');if(-not $acl.AreAccessRulesProtected){throw 'INHERITANCE'};$owner=$acl.GetOwner([Security.Principal.SecurityIdentifier]).Value;if($owner -ne $userSid){throw 'OWNER'};$rules=$acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]);if($rules.Count -ne 3){throw 'RULE_COUNT'};foreach($rule in $rules){if($rule.AccessControlType -ne 'Allow' -or $rule.IdentityReference.Value -notin $allowed -or -not $rule.FileSystemRights.ToString().Contains('FullControl')){throw 'RULE'};if($rule.IsInherited){throw 'INHERITED'}};[Console]::Out.Write('OK')`;
 const FILE_ACL_SCRIPT = `$ErrorActionPreference='Stop';$inputText=[Console]::In.ReadToEnd().Trim();$path=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($inputText));$acl=Get-Acl -LiteralPath $path;$userSid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value;$allowed=@($userSid,'S-1-5-18','S-1-5-32-544');if($acl.AreAccessRulesProtected){throw 'FILE_INHERITANCE'};$owner=$acl.GetOwner([Security.Principal.SecurityIdentifier]).Value;if($owner -ne $userSid){throw 'FILE_OWNER'};$rules=$acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]);if($rules.Count -ne 3){throw 'FILE_RULE_COUNT'};foreach($rule in $rules){if($rule.AccessControlType -ne 'Allow' -or $rule.IdentityReference.Value -notin $allowed -or -not $rule.FileSystemRights.ToString().Contains('FullControl')){throw 'FILE_RULE'}};[Console]::Out.Write('OK')`;
@@ -339,6 +337,13 @@ function containsString(value, expected) {
   return false;
 }
 
+function findNumberField(value, field) {
+  if (Array.isArray(value)) return value.map((item) => findNumberField(item, field)).find((item) => item !== undefined);
+  if (!value || typeof value !== "object") return undefined;
+  if (Object.hasOwn(value, field) && typeof value[field] === "number") return value[field];
+  return Object.values(value).map((item) => findNumberField(item, field)).find((item) => item !== undefined);
+}
+
 function runWranglerJson(wranglerPath, root, args) {
   const childEnv = { ...process.env };
   delete childEnv.GFS_D1_VAULT_RECOVERY_PASSPHRASE;
@@ -360,8 +365,10 @@ function verifyCanonicalExportConfig(root) {
 async function exportProductionD1ToVault(vaultPath, outputName) {
   const recoveryPassphrase = process.env.GFS_D1_VAULT_RECOVERY_PASSPHRASE;
   const referenceCreatedAt = Date.parse(process.env.GFS_D1_TIME_TRAVEL_REFERENCE_CREATED_AT ?? "");
+  const restoreTargetName = process.env.GFS_D1_RESTORE_TARGET_NAME;
+  const restoreTargetId = process.env.GFS_D1_RESTORE_TARGET_ID;
   const approvedVaultPath = process.env.GFS_D1_APPROVED_VAULT_PATH ? resolve(process.env.GFS_D1_APPROVED_VAULT_PATH) : "";
-  if (process.env.GFS_D1_PRODUCTION_EXPORT_AUTHORIZED !== "YES" || process.env.GFS_D1_DESTINATION_APPROVED !== "YES" || process.env.GFS_D1_RESTORE_TARGET_APPROVED !== "YES" || process.env.GFS_D1_RESTORE_ISOLATION_VERIFIED !== "YES" || process.env.GFS_D1_RESTORE_TARGET_ID !== EXPECTED_RESTORE_D1_ID || !process.env.GFS_D1_TIME_TRAVEL_REFERENCE || !Number.isFinite(referenceCreatedAt) || referenceCreatedAt > Date.now() || Date.now() - referenceCreatedAt > 30 * 60 * 1000 || (recoveryPassphrase?.length ?? 0) < 24) throw new Error("SEPARATE_OWNER_EXPORT_APPROVAL_REQUIRED");
+  if (process.env.GFS_D1_PRODUCTION_EXPORT_AUTHORIZED !== "YES" || process.env.GFS_D1_DESTINATION_APPROVED !== "YES" || process.env.GFS_D1_RESTORE_TARGET_APPROVED !== "YES" || process.env.GFS_D1_RESTORE_ISOLATION_VERIFIED !== "YES" || !restoreTargetName || !/^[A-Za-z0-9_-]{1,48}$/.test(restoreTargetName) || !restoreTargetId || !/^[a-f0-9-]{36}$/i.test(restoreTargetId) || !process.env.GFS_D1_TIME_TRAVEL_REFERENCE || !Number.isFinite(referenceCreatedAt) || referenceCreatedAt > Date.now() || Date.now() - referenceCreatedAt > 30 * 60 * 1000 || (recoveryPassphrase?.length ?? 0) < 24) throw new Error("SEPARATE_OWNER_EXPORT_APPROVAL_REQUIRED");
   const { path: root } = await assertVault(vaultPath);
   if (approvedVaultPath !== root) throw new Error("APPROVED_VAULT_PATH_MISMATCH");
   const target = targetPath(root, outputName);
@@ -373,8 +380,11 @@ async function exportProductionD1ToVault(vaultPath, outputName) {
   if (!containsString(identity, EXPECTED_CF_ACCOUNT_ID)) throw new Error("CLOUDFLARE_ACCOUNT_IDENTITY_MISMATCH");
   const d1Info = runWranglerJson(wranglerPath, repoRoot, ["d1", "info", EXPECTED_PRODUCTION_D1_NAME, "--json", "--config", configPath]);
   if (!containsString(d1Info, EXPECTED_PRODUCTION_D1_ID)) throw new Error("CANONICAL_D1_IDENTITY_MISMATCH");
-  const restoreInfo = runWranglerJson(wranglerPath, repoRoot, ["d1", "info", EXPECTED_RESTORE_D1_NAME, "--json", "--config", configPath]);
-  if (!containsString(restoreInfo, EXPECTED_RESTORE_D1_ID)) throw new Error("RESTORE_TARGET_IDENTITY_MISMATCH");
+  const restoreInfo = runWranglerJson(wranglerPath, repoRoot, ["d1", "info", restoreTargetName, "--json", "--config", configPath]);
+  if (!containsString(restoreInfo, restoreTargetId)) throw new Error("RESTORE_TARGET_IDENTITY_MISMATCH");
+  const restoreTables = runWranglerJson(wranglerPath, repoRoot, ["d1", "execute", restoreTargetName, "--remote", "--json", "--command", "SELECT COUNT(*) AS table_count FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%';", "--config", configPath]);
+  const tableCount = findNumberField(restoreTables, "table_count");
+  if (tableCount !== 0) throw new Error("RESTORE_TARGET_NOT_EMPTY");
   const pipeName = `\\\\.\\pipe\\gfs-orderflow-export-${randomBytes(12).toString("hex")}`;
   const server = createServer();
   let connectionCount = 0;

@@ -222,18 +222,19 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     seedIntent(new Date(start).toISOString(),"ur");
     sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES('ref-event','message:inbound-synthetic','MESSAGE','synthetic-signed-webhook-hash','RECEIVED','synthetic-correlation',?)").run(new Date(start).toISOString());
     const db=makeDb();
-    const referralEvent={id:"inbound-synthetic",from:"synthetic-wa-id",providerTimestamp:new Date(start).toISOString(),referral:{ctwaClid:"synthetic-click-id-never-persisted",sourceType:"ad",platform:"android"}};
-    await persistInboundConversationActivity(db,[referralEvent]);
-    await persistInboundConversationActivity(db,[referralEvent]);
+    const referralEvent={id:"inbound-synthetic",from:"synthetic-wa-id",providerTimestamp:new Date(start).toISOString(),referral:{ctwaClid:"synthetic-click-id-never-persisted",sourceType:"ad"}};
+    await persistInboundConversationActivity(db,[referralEvent],{ownerMobileTestAttestation:true});
+    await persistInboundConversationActivity(db,[referralEvent],{ownerMobileTestAttestation:true});
     sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES('old-ref-event','message:inbound-old','MESSAGE','synthetic-old-signed-webhook-hash','RECEIVED','synthetic-correlation',?)").run(new Date(start).toISOString());
     await persistInboundConversationActivity(db,[{id:"inbound-old",from:"synthetic-wa-id",providerTimestamp:new Date(start-60_000).toISOString(),referral:{ctwaClid:"synthetic-old-click-id",sourceType:"ad",platform:"ios"}}]);
     const state=JSON.parse(String(sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()?.state_data)) as {freeMessagingEvidence:{openingResponse:Record<string,unknown>;fep?:unknown;pricing?:unknown}};
-    expect(state.freeMessagingEvidence.openingResponse).toMatchObject({sourceType:"CTWA_AD",platform:"ANDROID",referralAt:new Date(start).toISOString(),policyVerified:true,sourceEvidenceRef:"synthetic-signed-webhook-hash"});
+    expect(state.freeMessagingEvidence.openingResponse).toMatchObject({sourceType:"CTWA_AD",mobileOriginAttestation:"OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST",referralAt:new Date(start).toISOString(),policyVerified:true,sourceEvidenceRef:"synthetic-signed-webhook-hash"});
+    expect(state.freeMessagingEvidence.openingResponse).not.toHaveProperty("platform");
     expect(sqlite.prepare("SELECT last_inbound_message_id,last_inbound_at FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()).toEqual({last_inbound_message_id:"inbound-synthetic",last_inbound_at:new Date(start).toISOString()});
     expect(state.freeMessagingEvidence.openingResponse).not.toHaveProperty("ctwaClid");
     expect(state.freeMessagingEvidence).not.toHaveProperty("fep");
     expect(state.freeMessagingEvidence).not.toHaveProperty("pricing");
-    expect(await evaluateStoredFreeWhatsAppOutbound(db,"synthetic-wa-id","ur",new Date(start+60_000),{allowFepOpeningResponse:true})).toMatchObject({eligible:true,basis:"FEP_OPENING_RESPONSE",locale:"ur"});
+    expect(await evaluateStoredFreeWhatsAppOutbound(db,"synthetic-wa-id","ur",new Date(start+60_000),{allowFepOpeningResponse:true,allowOwnerMobileTestAttestation:true})).toMatchObject({eligible:true,basis:"FEP_OPENING_RESPONSE",locale:"ur"});
   });
 
   it("activates later FEP only from matched Meta referral-conversion pricing and provider expiry webhooks", async () => {
@@ -243,18 +244,20 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     const providerHashBytes=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(providerMessageId)));
     const providerMessageIdHash=[...providerHashBytes].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
     seedIntent(new Date(start).toISOString(),"en");
-    const opening={sourceType:"CTWA_AD",platform:"ANDROID",clickIdHash:"9".repeat(64),referralAt:new Date(start-60_000).toISOString(),policyVerified:true,policyRef:"META-PMP-CTWA-FEP-2026-10-01",sourceEvidenceRef:"synthetic-referral-proof",firstResponseAttemptedAt:new Date(start).toISOString(),firstResponseKeyHash:"synthetic-attempt-key-hash",firstBusinessResponseAt:new Date(start).toISOString(),firstResponseMessageIdHash:providerMessageIdHash};
+    const opening={sourceType:"CTWA_AD",mobileOriginAttestation:"OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST",clickIdHash:"9".repeat(64),referralAt:new Date(start-60_000).toISOString(),policyVerified:true,policyRef:"META-PMP-CTWA-FEP-2026-10-01",sourceEvidenceRef:"synthetic-referral-proof",firstResponseAttemptedAt:new Date(start).toISOString(),firstResponseKeyHash:"synthetic-attempt-key-hash",firstBusinessResponseAt:new Date(start).toISOString(),firstResponseMessageIdHash:providerMessageIdHash};
     sqlite.prepare("UPDATE whatsapp_conversations SET state_data=? WHERE id='conversation-synthetic'").run(JSON.stringify({language:"en",freeMessagingEvidence:{openingResponse:opening}}));
     sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,customer_id,kind,status,attempt_count,provider_message_id,created_at,updated_at) VALUES('outbound-language','conversation_reply:inbound-synthetic',NULL,NULL,'LANGUAGE_SELECTION','SENT',1,?,?,?)").run(providerMessageId,new Date(start).toISOString(),new Date(start).toISOString());
-    const payload={entry:[{changes:[{value:{statuses:[{id:providerMessageId,recipient_id:"synthetic-wa-id",status:"delivered",timestamp:String(Math.floor((start+30_000)/1000)),conversation:{expiration_timestamp:String(Math.floor(Date.parse(expiresAt)/1000)),origin:{type:"referral_conversion"}},pricing:{billable:false,pricing_model:"PMP",type:"free_entry_point",category:"referral_conversion"}}]}}]}]};
+    const payload={entry:[{changes:[{value:{statuses:[{id:providerMessageId,recipient_id:"synthetic-wa-id",status:"sent",timestamp:String(Math.floor((start+10_000)/1000)),conversation:{id:"synthetic-conversation-id",expiration_timestamp:String(Math.floor(Date.parse(expiresAt)/1000)),origin:{type:"referral_conversion"}}},{id:providerMessageId,recipient_id:"synthetic-wa-id",status:"delivered",timestamp:String(Math.floor((start+30_000)/1000)),pricing:{pricing_model:"PMP",type:"free_entry_point",category:"referral_conversion"}}]}}]}]};
     const raw=new TextEncoder().encode(JSON.stringify(payload)).buffer as ArrayBuffer;
     vi.useFakeTimers();
     vi.setSystemTime(start+40_000);
-    expect(await persistWebhookRecords(makeDb(),payload,raw,"synthetic-status-correlation",false)).toBe(1);
-    const stored=JSON.parse(String(sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()?.state_data)) as {freeMessagingEvidence:{fep:{verifiedExpiresAt:string;expiryEvidenceRef:string};pricing:{type:string;category:string;pricingModel:string}}};
+    expect(await persistWebhookRecords(makeDb(),payload,raw,"synthetic-status-correlation",false)).toBe(2);
+    const stored=JSON.parse(String(sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()?.state_data)) as {freeMessagingEvidence:{fep:{verifiedExpiresAt:string;expiryEvidenceRef:string;mobileOriginAttestation?:string;platform?:string;firstBusinessResponseAt:string};pricing:{type:string;category:string;pricingModel:string;billable?:boolean}}};
     expect(stored.freeMessagingEvidence.fep).toMatchObject({verifiedExpiresAt:expiresAt});
     expect(stored.freeMessagingEvidence.pricing).toMatchObject({type:"free_entry_point",category:"REFERRAL_CONVERSION",pricingModel:"PMP"});
-    expect(await evaluateStoredFreeWhatsAppOutbound(makeDb(),"synthetic-wa-id","en",new Date(start+60_000))).toMatchObject({eligible:true,basis:"FEP",locale:"en"});
+    expect(stored.freeMessagingEvidence.pricing.billable).toBeUndefined();
+    expect(stored.freeMessagingEvidence.fep.mobileOriginAttestation).toBe("OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST");
+    expect(await evaluateStoredFreeWhatsAppOutbound(makeDb(),"synthetic-wa-id","en",new Date(start+60_000),{allowOwnerMobileTestAttestation:true})).toMatchObject({eligible:true,basis:"FEP",locale:"en"});
   });
 
   it("applies 0049 then unchanged 0050 then 0051 without backfilling legacy orders or adding inventory tables", async () => {

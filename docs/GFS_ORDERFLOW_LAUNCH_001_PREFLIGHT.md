@@ -1,10 +1,14 @@
 # GFS-ORDERFLOW-LAUNCH-001-PREFLIGHT
 
+## FEP-LIVE-002 Update (2026-11-27)
+
+Meta developer policy refreshed: up to7d maximum, exact per-contact expiry; prior72h public guidance is legacy. Referral schema has no mobile OS field; the isolated owner test uses a test-only mobile attestation, never generalized. Actual Graph status v26.0, sender name declined and registration expired; Business Agent off. Current WAM analytics are approximate and cannot decide the next send; production D1 contains no historical per-contact FEP evidence. Do not initiate test, send, change Meta settings, export D1 or restore until separate candidate/relay, sender-status and backup/target approvals pass. See `GFS_ORDERFLOW_FEP_LIVE_002.md`.
+
 ## TEST-ISOLATION-001 Update (2026-11-27)
 
 Local code implements a disabled test-mode, one-secret recipient, atomic ten-attempt/30-minute D1 budget and signed selective relay; relay remains off. The production Meta callback is unchanged. Candidate API Wrangler dry-run passes, binds only `getfreeseeds-v2-staging`, has no Cron/Queue/R2/routes, and defaults test/provider/COD/payment/CAPI flags off. Genuine CTWA can reach it only after separately authorized production API relay setup; never redirect Meta's callback directly.
 
-Vault `%LOCALAPPDATA%\GFS-Orderflow-D1Vault` has owner/SYSTEM/Admin ACL; AES-GCM, DPAPI and recovery passphrase wrap are tested. Export requires fresh Time Travel reference, verified account/source D1/target, approved exact vault path, recovery passphrase and explicit authorization. Restore-check target passes quick_check but is nonempty with schema/static config; owner must separately approve reset/restore. No export/restore/deploy/migration/message/campaign action occurred. WhatsApp and LAUNCH-001 remain NO-GO. See `GFS_ORDERFLOW_TEST_ISOLATION_001.md`.
+Vault `%LOCALAPPDATA%\GFS-Orderflow-D1Vault` has owner/SYSTEM/Admin ACL; AES-GCM, DPAPI and recovery passphrase wrap are tested. Export requires fresh Time Travel reference, verified account/source D1/target, approved exact vault path, recovery passphrase and explicit authorization. Restore-check target passes quick_check but contains schema/static configuration; prefer separately creating the proposed empty `getfreeseeds-v2-restore-fep-002` after quota/cost approval. No export/restore/deploy/migration/message/campaign action occurred. WhatsApp and LAUNCH-001 remain NO-GO. See `GFS_ORDERFLOW_TEST_ISOLATION_001.md`.
 
 ## LIVE-TEST-001 Update (2026-11-27)
 

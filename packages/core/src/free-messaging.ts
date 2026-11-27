@@ -3,11 +3,13 @@ import { WHATSAPP_SERVICE_WINDOW_MS } from "./service-window";
 export type WhatsAppOutboundForm = "FREEFORM" | "TEMPLATE";
 export type WhatsAppBillingCategory = "SERVICE" | "UTILITY" | "MARKETING" | "AUTHENTICATION";
 export const FEP_OPENING_POLICY_VERSION = "META-PMP-CTWA-FEP-2026-10-01";
+export const OWNER_CONFIRMED_TEST_MOBILE_POLICY = "OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST";
 
 export type FreeMessagingEvidence = {
   openingResponse?: {
     sourceType: "CTWA_AD";
-    platform: "ANDROID" | "IOS";
+    platform?: "ANDROID" | "IOS";
+    mobileOriginAttestation?: typeof OWNER_CONFIRMED_TEST_MOBILE_POLICY;
     clickIdHash: string;
     referralAt: string;
     policyVerified: true;
@@ -19,8 +21,10 @@ export type FreeMessagingEvidence = {
   };
   fep?: {
     sourceType: "CTWA_AD";
-    platform: "ANDROID" | "IOS";
+    platform?: "ANDROID" | "IOS";
+    mobileOriginAttestation?: typeof OWNER_CONFIRMED_TEST_MOBILE_POLICY;
     clickIdHash: string;
+    conversationIdHash?: string;
     referralAt: string;
     firstBusinessResponseAt: string;
     expiryVerified: true;
@@ -30,7 +34,7 @@ export type FreeMessagingEvidence = {
   };
   pricing?: {
     verified: true;
-    billable: false;
+    billable?: boolean;
     basis: "FEP" | "SERVICE_ALLOWANCE";
     type: "free_entry_point" | "free_customer_service";
     subtype?: "free_tier";
@@ -65,6 +69,7 @@ export function evaluateFreeWhatsAppOutbound(input: {
   category: WhatsAppBillingCategory;
   locale: "en" | "ur";
   allowFepOpeningResponse?: boolean;
+  allowOwnerMobileTestAttestation?: boolean;
   templateId?: string;
   evidence?: unknown;
   safetyMarginMs?: number;
@@ -85,13 +90,14 @@ export function evaluateFreeWhatsAppOutbound(input: {
   const evidence = input.evidence && typeof input.evidence === "object" ? input.evidence as FreeMessagingEvidence : undefined;
   if(input.allowFepOpeningResponse){
     const opening=evidence?.openingResponse;
-    if(input.form==="FREEFORM"&&input.category==="SERVICE"&&serviceWindowOpen&&opening&&opening.sourceType==="CTWA_AD"&&["ANDROID","IOS"].includes(opening.platform)&&/^[a-f0-9]{64}$/i.test(opening.clickIdHash)&&opening.policyVerified===true&&opening.policyRef===FEP_OPENING_POLICY_VERSION&&opening.sourceEvidenceRef?.trim()&&!opening.firstResponseAttemptedAt){
+    const mobileOriginVerified = Boolean(opening?.platform && ["ANDROID", "IOS"].includes(opening.platform)) || (input.allowOwnerMobileTestAttestation === true && opening?.mobileOriginAttestation === OWNER_CONFIRMED_TEST_MOBILE_POLICY);
+    if(input.form==="FREEFORM"&&input.category==="SERVICE"&&serviceWindowOpen&&opening&&opening.sourceType==="CTWA_AD"&&mobileOriginVerified&&/^[a-f0-9]{64}$/i.test(opening.clickIdHash)&&opening.policyVerified===true&&opening.policyRef===FEP_OPENING_POLICY_VERSION&&opening.sourceEvidenceRef?.trim()&&!opening.firstResponseAttemptedAt){
       const referralAt=Date.parse(opening.referralAt);
       if(Number.isFinite(referralAt)&&referralAt<=now&&now-referralAt<=WHATSAPP_SERVICE_WINDOW_MS)return {eligible:true,reason:"VERIFIED_FREE",basis:"FEP_OPENING_RESPONSE",expiresAt:new Date(serviceWindowExpiresAt).toISOString(),evidenceRef:opening.sourceEvidenceRef,locale:input.locale};
     }
   }
   const pricing = evidence?.pricing;
-  if (!pricing || pricing.verified !== true || pricing.billable !== false || pricing.pricingModel!=="PMP" || !pricing.evidenceRef?.trim() || (pricing.basis==="SERVICE_ALLOWANCE"&&(pricing.form!==input.form||pricing.messageCategory!==input.category))) return deny("FREE_BILLING_UNKNOWN_OR_MISMATCHED");
+  if (!pricing || pricing.verified !== true || pricing.billable === true || pricing.pricingModel!=="PMP" || !pricing.evidenceRef?.trim() || (pricing.basis==="SERVICE_ALLOWANCE"&&(pricing.form!==input.form||pricing.messageCategory!==input.category))) return deny("FREE_BILLING_UNKNOWN_OR_MISMATCHED");
   const pricingObservedAt = Date.parse(pricing.observedAt);
   const pricingVerifiedAt = Date.parse(pricing.verifiedAt);
   const pricingExpiresAt = Date.parse(pricing.validUntil);
@@ -112,16 +118,17 @@ export function evaluateFreeWhatsAppOutbound(input: {
 
   if (pricing.basis !== "FEP" || pricing.type !== "free_entry_point" || pricing.category!=="REFERRAL_CONVERSION") return deny("FREE_BILLING_UNKNOWN_OR_MISMATCHED");
   const fep = evidence?.fep;
-  if (pricing.basis !== "FEP" || !fep || fep.sourceType !== "CTWA_AD" || !["ANDROID", "IOS"].includes(fep.platform) || !/^[a-f0-9]{64}$/i.test(fep.clickIdHash) || fep.expiryVerified !== true || !fep.expiryEvidenceRef?.trim()) return deny("QUALIFYING_CTWA_EVIDENCE_UNKNOWN");
+  const mobileOriginVerified = Boolean(fep?.platform && ["ANDROID", "IOS"].includes(fep.platform)) || (input.allowOwnerMobileTestAttestation === true && fep?.mobileOriginAttestation === OWNER_CONFIRMED_TEST_MOBILE_POLICY);
+  if (pricing.basis !== "FEP" || !fep || fep.sourceType !== "CTWA_AD" || !mobileOriginVerified || !/^[a-f0-9]{64}$/i.test(fep.clickIdHash) || fep.expiryVerified !== true || !fep.expiryEvidenceRef?.trim()) return deny("QUALIFYING_CTWA_EVIDENCE_UNKNOWN");
   const referralAt = Date.parse(fep.referralAt);
   const firstResponseAt = Date.parse(fep.firstBusinessResponseAt);
   const fepVerifiedAt = Date.parse(fep.verifiedAt);
   const fepExpiresAt = Date.parse(fep.verifiedExpiresAt);
-  if (!Number.isFinite(referralAt) || !Number.isFinite(firstResponseAt) || referralAt > firstResponseAt || firstResponseAt - referralAt > WHATSAPP_SERVICE_WINDOW_MS || firstResponseAt > now || !Number.isFinite(fepVerifiedAt) || fepVerifiedAt > now || !Number.isFinite(fepExpiresAt) || fepExpiresAt <= now + margin) return deny("FEP_EXPIRED_OR_UNVERIFIED");
+  if (!Number.isFinite(referralAt) || !Number.isFinite(firstResponseAt) || referralAt > firstResponseAt || firstResponseAt - referralAt > WHATSAPP_SERVICE_WINDOW_MS || firstResponseAt > now || !Number.isFinite(fepVerifiedAt) || fepVerifiedAt > now || !Number.isFinite(fepExpiresAt) || fepExpiresAt <= now + margin || fepExpiresAt - firstResponseAt > 7 * 24 * 60 * 60 * 1000) return deny("FEP_EXPIRED_OR_UNVERIFIED");
   return { eligible: true, reason: "VERIFIED_FREE", basis: "FEP", expiresAt: new Date(Math.min(fepExpiresAt, pricingExpiresAt, input.form === "FREEFORM" ? serviceWindowExpiresAt : Number.POSITIVE_INFINITY)).toISOString(), evidenceRef: `${fep.expiryEvidenceRef}:${pricing.evidenceRef}`, locale: input.locale };
 }
 
-export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date(), options: {allowFepOpeningResponse?:boolean} = {}): Promise<FreeMessagingDecision> {
+export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date(), options: {allowFepOpeningResponse?:boolean;allowOwnerMobileTestAttestation?:boolean} = {}): Promise<FreeMessagingDecision> {
   let conversation: { state_data: string | null; last_inbound_at: string | null } | null | undefined;
   try {
     conversation = await db.prepare("SELECT state_data,last_inbound_at FROM whatsapp_conversations WHERE wa_id=?").bind(waId).first<{ state_data: string | null; last_inbound_at: string | null }>();
@@ -136,5 +143,5 @@ export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: s
   } catch { return { eligible: false, reason: "FREE_OPT_OUT_STATE_UNKNOWN" }; }
   const locale = localeHint ?? state.language;
   if (locale !== "en" && locale !== "ur") return { eligible: false, reason: "CUSTOMER_LOCALE_UNKNOWN" };
-  return evaluateFreeWhatsAppOutbound({ now, lastInboundAt: conversation.last_inbound_at, optedOut, blocked: state.blocked === true, form: "FREEFORM", category: "SERVICE", locale, evidence: state.freeMessagingEvidence, allowFepOpeningResponse:options.allowFepOpeningResponse });
+  return evaluateFreeWhatsAppOutbound({ now, lastInboundAt: conversation.last_inbound_at, optedOut, blocked: state.blocked === true, form: "FREEFORM", category: "SERVICE", locale, evidence: state.freeMessagingEvidence, allowFepOpeningResponse:options.allowFepOpeningResponse, allowOwnerMobileTestAttestation:options.allowOwnerMobileTestAttestation });
 }

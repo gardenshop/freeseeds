@@ -25,6 +25,7 @@ const codHmacKey = "synthetic-guided-cod-hmac-key-v1-2026-synthetic";
 let codRuntimeHmacKey = codHmacKey;
 let beforeBatch: ((sql: string[]) => Promise<void> | void) | undefined;
 let beforeRun: ((sql: string) => Promise<void> | void) | undefined;
+let injectSyntheticFreeEvidence: boolean;
 let qrAvailable: boolean;
 let qrReads: number;
 let remindersEnabled: boolean;
@@ -169,9 +170,23 @@ async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: s
 }
 
 describe("frozen V1 receipt hotfix", () => {
+  it("blocks an initial CTWA response when device eligibility is not owner-attested or provider-documented", async () => {
+    const testRuntime = { ...(env() as unknown as Record<string, unknown>), DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true", WHATSAPP_TEST_MOBILE_ATTESTED: "false", WHATSAPP_TEST_RECIPIENT: sender, WHATSAPP_TEST_WINDOW_START: new Date(Date.now() - 1_000).toISOString() } as never;
+    const opening = { from: sender, id: "synthetic-unattested-ctwa-opening", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hello from the synthetic ad" }, referral: { ctwa_clid: "synthetic-unattested-click", source_type: "ad" } };
+    injectSyntheticFreeEvidence = false;
+    let response: Response;
+    try { response = await callback([opening], [], testRuntime); } finally { injectSyntheticFreeEvidence = true; }
+    expect(response.status).toBe(200);
+    expect(sends).toHaveLength(0);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET'").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
+  });
+
   it("keeps isolated CTWA test turns on the allowlisted bilingual path with no order, payment, or CAPI writes", async () => {
-    const testRuntime = { ...(env() as unknown as Record<string, unknown>), DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true", WHATSAPP_TEST_RECIPIENT: sender, WHATSAPP_TEST_WINDOW_START: new Date(Date.now() - 1_000).toISOString() } as never;
-    const opening = { from: sender, id: "synthetic-isolated-ctwa-opening", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hello from the synthetic ad" }, referral: { ctwa_clid: "synthetic-isolated-click", source_type: "ad", platform: "android" } };
+    const testRuntime = { ...(env() as unknown as Record<string, unknown>), DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true", WHATSAPP_TEST_MOBILE_ATTESTED: "true", WHATSAPP_TEST_RECIPIENT: sender, WHATSAPP_TEST_WINDOW_START: new Date(Date.now() - 1_000).toISOString() } as never;
+    const opening = { from: sender, id: "synthetic-isolated-ctwa-opening", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hello from the synthetic ad" }, referral: { ctwa_clid: "synthetic-isolated-click", source_type: "ad" } };
     const openingResponse = await callback([opening], [], testRuntime);
     expect(openingResponse.status).toBe(200);
     expect(sends).toHaveLength(1);
@@ -181,8 +196,20 @@ describe("frozen V1 receipt hotfix", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
 
-    const fepStatus = { field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: ["sent", "delivered"].map((status) => ({ id: "synthetic-outbound-1", recipient_id: sender, status, timestamp: String(Math.floor(Date.now() / 1000)), conversation: { expiration_timestamp: String(Math.floor(Date.now() / 1000) + 6 * 24 * 60 * 60), origin: { type: "referral_conversion" } }, pricing: { billable: false, pricing_model: "PMP", type: "free_entry_point", category: "referral_conversion" } })) } };
-    expect((await callback([], [fepStatus], testRuntime)).status).toBe(200);
+    const responseSeconds = Math.floor(Date.now() / 1000);
+    const expirySeconds = responseSeconds + 6 * 24 * 60 * 60;
+    const sentFepStatus = { field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: [{ id: "synthetic-outbound-1", recipient_id: sender, status: "sent", timestamp: String(responseSeconds), conversation: { id: "synthetic-conversation-id", expiration_timestamp: String(expirySeconds), origin: { type: "referral_conversion" } } }] } };
+    const deliveredFepStatus = { field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: [{ id: "synthetic-outbound-1", recipient_id: sender, status: "delivered", timestamp: String(Math.floor(Date.now() / 1000)), pricing: { pricing_model: "PMP", type: "free_entry_point", category: "referral_conversion" } }] } };
+    expect((await callback([], [sentFepStatus], testRuntime)).status).toBe(200);
+    expect((await callback([], [deliveredFepStatus], testRuntime)).status).toBe(200);
+    const fepRow = sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE wa_id=?").get(sender) as { state_data: string | null } | undefined;
+    if (!fepRow?.state_data) throw new Error("SYNTHETIC_FEP_STATE_MISSING");
+    const fepState = JSON.parse(fepRow.state_data) as { freeMessagingEvidence: { fep: { mobileOriginAttestation?: string; platform?: string; expiryVerified: boolean; verifiedExpiresAt: string; firstBusinessResponseAt: string; conversationIdHash?: string }; pricing: { type: string; category: string; billable?: boolean } } };
+    expect(fepState.freeMessagingEvidence.fep).toMatchObject({ mobileOriginAttestation: "OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST", expiryVerified: true, verifiedExpiresAt: new Date(expirySeconds * 1000).toISOString(), conversationIdHash: expect.any(String) });
+    expect(fepState.freeMessagingEvidence.fep.platform).toBeUndefined();
+    expect(fepState.freeMessagingEvidence.pricing).toMatchObject({ type: "free_entry_point", category: "REFERRAL_CONVERSION" });
+    expect(fepState.freeMessagingEvidence.pricing.billable).toBeUndefined();
+    expect(Date.parse(fepState.freeMessagingEvidence.fep.verifiedExpiresAt) - Date.parse(fepState.freeMessagingEvidence.fep.firstBusinessResponseAt)).toBe(6 * 24 * 60 * 60 * 1000);
 
     const chooseEnglish = { from: sender, id: "synthetic-isolated-language-en", timestamp: String(Math.floor(Date.now() / 1000)), type: "interactive", interactive: tap("LANG_EN") };
     expect((await callback([chooseEnglish], [], testRuntime)).status).toBe(200);
@@ -205,21 +232,20 @@ describe("frozen V1 receipt hotfix", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
   });
 
-  it("allows one synthetic mobile-CTWA first response without preexisting FEP expiry or pricing evidence", async () => {
+  it("does not treat an undocumented platform field as mobile CTWA evidence in production", async () => {
     const id="synthetic-ctwa-opening-response";
     const timestamp=String(Math.floor(Date.now()/1000));
-    const message={from:sender,id,timestamp,type:"text",text:{body:"Hello"},referral:{ctwa_clid:"synthetic-ctwa-click-id",source_type:"ad",platform:"android"}};
-    expect((await callback([message])).status).toBe(200);
-    expect(sends).toHaveLength(1);
-    expect(buttonTitles()).toEqual(["اردو","English"]);
+    const message={from:sender,id,timestamp,type:"text",text:{body:"Hello"},referral:{ctwa_clid:"synthetic-ctwa-click-id",source_type:"ad",platform:"android",source_platform:"android"}};
+    injectSyntheticFreeEvidence=false;
+    let response: Response;
+    try { response=await callback([message]); } finally { injectSyntheticFreeEvidence=true; }
+    expect(response.status).toBe(200);
+    expect(sends).toHaveLength(0);
     const stateRow=sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE wa_id=?").get(sender) as {state_data:string};
     const state=JSON.parse(stateRow.state_data) as {freeMessagingEvidence:{openingResponse:Record<string,unknown>;fep?:unknown;pricing?:unknown}};
-    expect(state.freeMessagingEvidence.openingResponse).toMatchObject({sourceType:"CTWA_AD",platform:"ANDROID",policyVerified:true,firstResponseAttemptedAt:expect.any(String),firstBusinessResponseAt:expect.any(String),firstResponseMessageIdHash:expect.stringMatching(/^[a-f0-9]{64}$/)});
-    expect(state.freeMessagingEvidence.openingResponse).not.toHaveProperty("ctwaClid");
-    expect(state.freeMessagingEvidence).not.toHaveProperty("fep");
-    expect(state.freeMessagingEvidence).not.toHaveProperty("pricing");
-    expect((await callback([message])).status).toBe(200);
-    expect(sends).toHaveLength(1);
+    expect(state.freeMessagingEvidence?.openingResponse).toBeUndefined();
+    expect(state.freeMessagingEvidence?.fep).toBeUndefined();
+    expect(state.freeMessagingEvidence?.pricing).toBeUndefined();
   });
 
   it.each(["en", "ur"] as const)("keeps CONTACT for invalid mobile input and normalizes a valid hyphenated number (%s)", async (language) => {
@@ -907,7 +933,7 @@ beforeEach(() => {
         fep: { sourceType: "CTWA_AD", platform: "ANDROID", clickIdHash: "d".repeat(64), referralAt: new Date(checkedAt - 2 * 60_000).toISOString(), firstBusinessResponseAt: new Date(checkedAt - 60_000).toISOString(), expiryVerified: true, verifiedAt: new Date(checkedAt - 30_000).toISOString(), verifiedExpiresAt: new Date(checkedAt + 6 * 24 * 60 * 60_000).toISOString(), expiryEvidenceRef: "synthetic-meta-expiry-evidence" },
         pricing: { verified: true, billable: false, basis: "FEP", type: "free_entry_point", category: "REFERRAL_CONVERSION", messageCategory: "SERVICE", pricingModel: "PMP", form: "FREEFORM", evidenceRef: "synthetic-meta-pricing-evidence", observedAt: new Date(checkedAt - 30_000).toISOString(), verifiedAt: new Date(checkedAt - 30_000).toISOString(), validUntil: new Date(checkedAt + 60 * 60_000).toISOString() }
       };
-      for (const row of sqlite.prepare("SELECT id,state_data FROM whatsapp_conversations").all() as Array<{ id: string; state_data: string | null }>) {
+      if (injectSyntheticFreeEvidence) for (const row of sqlite.prepare("SELECT id,state_data FROM whatsapp_conversations").all() as Array<{ id: string; state_data: string | null }>) {
         try {
           const state = JSON.parse(row.state_data ?? "{}") as Record<string, unknown>;
           state.freeMessagingEvidence ??= syntheticFreeEvidence;
@@ -929,6 +955,7 @@ beforeEach(() => {
   codRuntimeHmacKey = codHmacKey;
   beforeBatch = undefined;
   beforeRun = undefined;
+  injectSyntheticFreeEvidence = true;
   qrAvailable = false;
   qrReads = 0;
   remindersEnabled = false;

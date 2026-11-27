@@ -1,5 +1,13 @@
 # Resource Registry
 
+## FEP-LIVE-002 read-only state (2026-11-27)
+
+- Meta Activation GET used Graph API `v26.0`; current live status is WABA subscribed, permissions granted, quality GREEN, display name DECLINED, registration EXPIRED. Business Agent remains in Setup/off; AI Provider count0. No account setting changed.
+- WhatsApp Manager aggregate view (one listed business phone): rolling30d66,349 FEP/981 free service; calendar MTD57,489 FEP/892 free service; paid0 and approximately$0 charges. Values are dashboard approximations, not invoices or per-contact eligibility. Earlier supplied 30d values61,254/924 are a separate snapshot.
+- Historical production D1 aggregate:12,304 conversations,0 structured opening/CTWA click hash/first response/FEP expiry/pricing entries. `whatsapp_events` stores payload hashes/statuses, no raw webhook payload. Cannot reconstruct individual historical FEP duration or credit the>72h gate.
+- Proposed empty restore target `getfreeseeds-v2-restore-fep-002` is not created; new D1/quota/cost approval is required. Existing `getfreeseeds-v2-restore-check` is nonempty with schema/static config; it was not reset or restored. Production API/Admin remain bound elsewhere.
+- Candidate/relay flags remain off; no new Meta callback, message, campaign, export, restore, Worker deployment or pricing/action setting. See `GFS_ORDERFLOW_FEP_LIVE_002.md`.
+
 ## GFS-ORDERFLOW-TEST-ISOLATION-001 local vault and target (2026-11-27)
 
 - New local vault path `%LOCALAPPDATA%\GFS-Orderflow-D1Vault`; no production/financial backup file is present. Directory inheritance disabled; ACL verified to current owner, SYSTEM and Administrators only; free capacity approximately62.9GB. Cipher and self-test files were removed after verification; vault directory is empty.

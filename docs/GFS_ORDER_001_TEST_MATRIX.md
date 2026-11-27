@@ -1,5 +1,11 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Test Matrix
 
+## FEP-LIVE-002 (2026-11-27)
+
+Focused synthetic acceptance: CTWA opening with owner-only test mobile attestation works without an undocumented device field; same event without attestation is blocked. FEP status split test supplies expiry/origin on SENT and `pricing.type/category` on DELIVERED with `billable` absent; the merged actual timestamp/duration drives EN/UR samples. Pricing `billable=true`, wrong type/category, mismatched conversation ID, stale/future status, >24h opening, >7d expiry, missing delivery/read and missing mobile proof fail closed. No provider field or expiry is fabricated. No actual WAM message/test window started. Current historical data does not contain FEP rows; see report.
+
+FEP-LIVE-002 regression: Vitest524 passed/1 skipped, build/lint PASS; safe Node72+credential bridge1 PASS; production audit0. No live message, Meta mutation, export/restore, callback change or deployment. See `GFS_ORDERFLOW_FEP_LIVE_002.md`.
+
 ## TEST-ISOLATION-001 (2026-11-27)
 
 - **Full:** Vitest522 passed/1 skipped; TypeScript build PASS; lint PASS; production dependency audit0.

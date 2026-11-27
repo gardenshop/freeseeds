@@ -1,4 +1,4 @@
-import { FEP_OPENING_POLICY_VERSION } from "./free-messaging";
+import { FEP_OPENING_POLICY_VERSION, OWNER_CONFIRMED_TEST_MOBILE_POLICY } from "./free-messaging";
 
 export type WebhookRecord = {
   providerEventId: string;
@@ -12,7 +12,7 @@ type WebhookStatus = {
   status?: string;
   timestamp?: string | number;
   recipient_id?: string;
-  conversation?: { expiration_timestamp?: string | number; origin?: { type?: string } };
+  conversation?: { id?: string; expiration_timestamp?: string | number; origin?: { type?: string } };
   pricing?: { billable?: boolean; pricing_model?: string; type?: string; category?: string; subtype?: string };
 };
 type WebhookValue = { messages?: WebhookMessage[]; statuses?: WebhookStatus[] };
@@ -55,6 +55,7 @@ export type WhatsAppFreeWindowStatus = {
   recipientId?: string;
   status: "SENT" | "DELIVERED" | "READ" | "FAILED";
   providerTimestamp: string;
+  conversationId?: string;
   conversationExpiresAt?: string;
   conversationOriginType?: string;
   pricing?: { billable?: boolean; pricingModel?: string; type?: string; category?: string; subtype?: string };
@@ -74,6 +75,7 @@ export function parseWhatsAppFreeWindowStatuses(payload: unknown): WhatsAppFreeW
       ...(typeof status.recipient_id==="string"?{recipientId:status.recipient_id}:{}),
       status:status.status==="sent"?"SENT":status.status==="delivered"?"DELIVERED":status.status==="read"?"READ":"FAILED",
       providerTimestamp:new Date(millis).toISOString(),
+      ...(typeof status.conversation?.id==="string"?{conversationId:status.conversation.id}:{}),
       ...(Number.isSafeInteger(expiry)&&expiry>0&&Number.isSafeInteger(expiry*1000)?{conversationExpiresAt:new Date(expiry*1000).toISOString()}:{}),
       ...(typeof status.conversation?.origin?.type==="string"?{conversationOriginType:status.conversation.origin.type}:{}),
       ...(status.pricing?{pricing:{...(typeof status.pricing.billable==="boolean"?{billable:status.pricing.billable}:{}),...(typeof status.pricing.pricing_model==="string"?{pricingModel:status.pricing.pricing_model}:{}),...(typeof status.pricing.type==="string"?{type:status.pricing.type}:{}),...(typeof status.pricing.category==="string"?{category:status.pricing.category}:{}),...(typeof status.pricing.subtype==="string"?{subtype:status.pricing.subtype}:{})}}:{})
@@ -91,7 +93,10 @@ async function persistFirstResponseFreeWindowEvidence(db:D1Database,statuses:Wha
     let state:{freeMessagingEvidence?:{openingResponse?:Record<string,unknown>;fep?:unknown;pricing?:unknown}};
     try{state=JSON.parse(conversation.state_data) as typeof state;}catch{continue;}
     const opening=state.freeMessagingEvidence?.openingResponse;
+    const ownerTestMobile=opening?.mobileOriginAttestation===OWNER_CONFIRMED_TEST_MOBILE_POLICY;
+    if(ownerTestMobile&&opening.platform!=="ANDROID"&&opening.platform!=="IOS")opening.platform="ANDROID"; // Temporary legacy predicate adapter; only the owner attestation is persisted.
     if(!opening||opening.sourceType!=="CTWA_AD"||!(["ANDROID","IOS"] as unknown[]).includes(opening.platform)||opening.policyVerified!==true||opening.policyRef!==FEP_OPENING_POLICY_VERSION||typeof opening.firstResponseMessageIdHash!=="string")continue;
+    if(ownerTestMobile)delete opening.platform;
     const providerIdHashBytes=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(status.providerMessageId)));
     const providerIdHash=[...providerIdHashBytes].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
     if(providerIdHash!==opening.firstResponseMessageIdHash)continue;
@@ -99,28 +104,48 @@ async function persistFirstResponseFreeWindowEvidence(db:D1Database,statuses:Wha
       if(opening.fepPending){delete opening.fepPending;opening.firstResponseFailedAt=receivedAt;await db.prepare("UPDATE whatsapp_conversations SET state_data=?,updated_at=? WHERE id=? AND state_data=?").bind(JSON.stringify(state),receivedAt,conversation.id,conversation.state_data).run();}
       continue;
     }
-    const providerPricing=status.pricing;
-    const candidate=providerPricing?.billable===false&&providerPricing.pricingModel==="PMP"&&providerPricing.type==="free_entry_point"&&providerPricing.category==="referral_conversion"&&status.conversationOriginType==="referral_conversion"&&status.conversationExpiresAt
-      ? {expiresAt:status.conversationExpiresAt,responseAt:typeof opening.firstBusinessResponseAt==="string"?opening.firstBusinessResponseAt:status.providerTimestamp,pricingObservedAt:status.providerTimestamp,evidenceRef:payloadHash}
-      : status.status==="DELIVERED"||status.status==="READ"?opening.fepPending as {expiresAt?:string;responseAt?:string;pricingObservedAt?:string;evidenceRef?:string}|undefined:undefined;
-    if(candidate&&status.status==="SENT"){
-      opening.fepPending=candidate;
+    type PendingFep={sentAt?:string;deliveredAt?:string;readAt?:string;expiresAt?:string;originType?:string;conversationIdHash?:string;expiryEvidenceRef?:string;responseAt?:string;pricingObservedAt?:string;evidenceRef?:string;pricing?:{billable?:boolean;pricingModel?:string;type?:string;category?:string;subtype?:string;observedAt?:string;evidenceRef?:string}};
+    const pending={...((opening.fepPending&&typeof opening.fepPending==="object")?opening.fepPending as PendingFep:{})};
+    if(status.status==="SENT")pending.sentAt=status.providerTimestamp;
+    if(status.status==="DELIVERED")pending.deliveredAt=status.providerTimestamp;
+    if(status.status==="READ")pending.readAt=status.providerTimestamp;
+    if(status.conversationExpiresAt){pending.expiresAt=status.conversationExpiresAt;pending.expiryEvidenceRef=payloadHash;}
+    if(status.conversationOriginType)pending.originType=status.conversationOriginType;
+    if(status.conversationId){
+      const digest=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(status.conversationId)));
+      const conversationIdHash=[...digest].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
+      if(pending.conversationIdHash&&pending.conversationIdHash!==conversationIdHash){delete opening.fepPending;await db.prepare("UPDATE whatsapp_conversations SET state_data=?,updated_at=? WHERE id=? AND state_data=?").bind(JSON.stringify(state),receivedAt,conversation.id,conversation.state_data).run();continue;}
+      pending.conversationIdHash=conversationIdHash;
+    }
+    if(status.pricing){
+      if(status.pricing.billable===true||(status.pricing.type&&status.pricing.type!=="free_entry_point")||(status.pricing.category&&status.pricing.category!=="referral_conversion")){
+        delete opening.fepPending;opening.fepRejectedAt=receivedAt;
+        await db.prepare("UPDATE whatsapp_conversations SET state_data=?,updated_at=? WHERE id=? AND state_data=?").bind(JSON.stringify(state),receivedAt,conversation.id,conversation.state_data).run();
+        continue;
+      }
+      pending.pricing={...pending.pricing,...status.pricing,observedAt:status.providerTimestamp,evidenceRef:payloadHash};
+    }
+    opening.fepPending=pending;
+    const pricing=pending.pricing;
+    const pricingVerified=pricing?.billable!==true&&pricing?.pricingModel==="PMP"&&pricing.type==="free_entry_point"&&pricing.category==="referral_conversion"&&pending.originType==="referral_conversion"&&Boolean(pending.expiresAt);
+    const businessResponseAt=pending.sentAt??(typeof opening.firstBusinessResponseAt==="string"?opening.firstBusinessResponseAt:pending.responseAt);
+    if(!pricingVerified||!pending.sentAt||(!pending.deliveredAt&&!pending.readAt)||!businessResponseAt){
       await db.prepare("UPDATE whatsapp_conversations SET state_data=?,updated_at=? WHERE id=? AND state_data=?").bind(JSON.stringify(state),receivedAt,conversation.id,conversation.state_data).run();
       continue;
     }
-    if(!candidate||!(status.status==="DELIVERED"||status.status==="READ"))continue;
+    const candidate={expiresAt:pending.expiresAt,responseAt:businessResponseAt,pricingObservedAt:pricing.observedAt??pending.pricingObservedAt,evidenceRef:pricing.evidenceRef??pending.evidenceRef,expiryEvidenceRef:pending.expiryEvidenceRef,conversationIdHash:pending.conversationIdHash,pricing};
     const expiry=Date.parse(candidate.expiresAt??"");
     const responseAt=Date.parse(candidate.responseAt??"");
     const referralAt=Date.parse(String(opening.referralAt??""));
-    if(!Number.isFinite(expiry)||!Number.isFinite(responseAt)||!Number.isFinite(referralAt)||referralAt>responseAt||responseAt>expiry)continue;
+    if(!Number.isFinite(expiry)||!Number.isFinite(responseAt)||!Number.isFinite(referralAt)||referralAt>responseAt||responseAt-referralAt>24*60*60*1000||expiry<=responseAt||expiry-responseAt>7*24*60*60*1000)continue;
     state.freeMessagingEvidence??={};
     state.freeMessagingEvidence.fep={
-      sourceType:"CTWA_AD",platform:opening.platform,clickIdHash:opening.clickIdHash,referralAt:opening.referralAt,
+      sourceType:"CTWA_AD",...(opening.platform?{platform:opening.platform}:{}),...(ownerTestMobile?{mobileOriginAttestation:OWNER_CONFIRMED_TEST_MOBILE_POLICY}:{}),clickIdHash:opening.clickIdHash,referralAt:opening.referralAt,
       firstBusinessResponseAt:candidate.responseAt,expiryVerified:true,verifiedAt:receivedAt,verifiedExpiresAt:candidate.expiresAt,
-      expiryEvidenceRef:candidate.evidenceRef??payloadHash
+      ...(candidate.conversationIdHash?{conversationIdHash:candidate.conversationIdHash}:{}),expiryEvidenceRef:candidate.expiryEvidenceRef??payloadHash
     };
     state.freeMessagingEvidence.pricing={
-      verified:true,billable:false,basis:"FEP",type:"free_entry_point",category:"REFERRAL_CONVERSION",messageCategory:"SERVICE",pricingModel:"PMP",form:"FREEFORM",
+      verified:true,...(candidate.pricing.billable===false?{billable:false}:{}),basis:"FEP",type:"free_entry_point",category:"REFERRAL_CONVERSION",messageCategory:"SERVICE",pricingModel:"PMP",form:"FREEFORM",
       evidenceRef:candidate.evidenceRef??payloadHash,observedAt:candidate.pricingObservedAt??candidate.responseAt,verifiedAt:receivedAt,validUntil:candidate.expiresAt
     };
     delete opening.fepPending;
@@ -153,22 +178,23 @@ export async function persistWebhookRecords(db: D1Database, payload: unknown, ra
   return records.length;
 }
 
-export async function persistInboundConversationActivity(db: D1Database, events: Array<{ id: string; from: string; providerTimestamp?: string; referral?: {ctwaClid?:string;sourceType?:string;platform?:string} }>): Promise<void> {
+export async function persistInboundConversationActivity(db: D1Database, events: Array<{ id: string; from: string; providerTimestamp?: string; referral?: {ctwaClid?:string;sourceType?:string;platform?:string} }>, options: {ownerMobileTestAttestation?:boolean} = {}): Promise<void> {
   if (!events.length) return;
   const statements=[];
   for(const event of events){
     const sourceType=event.referral?.sourceType?.toLowerCase();
     const platform=event.referral?.platform?.toUpperCase();
+    const recognizedPlatform=platform==="ANDROID"||platform==="IOS"?platform:undefined;
     const referralAt=event.providerTimestamp&&Number.isFinite(Date.parse(event.providerTimestamp))?event.providerTimestamp:undefined;
     const providerTimestamp=event.providerTimestamp&&Number.isFinite(Date.parse(event.providerTimestamp))?event.providerTimestamp:null;
     const ctwaClid=event.referral?.ctwaClid?.trim();
     let openingResponse:Record<string,unknown>|undefined;
-    if(sourceType==="ad"&&ctwaClid&&referralAt&&(platform==="ANDROID"||platform==="IOS")){
+    if(sourceType==="ad"&&ctwaClid&&referralAt&&(recognizedPlatform||options.ownerMobileTestAttestation===true)){
       const source=await db.prepare("SELECT payload_hash FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${event.id}`).first<{payload_hash:string}>();
       if(source?.payload_hash){
         const clickDigest=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(ctwaClid)));
         const clickIdHash=[...clickDigest].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
-        openingResponse={sourceType:"CTWA_AD",platform,clickIdHash,referralAt,policyVerified:true,policyRef:FEP_OPENING_POLICY_VERSION,sourceEvidenceRef:source.payload_hash};
+        openingResponse={sourceType:"CTWA_AD",...(recognizedPlatform?{platform:recognizedPlatform}:{}),...(options.ownerMobileTestAttestation?{mobileOriginAttestation:OWNER_CONFIRMED_TEST_MOBILE_POLICY}:{}),clickIdHash,referralAt,policyVerified:true,policyRef:FEP_OPENING_POLICY_VERSION,sourceEvidenceRef:source.payload_hash};
       }
     }
     const initialState=openingResponse?JSON.stringify({freeMessagingEvidence:{openingResponse}}):"{}";

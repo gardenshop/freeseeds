@@ -1,5 +1,9 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Handover
 
+## FEP-LIVE-002 (2026-11-27)
+
+No live send/window began. Current sender registration is EXPIRED and display name DECLINED; Business Agent remains off. Owner's supplied contact and10/30 authorization remain accepted; do not ask again. Exact mobile CTWA action and candidate relay deployment steps are in `GFS_ORDERFLOW_FEP_LIVE_002.md`. Phone registration/name resolution, candidate API deployment, production API/Admin relay block/route authorization and live test remain separate gates. D1 history lacks per-contact expiry; prefer a separately authorized new empty target `getfreeseeds-v2-restore-fep-002` instead of deleting nonempty restore-check schema/config. Restore target creation, production export and isolated restore all remain unauthorized. Preserve current active Worker routes until explicit approval.
+
 ## TEST-ISOLATION-001 (2026-11-27)
 
 Local test guard, relay splitter, isolated API config and encrypted vault are implemented and synthetically tested; no production deploy, route/config change, test message, export or restore. Candidate API config is `apps/api/wrangler.whatsapp-test.jsonc`; it is disabled by default, no routes/Cron/Queue/R2 and uses staging D1 only. For a genuine referral, preserve Meta's current callback and separately authorize the production API recipient-selective relay to the exact candidate URL. Owner must initiate only through an already-running Get Free Seeds CTWA ad after the relay/candidate guards are separately approved.
