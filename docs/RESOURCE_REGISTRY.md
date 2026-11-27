@@ -1,5 +1,14 @@
 # Resource Registry
 
+## LAUNCH-001 preflight local artifacts (2026-11-27)
+
+- Source candidate commit: `90cb57d9e13e87d6778f028e7f1fbbf4ba4ec93e`, branch `codex/gfs-order-001-rev2`, origin verified as `gardenshop/freeseeds`; local/remote branch SHA matched before this documentation-only preflight update.
+- Local dry-run artifact only, Wrangler4.149.0 `deploy --dry-run --outdir`: API staging bundle1,279,447 bytes, SHA-256 `8c86c9734b08bf2a0e5d7b9869234ff181fbdb99533572b4b59ed3109a16242b`; Admin staging bundle1,386,988 bytes, SHA-256 `0cfdaa382a98fdbbbcc6bc7a04d7e7a3ad8e1bd0832c84864ecc79041cee45a2`. No upload. These outputs use staging config and are not production artifacts.
+- Local source hashes include `migrations/0049` `01fd20cb7294c9401efa3773f5ecb05f4373972969c86de74493e546df34fec6`, unchanged `0050` `d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4`, and `0051` `900c4410796cb0de20da568088a7563f670be758454f129d38fd28207606a47a`. Local sequence tests passed; no remote marker/history query was made.
+- Both checked-in Worker configs use the owner-provided account ID but staging Worker, D1, R2 and Queue names. API declares a one-minute Cron and Queue/DLQ; Admin declares D1/R2 and Queue producer. Secret values/presence and production bindings were not read.
+- The current session exposes no Chrome DevTools MCP namespace; `kilo` CLI is unavailable and the GFS project has no local `.kilo/kilo.json`. No global credential-bearing config was opened or changed. No live Admin/Cloudflare/Meta read occurred. The current-production deployment/version/billing snapshots from 2026-11-25 remain historical.
+- The V1 rollback harness requires an exact clean checkout at `cf01f444500415b1f22a64730674caca1c286006`; no such worktree or `GFS_LEGACY_ROOT` is present. No new worktree was created. Rollback compatibility remains unproven.
+
 ## GFS-ORDERFLOW-PENDING-001 local source resources (2026-11-26)
 
 - Local code/test resources: `apps/admin/src/order-reconciliation.ts`, the authenticated read-only Admin Orders Reconciliation view/count query and fulfillment compare-and-set guards in `apps/admin/src/index.ts`; synthetic coverage in `tests/order-reconciliation.test.ts`, `tests/admin-orders.test.ts`, `tests/admin-fulfillment.test.ts`, `tests/cod-admin.test.ts`, and `tests/guided-lead-only.test.ts`.

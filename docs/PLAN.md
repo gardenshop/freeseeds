@@ -18,6 +18,10 @@ The shared fail-closed guard now distinguishes a single initial free FEP-opening
 
 The Admin Orders reconciliation tab now reports per-order payment/COD/review/unresolved/conflict state, sequence disposition, fulfillment disposition, and filtered as-of overlapping counts across active and archived orders. It never writes, backfills, sends, or claims a live refresh. Advance fulfillment requires exact approved totals, stored receipt, and matching Admin settlement-evidence audit; COD fulfillment requires explicit customer confirmation of the immutable quote. Local/synthetic acceptance is complete; authenticated live history/current counts remain unrefreshed because the approved browser tool is not exposed. See [PENDING-001 closeout](GFS_ORDERFLOW_PENDING_001.md). Do not proceed to LAUNCH-001 live activity until the supported authenticated Admin refresh and the separate launch gates pass.
 
+## LAUNCH-001 preflight (2026-11-27)
+
+Local source review, focused/full synthetic tests, protected hashes and API/Admin staging Wrangler dry-runs pass. The expected source commit and remote branch match. **Live access is blocked:** this runtime exposes no Chrome DevTools MCP and `list_pages` could not be called; consequently no current Admin counts, Cloudflare/Meta identity, production version/binding, secret-presence, migration-history, sender/template or billing status is claimed. Existing 2026-11-25 snapshots are historical only. Local Wrangler configs are staging-named; no production deploy/migration/test message was attempted. `ORDER_INTENT_AUTOMATION_ENABLED` is absent from the checked-in staging API config (effective false), and utility-template approval is false there. See [LAUNCH-001 preflight](GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md); WhatsApp remains **NO-GO**.
+
 ## GFS-COD-MO-109 canonicalization stages (2026-11-16 UTC)
 
 | Stage | Completion | Gate |

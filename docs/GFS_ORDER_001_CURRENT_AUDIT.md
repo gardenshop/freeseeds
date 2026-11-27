@@ -1,5 +1,9 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Current Audit
 
+## LAUNCH-001 preflight update (2026-11-27)
+
+No new live audit occurred: Chrome DevTools MCP is absent from this task runtime and `list_pages` could not be called. The GitHub branch/HEAD were verified against the requested source commit; the local Cloudflare account identifier matches the owner-provided value, but the active signed-in identity was not verified. Wrangler dry-runs compiled the current API/Admin code from staging-named configs only. Therefore the existing 2026-11-25 order cohort, WABA analytics, sender/template states, runtime Worker IDs and account checks remain **historical**. Do not reuse them as current counts or deployment parity. No remote D1 query, Cloudflare/Meta API, migration, Worker release, message or account mutation was performed. See [LAUNCH-001 preflight](GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md) for the blocked metrics/identities, exact local artifact manifest and owner reconnect step.
+
 ## Local PENDING-001 follow-up (2026-11-26)
 
 This is a source/test update, not a fresh production audit. Admin Orders has a read-only, paginated Reconciliation tab defaulting to active and archived orders. Each row reports an exclusive payment classification plus separate COD-consent, intent-sequence, and fulfillment dispositions; aggregate counts are overlapping evidence dimensions with an as-of timestamp, not a unique-customer denominator or final A-G partition. Counts/rows are recomputed on Admin refresh, not copied into this report.

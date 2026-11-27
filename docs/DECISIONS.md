@@ -1,3 +1,12 @@
+## LAUNCH-001 preflight decision (2026-11-27)
+
+- The Kilo session has no Chrome DevTools MCP tools; `list_pages` was not callable. Do not replace it with raw CDP, Cloudflare/Meta HTTP, Wrangler remote D1, a new browser profile, or an unauthenticated CSV/export. Current order/account/deployment facts stay UNKNOWN; the 2026-11-25 snapshots are historical only.
+- The local Worker configs target staging resources. `DEPLOYMENT_STATE` is a local string, not proof of production. `ORDER_INTENT_AUTOMATION_ENABLED` is absent (false) in the staging API config; template approval is false there. Do not activate either or infer production settings.
+- Local FEP/intent/payment/fulfillment controls and synthetic tests remain PASS; live FEP expiry/pricing/allowance, sender display/template approval, current row reconciliation, production migration state and deployment parity remain blocked.
+- Migrations0049/0050/0051 remain candidates. Future order is backup/Time Travel reference → read-only 0049 conflict preflight → approved0049 → verify → unchanged0050 →0051 → readback → deploy compatible Workers with activation gates closed. 0049 is forward-only; preserve claims/triggers and financial history during Worker rollback.
+- A production rollback target must be a freshly observed compatible Worker/version/config. The existing local V1 rollback harness was not run because its exact clean baseline checkout is absent; the source itself warns V1 cannot render COD-specific totals after COD intake. A COD-compatible intake-off rollback target remains required for A10.
+- Do not activate the WhatsApp leads release or start LAUNCH-001-RELEASE until the owner restores the existing authorized Chrome MCP connection, calls `list_pages` first, completes live read-only checks and separately authorizes any message/migration/deployment.
+
 ## Owner decision and PENDING-001 local acceptance (2026-11-26)
 
 - Historical/current order review is read-only and order-by-order in the authenticated Admin Orders Reconciliation tab. Active and archived rows are included by default. Counts are explicitly overlapping evidence dimensions; they are not a disjoint A-G partition, denominator, conversion rate, or bank statement.
@@ -5,7 +14,7 @@
 - Advance fulfillment must recheck exact approved/expected amounts, persisted receipt, and Admin settlement-evidence/TID-hash approval audit. COD fulfillment must recheck customer confirmation against the quote in the same state update. No amount conversion or new order is performed.
 - The report may only surface an existing presented/unexpired INTENT-030. It never starts/replays a sequence; the ordinary worker rechecks recipient, opt-out, CSW/FEP/free pricing/template/locale immediately before any individual send. No history backfill or bulk message. Missing recipient, expired intent, unknown schema/evidence, or unsupported service window fails closed.
 - Local synthetic acceptance does not refresh actual rows. The supported authenticated Admin/Chrome tool was unavailable, so live counts/classifications remain NOT REFRESHED; the existing 2026-11-25 aggregate is historical. No direct database or alternate-API workaround, migration, account change, deployment, payment, order, COD, or message mutation occurred.
-- PENDING-001 local acceptance is recorded; LAUNCH-001 is not started. Do not treat local tests or this decision as launch/release approval.
+- PENDING-001 local acceptance is recorded. LAUNCH-001 preflight is in progress but live-account/row acceptance is blocked; do not treat local tests or this decision as launch/release approval.
 
 ## Owner decision and INTENT-030 local acceptance (2026-11-26)
 

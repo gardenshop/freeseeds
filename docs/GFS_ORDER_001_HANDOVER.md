@@ -1,5 +1,11 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Handover
 
+## LAUNCH-001 preflight (2026-11-27)
+
+**PARTIAL / NO-GO.** HEAD `90cb57d9e13e87d6778f028e7f1fbbf4ba4ec93e` matches the specified remote branch. Local FEP/PENDING code, synthetic tests, staging Wrangler dry-runs, full tests, production-only audit and protected hashes pass. The tool runtime exposes no Chrome DevTools MCP; `list_pages` was not callable, so no fresh live counts, account identities, production versions, current migration markers, template/sender status, per-contact price/expiry, D1 backup/Time Travel reference or live rollback target is claimed. No direct D1/API substitute or production action occurred. The two local dry-run bundles target staging configs only.
+
+Next owner action: restore the **existing** authorized Chrome DevTools MCP in the existing Kilo/VS Code session; call `list_pages` first. Owner resolves any ordinary login challenge. After that, refresh existing Admin orders and verify identities/current production metadata read-only. Do not deploy the reconciliation view just to get counts. Historical orders without a presented INTENT-030 still have no fresh confirmation sequence. See [LAUNCH-001 preflight](GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md); do not authorize LAUNCH-001-RELEASE until the live gates close.
+
 ## PENDING-001 local closeout (2026-11-26)
 
 Local code and synthetic acceptance are complete; see [PENDING-001 report](GFS_ORDERFLOW_PENDING_001.md). The read-only Admin Orders Reconciliation tab includes active and archived orders, overlapping as-of counts, and per-row payment/COD/review/unresolved/conflict, sequence, and fulfillment dispositions. Advance fulfillment now requires exact approved amounts, stored receipt, and matching settlement/TID-hash audit; COD requires explicit customer consent matched to its quote in the atomic state update. No migration, order update, send, backfill, bulk action, export-specific report or deployment was added.

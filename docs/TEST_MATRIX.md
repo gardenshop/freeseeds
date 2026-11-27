@@ -61,7 +61,21 @@ FEP-001 is local acceptance only. Per-contact mobile referral/platform, exact FE
 | Migrations/protected files | PASS local boundary | No migration applied; `0050` remains SHA-256 `d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4`; Label Printer hashes923/923. |
 | Live data/external actions | NOT PERFORMED | No current production counts or per-order decisions refreshed; no browser connector was exposed. No direct D1 workaround, external identity re-audit, migration, deployment, send, payment, COD/order transition or account change. |
 
-PENDING-001 local implementation/test acceptance passes. S2 operational exit remains partial until supported authenticated read-only current/historical row evidence and final A-G denominators are reviewed. Local synthetic data is not live order classification. WhatsApp stays NO-GO; LAUNCH-001 is not started.
+PENDING-001 local implementation/test acceptance passes. S2 operational exit remains partial until supported authenticated read-only current/historical row evidence and final A-G denominators are reviewed. Local synthetic data is not live order classification. WhatsApp stays NO-GO; LAUNCH-001 preflight is in progress but blocked on live access.
+
+## GFS ORDERFLOW LAUNCH-001 preflight (2026-11-27)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Focused release/FEP/intent/payment/fulfillment/auth/migration tests | PASS263/SKIP1 | Fourteen synthetic Vitest files; details in `GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md`. |
+| Focused FEP/intent subset | PASS136/SKIP1 | Four files: free-messaging, order-intent, guided API, service-window. |
+| Full suite | PASS465/SKIP1 | 39 files; no live provider or customer fixture. |
+| Node/build/lint | PASS52/52 / PASS | Eight documented Node scripts; TypeScript build and lint pass. |
+| Dependency audit | PASS production / OPEN dev | 0 production findings; six registered moderate development-tool findings remain. |
+| Release artifact | PASS local dry-run only | Wrangler4.149.0 API/Admin staging bundles hash-recorded; no upload/deployment. |
+| Live preflight | BLOCKED | No Chrome MCP/list_pages; no fresh counts/identities/production versions/billing/template/migration/backup/rollback status. |
+
+No deployment or activation is authorized by these local passes. S0 remains80%; A06/A10 remain partial; S2 live order acceptance remains open; WhatsApp is NO-GO. See the linked LAUNCH-001 report for owner reconnect instructions and release/rollback sequence.
 
 INT01-21/S1 local acceptance is complete. The timer is customer-confirmation policy only. No stock/warehouse schema or dependency; eligibility locks are cooldown-only. Per-contact live FEP expiry/pricing, display-name/template quality and release-specific rollback remain production gates; no paid fallback and no WhatsApp launch authorization.
 
