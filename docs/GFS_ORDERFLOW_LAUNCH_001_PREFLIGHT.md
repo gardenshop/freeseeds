@@ -1,6 +1,6 @@
 # GFS-ORDERFLOW-LAUNCH-001-PREFLIGHT
 
-**Result: PARTIAL / MCP RECOVERY PASS / AGGREGATE LIVE READ PASS / ROW-LEVEL ACCEPTANCE PARTIAL / WHATSAPP NO-GO.** This is release preparation only. No Worker deployment, migration, live message, payment, campaign activation, Meta/account setting change, COD/order-row change, postal poll, or parcel action was performed. One current D1 Time Travel bookmark was created as an authorized recovery reference; no D1 rows/schema were changed and no export backup was written.
+**Result: PARTIAL / MCP RECOVERY PASS / AGGREGATE LIVE READ PASS / ROW-LEVEL ACCEPTANCE PARTIAL / WHATSAPP NO-GO.** This is release preparation only. No Worker deployment, migration, live message, payment, campaign activation, Meta/account setting change, COD/order-row change, postal poll, parcel action or Cloudflare data/config mutation was performed. The existing current D1 Time Travel bookmark ID was retrieved read-only; no D1 rows/schema were changed and no export backup was written.
 
 ## Requirement Status
 
@@ -75,7 +75,7 @@ Local source candidate: commit `90cb57d9e13e87d6778f028e7f1fbbf4ba4ec93e`, branc
 
 On the active bound D1, `cod_schema_migrations` records `0030`, `0036`-`0043`, `0047`, and `0048`; the Wrangler `d1_migrations` table exists but is empty. The `cod_mo_reference_migration_preflight`, `cod_mo_reference_claims`, `order_confirmation_intents`, and intent-preference tables/triggers are absent. Thus the live markers do **not** establish a complete migration history; the gaps and migration-runner procedure must be reconciled before release. A strictly read-only 0049 duplicate-group preflight returned **0** (normal and historical MO ledgers combined). No DDL/DML or migration was run; only metadata/count SELECTs were executed. Candidate order remains `0049_cod_mo_global_reference_claims.sql` → unchanged `0050_order_confirmation_intents.sql` → `0051_order_confirmation_intent_state_guards.sql`. `0050` remains SHA-256 `d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4`.
 
-The D1 Time Travel window shown in Cloudflare was 2026-10-28 12:26 to 2026-11-27 12:26 PKT. After verifying the Get Free Seeds account, a **current Time Travel bookmark was created** on the active bound D1; no restore or row change occurred. The exact bookmark ID is supplied only in the owner-facing final response and is not committed to this repository. No separate full SQL export/backup file was created; a secured backup/export location and restore rehearsal remain prerequisites before migrations.
+The D1 Time Travel window shown in Cloudflare was 2026-10-28 12:26 to 2026-11-27 12:26 PKT. After verifying the Get Free Seeds account, the **existing current bookmark ID was retrieved read-only** from the active bound D1; no bookmark, restore or row change occurred. The exact reference is supplied only in the owner-facing final response and is not committed to this repository. No separate full SQL export/backup file was created; a secured backup/export location and restore rehearsal remain prerequisites before migrations.
 
 ### Proposed sequence - not executed
 
@@ -100,13 +100,15 @@ The D1 Time Travel window shown in Cloudflare was 2026-10-28 12:26 to 2026-11-27
 - Production dependency audit: **0 findings**. Full audit: six previously registered moderate development-tool findings; no unrelated upgrade.
 - Migration0050 SHA is unchanged. Protected Label Printer baseline: **923 identical, 0 changed, 0 missing**.
 - New-number WhatsApp lock, Hoja Seeds zero-connection rule, Hono, FIN-ATOMIC-001, INTENT-030, TID-001, FEP, PENDING, payment methods, Rs.125 fee and O01-O23/REV.2 were preserved. FIN-MO-002 remains mandatory before revised postal settlement (gross625/VPL550+75/MO550).
-- Current account/Admin/Meta/D1 data was read through authenticated browser/Cloudflare UI. No deployment, migration, payment, order/COD row, campaign, Meta setting, CAPI, routing, postal or parcel action occurred. One Time Travel bookmark was created as authorized recovery metadata; no D1 rows/schema changed.
+- Current account/Admin/Meta/D1 data was read through authenticated browser/Cloudflare UI. No deployment, migration, payment, order/COD row, campaign, Meta setting, CAPI, routing, postal or parcel action occurred. The existing Time Travel bookmark was retrieved read-only; no D1 rows/schema or Cloudflare configuration changed.
 
 ## Completion and Next Owner Action
 
 S0 is **80% (8/10 accepted audit units)** with A06 and A10 partial. S1 INTENT-030 and S3 TID-001 are **100% locally accepted**. S2 operational exit remains **0% accepted** despite fresh aggregate counts; row-level evidence/A-G denominators are not available in the deployed Admin. S4 is local/synthetic PASS but remains partial for live contacts/templates/client rendering. S5-S9 remain **0% accepted**. Overall stage-exit baseline remains **2/10 complete; 8/10 open**; these are acceptance gates, not effort estimates.
 
 ## Owner Actions and Next Task
+
+The owner replied to the consolidated confirmation request that **one or more gates remain unresolved**. No gate was marked PASS by that reply; no live or release action is authorized.
 
 1. Confirm that the active Cloudflare `Production` Workers bound to `getfreeseeds-staging` are the canonical production order dataset; if not, identify the authorized production Admin/Worker/D1 before using these aggregate counts.
 2. Through the existing authorized Admin and actual bank-credit records, reconcile the two PAID/APPROVED evidence conflicts, including the one in PACKING. Keep status/receipt/history unchanged and do not dispatch until actual settlement is verified. Do not put order IDs, receipts or TIDs in this report.

@@ -43,7 +43,7 @@ Aggregate counts are overlapping evidence dimensions, not a partition, unique-cu
 
 The 2026-11-27 MCP recovery provided current Admin aggregate counts and authenticated D1-console aggregate status/evidence counts; details are in `GFS_ORDERFLOW_MCP_RECOVERY_001.md`. No row IDs, names, addresses, TIDs, receipts, WAMIDs or individual records were copied into this report. The 2026-11-25 cohort totals remain historical. Per-contact FEP/referral/expiry/pricing is still unknown; the visible Meta user principal was not matched to the owner-reported profile, while account/business assets matched. Existing Orders UI fields are insufficient for individual A-G/dispatch acceptance.
 
-No migrations `0049`, `0050`, or `0051` were applied. No deployment, live message, campaign, payment, COD/order transition, traffic/routing, billing/template/account or parcel change occurred. One current D1 Time Travel bookmark was created as recovery metadata; no D1 row/schema change or full export backup was made. The protected Label Printer set remains923/923 unchanged and is not a commit target.
+No migrations `0049`, `0050`, or `0051` were applied. No deployment, live message, campaign, payment, COD/order transition, traffic/routing, billing/template/account or parcel change occurred. The existing D1 Time Travel bookmark was retrieved read-only; no D1 row/schema change or full export backup was made. The protected Label Printer set remains923/923 unchanged and is not a commit target.
 
 ## Local Verification
 
