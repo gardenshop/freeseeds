@@ -1,3 +1,12 @@
+## GFS-ORDERFLOW-LIVE-TEST-001 (2026-11-27)
+
+- Test contact and bounded authorization were supplied by the owner but are omitted from persistent records. Stop before initiation because the active old API Worker has per-minute Cron and Queue processing with no observed10-outbound/30-minute recipient cap. Record0 outbound; no test window started; do not disable jobs or mutate production under this task.
+- Manual CTWA step for a future safe test: owner uses own mobile Facebook session, opens an already-running Get Free Seeds CTWA ad, taps WhatsApp/Send message and sends the prefilled greeting. Never create/boost/activate an ad. Do not initiate until isolated cap/free-only safety exists. A short test cannot prove seven-day behavior or post24h template routing.
+- Current production API `b426ba47` at100%; candidate is not deployed and cannot be accepted by an old Worker test. No free pricing, CTWA, FEP, bilingual rendering, utility template or payment/COD message acceptance is claimed.
+- `getfreeseeds-v2-restore-check` observed with zero last24h queries/read/writes and no binding from inspected GFS API/Admin/test workers. It is the restore-target candidate, not restore-ready; no D1 rows/schema read or restore. Final current isolation/schema preflight remains.
+- F backup root rejected: broad `Authenticated Users` Modify, EFS off; BitLocker cannot be verified without admin. No approved vault path available. Do not change shared F root/ACL due other project backups. Owner/admin must designate/provision a dedicated encrypted owner-only vault and confirm capacity/ACL before export authorization.
+- No source, message, payment, campaign, Worker, routing, D1 export/restore, migration or launch mutation. Maintain prior confirmation closures and all production/data safeguards.
+
 ## GFS-ORDERFLOW-FINAL-VERIFICATION-001 (2026-11-27)
 
 - Verified the requested branch and matching local/remote SHA `a8057a5174c552570e7d98feeaf714cf6e0b6a7b`. Official Chrome MCP `list_pages` ran first; tabs were inventoried only. No browser mutation, live send, D1 export/restore, migration, Worker upload/deploy, campaign or activation occurred.

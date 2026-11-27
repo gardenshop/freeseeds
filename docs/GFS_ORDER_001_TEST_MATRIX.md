@@ -1,5 +1,9 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Test Matrix
 
+## LIVE-TEST-001 (2026-11-27)
+
+Live controlled test safely stopped before initiation:0 outbound/10; no test window. Current API old Worker has per-minute Cron and Queue consumer without verified recipient-specific cap. CTWA/FEP/pricing, expiry, English/Urdu rendering, localized buttons, payment/COD content and Utility routing are NOT TESTED. No source change and no regression run. Reused baseline full499 passed/1 skipped, focused143, Node52/52, build/lint PASS, production audit0. No export or restore; candidate D1 metrics were read-only only. Protected Label Printer hashes verified:923 identical,0 changed,0 missing. See `GFS_ORDERFLOW_LIVE_TEST_001.md`.
+
 ## FINAL-VERIFICATION-001 (2026-11-27)
 
 No source changed, so prior accepted results are reused rather than rerun: full Vitest499 passed/1 skipped, focused143, Node52/52, TypeScript/build/lint PASS, production audit0, six registered moderate development findings retained. Recovery/quarantine,0049→unchanged0050→0051 and synthetic restore checks are local-only evidence. This task rechecked protected Label Printer hashes:923 identical,0 changed,0 missing. Live WhatsApp/FEP/pricing/rendering, export/restore, remote migration and candidate acceptance are NOT RUN; owner approved test count/window but private number is outstanding. Proposed F:\GFS-Backups failed encryption/ACL preflight; no encrypted destination is approved. Current Workers predate the candidate. No production changes. See `GFS_ORDERFLOW_FINAL_VERIFICATION_001.md`.

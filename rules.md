@@ -1,5 +1,15 @@
 # GFS ORDERFLOW / Get Free Seeds Binding Rules
 
+## GFS-ORDERFLOW-LIVE-TEST-001 (2026-11-27)
+
+- Owner has authorized one owner-controlled CTWA test contact, at most10 outbound messages within30 minutes, English/Urdu, free-only, no paid fallback/no unknown-acceptance retry/no other customer sends/campaign activation. Keep the number out of Git, permanent docs, logs, screenshots and test output.
+- Chrome DevTools MCP `list_pages` first. On 2026-11-27 current API Production version `b426ba47` was read at100% traffic with `PAYMENT_CHOICE_RECOVERY_ENABLED=true`, per-minute Cron and EVENTS queue consumer. No per-contact10/30 cap is verified. Do not let a production user initiate the test until this safety gate is removed through a separately authorized isolated plan. Do not modify production Cron/Queue/flags under this task.
+- If future safe CTWA test is authorized, instruct owner to use their own mobile Facebook session and an already-running Get Free Seeds Click-to-WhatsApp ad; tap WhatsApp/Send message and send only the prefilled greeting. Do not create/boost/activate/edit an ad. Start the30-minute window at owner initiation. Hard stop at10 outbound,30 minutes, unknown FEP/free status or provider acceptance; no retry. A 30-minute test does not prove seven-day behavior or post24-hour template routing.
+- Current production Workers predate the candidate; old Worker tests never accept candidate source. Candidate live test requires separate isolated Worker/D1 and safe Meta callback/test number; do not redirect production webhook or deploy under this task.
+- D1 `getfreeseeds-v2-restore-check` is a read-only restore-target candidate; zero queries/rows read/written in observed last24h. Inspected current GFS API/Admin bind staging D1, not target; target must stay unbound from all production Workers/Queue/Cron/WhatsApp. Perform final identity/isolation/schema readback after owner approval.
+- No secure destination passed inspection: shared F backup path grants `Authenticated Users` Modify, EFS absent, BitLocker state unavailable without admin, and no local 7z/age/gpg. Do not use F root/shared backup tree or plaintext temp. Owner/admin must provide a dedicated encrypted owner-only vault, verified encryption/ACL/capacity, before export authorization. Never public R2/Git or production restore.
+- Preserve inherited dirty files, `.audit-local/`, Label Printer, standalone MO, Hoja isolation, payment methods/COD125, financial holds, Access/CAPI, O01-O23/REV.2, FIN-MO-002, history and six dev findings. No deployment/migration/activation; LAUNCH-001-RELEASE NO-GO.
+
 ## GFS-ORDERFLOW-FINAL-VERIFICATION-001 (2026-11-27)
 
 - Local/remote branch baseline `a8057a5174c552570e7d98feeaf714cf6e0b6a7b` was verified before documentation changes. Chrome DevTools MCP `list_pages` is mandatory first; this task inventoried existing tabs without navigating/mutating them.

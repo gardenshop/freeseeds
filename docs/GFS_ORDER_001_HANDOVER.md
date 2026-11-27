@@ -1,5 +1,9 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Handover
 
+## LIVE-TEST-001 (2026-11-27)
+
+Owner supplied test number/authorization; number omitted from all records. Do not initiate: current old API Production version has per-minute Cron and Queue consumer with no verified per-contact10/30 cap. Count0, window not started. Exact future mobile CTWA instructions and candidate-isolation requirements are in `GFS_ORDERFLOW_LIVE_TEST_001.md`. Existing `getfreeseeds-v2-restore-check` is a read-only isolated target candidate; no restore. Shared F backup root is unsafe (broad ACL, EFS off, BitLocker unverified); preserve it and other project backups. Owner/admin must identify/provision a dedicated encrypted owner-only vault. No production change. Keep all migration/deployment/activation separately authorized and LAUNCH-001-RELEASE NO-GO.
+
 ## FINAL-VERIFICATION-001 (2026-11-27)
 
 The requested local/remote branch SHA matched `a8057a5174c552570e7d98feeaf714cf6e0b6a7b`; Chrome `list_pages` ran first and existing tabs were not navigated or mutated. Canonical resources, Meta operator and both bank credits remain completed decisions; do not ask again. No source/live mutation. Owner approved maximum10 outbound messages/30 minutes, contingent on private test-number delivery. Owner withheld export; `F:\GFS-Backups` failed encryption/ACL preflight and no approved encrypted destination is identified. Existing restore-check D1 requires current isolation readback. Commit/push is authorized only for scoped project docs; inherited dirty files remain excluded. Then follow the exact sequence/rollback in `GFS_ORDERFLOW_FINAL_VERIFICATION_001.md`; each migration/deploy/canary/activation remains separately authorized. Preserve holds, six test COD rows, payment/COD125/Hoja/Label Printer/Access/CAPI boundaries. LAUNCH-001-RELEASE is not ready.
