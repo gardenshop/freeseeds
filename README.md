@@ -8,6 +8,10 @@ Read `rules.md` before making changes.
 
 ## Order Lifecycle REV.2
 
+### Release Blocker Close (2026-11-27)
+
+The [blocker-close report](docs/GFS_ORDERFLOW_RELEASE_BLOCKER_CLOSE_001.md) records the locally tested COD-compatible recovery API/Admin, per-order quarantine across fulfillment paths,0048→0051/restore tests and exact future commands. No production deployment/migration/send occurred. Active–Quality pending templates are technically sendable per Meta's live tooltip, not rejected; exact locale/content mapping and contact-level free eligibility still gate sending. External owner, bank-credit, test-contact and secure-backup gates remain **NO-GO**. V1 is not the rollback target; this candidate preserves COD amounts/fee and financial review with intake/automation off.
+
 Permanent master project reference: **GFS ORDERFLOW** (GFS-ORDER-001 REV.2, stages S0-S9, historical decisions and future subtasks). Keep existing file names, branch and task IDs. Label Printer, standalone Money Order Printing and Hoja Seeds remain entirely separate.
 
 Owner-provided Facebook profile context for future operator identity checks: `ayesha.butt55@hotmail.com`. This identifies the profile email the owner reports using; it is not a credential or independent proof of the active Meta session. Never store or request authentication factors. The owner completes any Meta authenticity challenge personally in the existing profile.

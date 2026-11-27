@@ -1,5 +1,13 @@
 # GFS ORDERFLOW / Get Free Seeds Status
 
+## RELEASE-BLOCKER-CLOSE-001 (2026-11-27)
+
+Owner confirmations now obtained separately: canonical staging-named Production resources, authorized Meta operator, and each of the two actual bank credits. No order/audit change or dispatch is authorized; machine-evidence holds remain and must not be fabricated away. Test contact/send scope and private backup/isolated restore destination are promised but not supplied. Do not repeat the four resolved owner questions. No live send/export/restore/deployment follows automatically.
+
+**Local technical PASS / external gates PARTIAL / WhatsApp NO-GO.** Current-source API/Admin provide COD-compatible recovery (intake/sends/Cron/fulfillment paused; signed status, existing receipt/reference capture and protected financial review preserved). Quarantine applies to transitions, confirmation, tracking, both label aliases, UI and CSV HOLD marking, with atomic confirmation/tracking rechecks. Two legacy conflicts/six test-held COD records remain unchanged; actual-handler tests prove unrelated valid Advance/confirmed COD can progress without duplicate transitions. This is not deployed; manual production holds remain required.
+
+Meta's live tooltip clarifies that Active–Quality pending templates can be sent to obtain a quality rating; this is not rejection. Exact locale/template mapping, mobile CTWA/free-pricing evidence and device rendering remain open; operator owner-authorization is now confirmed. Required live D1 dependency DDL matches synthetic0048 shapes; targeted0049→0050→0051 and secure backup/restore/rollback procedures are prepared, not executed. Full499/1, focused143, Node52, build/lint, production audit0 and protected923/923 checks are recorded in the blocker-close report/matrix. The current owner confirmations do not authorize a send/export/deployment.
+
 ## GFS-ORDERFLOW-LAUNCH-001-PREFLIGHT (2026-11-27)
 
 Owner answered the consolidated gate request: **one or more items remain unresolved**. No approval is inferred; keep fulfillment/release actions blocked pending evidence.

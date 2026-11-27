@@ -1,5 +1,13 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Handover
 
+## RELEASE-BLOCKER-CLOSE-001 (2026-11-27)
+
+Owner has now separately confirmed canonical resources, authorized Meta operator and both actual bank credits. Treat these as completed owner gates, not new audit rows or dispatch authorization. Both records/holds remain unchanged; no fabricated backfill. Remaining private inputs: controlled test contact/send window/count and encrypted backup/isolated restore target, both promised but not yet supplied.
+
+Local technical work is complete: current-schema API/Admin `RECOVERY_MODE` pauses intake/messages/Cron/fulfillment, preserves COD125 fee/quotes and receipt/financial review, and safely retains Queue/DLQ work without blind replay. Historical conflict quarantine now covers confirmation/tracking/both-label aliases/detail/export/transitions with same-statement evidence rechecks. Synthetic tests prove two conflict shapes do not block unrelated valid paid/confirmed COD records and six test holds persist. Do not claim this enforcement is active on the old production versions.
+
+Required live dependency DDL matches tested0048 shapes; targeted0049→unchanged0050→0051 and backup/restore/recovery commands are documented, not executed. Active–Quality pending templates are technically sendable per live tooltip, not rejected; exact locale/content/free routing remains open. Full499/1, focused143, Node52, build/lint, audit0 and protected923/923 pass. Delivery-anchor receipts are retained during recovery when0050 exists without starting timers;0048 still works. Exact manifests, Queue retention cautions and independent owner steps are in [blocker-close report](GFS_ORDERFLOW_RELEASE_BLOCKER_CLOSE_001.md). No production mutation/export/send occurred. Keep O01-O23/REV.2, FIN-MO-002 and historical fresh-intent recovery registered; WhatsApp remains NO-GO.
+
 ## LAUNCH-001 preflight (2026-11-27)
 
 **PARTIAL / NO-GO.** Runtime source candidate is commit `90cb57d9e13e87d6778f028e7f1fbbf4ba4ec93e`; the MCP recovery/documentation commit is tracked separately. Chrome DevTools recovery PASS: `list_pages` succeeded first in the existing profile. Cloudflare account and Meta Business/Page/WABA/ad assets match; the visible Meta user principal does not match the owner-reported profile context and remains unverified. Current Worker settings and aggregate Admin/WABA data were read. Exact per-order COD/payment/dispatch classification, contact-level FEP evidence and production data-plane naming remain open. The existing Time Travel bookmark ID was retrieved read-only; no bookmark, D1 rows, migrations or Worker code were changed. See [MCP recovery report](GFS_ORDERFLOW_MCP_RECOVERY_001.md) and [preflight](GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md).

@@ -1,5 +1,13 @@
 # GFS-ORDERFLOW-LAUNCH-001-PREFLIGHT
 
+## RELEASE-BLOCKER-CLOSE-001 Superseding Local Evidence
+
+Owner separately confirmed canonical staging-named Production resources, Meta operator authority, and actual bank credit for both historical paid conflicts. These gates are owner-verified; no state/audit/dispatch action was authorized. Keep missing machine-evidence holds until separately authorized reconciliation. Controlled-contact/send scope and secure backup/isolated restore details will be supplied privately; no message/export/restore is authorized now. This supersedes the earlier unresolved-owner statements below without rewriting historical observations.
+
+The [blocker-close report](GFS_ORDERFLOW_RELEASE_BLOCKER_CLOSE_001.md) supplies the now-tested COD-compatible current-schema recovery candidate, per-order fulfillment quarantine,0048→0051/restore checks, exact artifact hashes and future commands. This supersedes the earlier statement that no local COD-safe rollback candidate exists; a remote recovery version still does not exist. Full499/1, Node52, build/lint and protected923/923 pass. None is deployed; production data/routing/settings remain unchanged.
+
+Meta's live Active–Quality pending tooltip explicitly says these templates can be sent to obtain a quality rating. Quality-pending alone is not rejection or a platform send block. Exact approved template/content/locale mapping, per-contact free eligibility, authorized operator/test contact and actual device rendering remain required. In Review display name is still recorded; no failing send was induced to establish a restriction. Existing historical account/count evidence below was reused, not refreshed as a general audit. Two legacy payment records remain owner-review/manual dispatch holds; no fabricated settlement or state change.
+
 **Result: PARTIAL / MCP RECOVERY PASS / AGGREGATE LIVE READ PASS / ROW-LEVEL ACCEPTANCE PARTIAL / WHATSAPP NO-GO.** This is release preparation only. No Worker deployment, migration, live message, payment, campaign activation, Meta/account setting change, COD/order-row change, postal poll, parcel action or Cloudflare data/config mutation was performed. The existing current D1 Time Travel bookmark ID was retrieved read-only; no D1 rows/schema were changed and no export backup was written.
 
 ## Requirement Status

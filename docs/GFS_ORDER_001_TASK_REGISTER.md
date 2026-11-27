@@ -4,6 +4,7 @@ Permanent master project: **GFS ORDERFLOW**, comprising this REV.2 work, S0-S9, 
 
 | ID | Acceptance unit | Status | Evidence/remaining gate |
 |---|---|---|---|
+| GFS-ORDERFLOW-RELEASE-BLOCKER-CLOSE-001 | COD-compatible recovery, isolated financial quarantine and migration/recovery contract | DONE LOCAL / OWNER CONFIRMATIONS OBTAINED / LIVE GATES PARTIAL / NO-GO | Recovery/quarantine actual-handler and0048→0051/restore tests pass; no remote candidate/deploy exists. Owner separately confirmed canonical resources, Meta operator and both bank credits; historical machine-evidence holds stay unchanged. Active–Quality pending is technically sendable per live tooltip. Exact template/FEP/rendering, private test scope, backup destination and isolated restore evidence remain. See `GFS_ORDERFLOW_RELEASE_BLOCKER_CLOSE_001.md`. |
 | S0-A01 | Isolated checkout, dirty work and protected files | DONE | Owner approval; branch/remote/HEAD; 923/923 hashes |
 | S0-A02 | Full rules and latest required docs | DONE | Initial 2921-line rules and latest PLAN/STATUS/REGISTRY/DECISIONS |
 | S0-A03 | Source/schema lifecycle, reuse and gap audit | DONE | CURRENT_AUDIT and static risks, not behavioral PASS |

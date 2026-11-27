@@ -8,7 +8,7 @@ import { CancellationInputError, cancellationDashboardPageHtml, parseCancellatio
 import { readAttributionReport } from "./attribution";
 import { classifyOrderReconciliation } from "./order-reconciliation";
 
-  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
+  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; RECOVERY_MODE?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string } };
 const app = new Hono<Env>();
 app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
 app.use("/api/orders", async (c, next) => { c.header("Cache-Control", "private, no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
@@ -217,7 +217,8 @@ function orderView(row: Record<string, unknown>, referenceRequestDispatchEnabled
   const financial = String(row.state) === "PAID" || String(row.payment_status) === "PAID" || String(row.review_state ?? "") === "APPROVED" || row.approved_at != null || row.approved_amount != null || historicalMoSettled;
   const state = String(row.state);
   const codTestHold = row.cod_status != null && Number(row.cod_test_hold) !== 0;
-  const fulfillmentHold = String(row.order_number) === "FS-261019-000001" || codTestHold;
+  const evidenceHold = (financial || ["COD_PENDING", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING"].includes(state)) && Number(row.fulfillment_evidence_verified ?? 0) !== 1;
+  const fulfillmentHold = String(row.order_number) === "FS-261019-000001" || codTestHold || evidenceHold;
   const reconciliation = classifyOrderReconciliation({
     state,
     paymentStatus: String(row.payment_status ?? "UNKNOWN"),
@@ -709,6 +710,10 @@ function metaActivation(c: { env: Env["Bindings"] }) {
 
 app.use("*", async (c, next) => {
   if (!authorizedForAdmin(c)) return c.json({ error: "ADMIN_ACCESS_REQUIRED" }, 403);
+  if (c.env.RECOVERY_MODE !== undefined && c.env.RECOVERY_MODE !== "false" && c.req.method === "POST"
+    && (c.req.path.startsWith("/api/meta-activation/") || /\/request-(transaction-reference|clearer-receipt)$/.test(c.req.path))) {
+    return c.json({ error: "RECOVERY_MODE_MESSAGING_PAUSED" }, 503);
+  }
   await next();
 });
 
@@ -2116,6 +2121,18 @@ function paymentApprovalEvidenceSql(orderAlias: string, paymentAlias: string): s
   return `EXISTS(SELECT 1 FROM audit_log payment_approval WHERE payment_approval.entity_type='PAYMENT' AND payment_approval.entity_id=${paymentAlias}.id AND payment_approval.actor_type='ADMIN' AND payment_approval.action='PAYMENT_APPROVED' AND json_extract(${metadata},'$.orderId')=${orderAlias}.id AND CAST(json_extract(${metadata},'$.amountPkr') AS INTEGER)=${orderAlias}.total_payable AND trim(COALESCE(json_extract(${metadata},'$.settlementEvidenceRef'),''))<>'' AND trim(COALESCE(json_extract(${metadata},'$.transactionReferenceHash'),''))<>'')`;
 }
 
+function advanceFulfillmentEvidenceSql(orderAlias: string, paymentAlias: string): string {
+  return `${orderAlias}.payment_status='PAID' AND ${paymentAlias}.review_state='APPROVED' AND ${paymentAlias}.expected_amount=${orderAlias}.total_payable AND ${paymentAlias}.approved_amount=${orderAlias}.total_payable AND ${paymentAlias}.approved_at IS NOT NULL AND ${paymentApprovalEvidenceSql(orderAlias, paymentAlias)} AND EXISTS(SELECT 1 FROM payment_receipts verified_receipt WHERE verified_receipt.order_id=${orderAlias}.id AND verified_receipt.payment_id=${paymentAlias}.id AND verified_receipt.r2_object_key<>'' AND verified_receipt.sha256<>'')`;
+}
+
+function fulfillmentEvidenceSql(orderAlias: string): string {
+  return `(${orderAlias}.order_number<>'FS-261019-000001' AND NOT EXISTS(SELECT 1 FROM cod_order_details held WHERE held.order_id=${orderAlias}.id AND held.test_hold<>0) AND (
+    (NOT EXISTS(SELECT 1 FROM cod_order_details sidecar WHERE sidecar.order_id=${orderAlias}.id) AND EXISTS(SELECT 1 FROM payments approved WHERE approved.order_id=${orderAlias}.id AND ${advanceFulfillmentEvidenceSql(orderAlias, "approved")}))
+    OR EXISTS(SELECT 1 FROM cod_order_details confirmed_cod WHERE confirmed_cod.order_id=${orderAlias}.id AND confirmed_cod.test_hold=0 AND confirmed_cod.status=${orderAlias}.state AND ${orderAlias}.payment_status='COD_PENDING' AND ${codConfirmationEvidenceSql(orderAlias, "confirmed_cod")})
+    OR (${orderAlias}.payment_status='PAID' AND EXISTS(SELECT 1 FROM cod_historical_mo_receipts historical WHERE historical.order_id=${orderAlias}.id AND historical.received_amount_pkr=${orderAlias}.total_payable))
+  ))`;
+}
+
 const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.internal_sequence,o.internal_sequence_date,o.total_payable,o.province,o.created_at,o.updated_at,
   o.cancelled_at,o.cancelled_by,o.cancellation_reason,o.archived_at,o.archived_by,o.archive_reason,
   (SELECT created_at FROM audit_log confirmation WHERE confirmation.entity_type='ORDER' AND confirmation.entity_id=o.id AND confirmation.action='ORDER_CONFIRMED' ORDER BY confirmation.created_at DESC LIMIT 1) AS order_confirmed_at,
@@ -2133,7 +2150,8 @@ const ORDER_ADMIN_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,
    COALESCE((SELECT json_group_array(json_object('id',receipts.id,'paymentId',receipts.payment_id,'objectKey',receipts.r2_object_key,'mimeType',receipts.mime_type,'sizeBytes',receipts.size_bytes,'submittedAt',receipts.submitted_at,'createdAt',receipts.created_at)) FROM payment_receipts receipts WHERE receipts.order_id=o.id),'[]') AS receipts_json,
    ${codConfirmationEvidenceSql("o", "cod")} AS cod_confirmation_verified,
    ${paymentApprovalEvidenceSql("o", "p")} AS payment_approval_evidence_verified,
-   1 AS tracking_evidence_available
+    ${fulfillmentEvidenceSql("o")} AS fulfillment_evidence_verified,
+    1 AS tracking_evidence_available
   FROM orders o JOIN customers c ON c.id=o.customer_id
   LEFT JOIN payments p ON p.order_id=o.id
   LEFT JOIN cod_order_details cod ON cod.order_id=o.id
@@ -2155,7 +2173,8 @@ const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_st
    0 AS payment_method_verified,0 AS reference_request_sent,0 AS has_tracking_number,0 AS receipt_count,
    ${codConfirmationEvidenceSql("o", "cod")} AS cod_confirmation_verified,
    ${paymentApprovalEvidenceSql("o", "p")} AS payment_approval_evidence_verified,
-   0 AS tracking_evidence_available,
+    ${fulfillmentEvidenceSql("o")} AS fulfillment_evidence_verified,
+    0 AS tracking_evidence_available,
    '[]' AS items_json,'[]' AS receipts_json
   FROM orders o JOIN customers c ON c.id=o.customer_id
   LEFT JOIN payments p ON p.order_id=o.id
@@ -2166,7 +2185,8 @@ const ORDER_ADMIN_LIST_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_st
 const ORDER_ADMIN_EXPORT_SELECT = `SELECT o.id,o.order_number,o.state,o.payment_status,o.pack_quantity,o.delivery_fee,o.fertilizer_fee,o.total_payable,o.province,o.created_at,o.archived_at,
   c.full_name,c.delivery_address,c.nearby_place,c.city,c.contact_number,
   p.method,p.approved_amount,p.review_state,
-  cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,
+   cod.status AS cod_status,cod.test_hold AS cod_test_hold,cod.cod_fee_pkr,cod.quoted_total_pkr AS cod_quoted_total_pkr,
+   ${fulfillmentEvidenceSql("o")} AS fulfillment_evidence_verified,
   COALESCE((SELECT json_group_array(json_object('itemType',items.item_type,'description',items.description,'quantity',items.quantity,'unitPricePkr',items.unit_price_pkr)) FROM order_items items WHERE items.order_id=o.id),'[]') AS items_json
   FROM orders o JOIN customers c ON c.id=o.customer_id
   LEFT JOIN payments p ON p.order_id=o.id
@@ -2280,7 +2300,7 @@ function orderExportRow(row: Record<string, unknown>): unknown[] {
   const methodMap: Record<string, string> = { JAZZCASH: "JazzCash", EASYPAISA: "Easypaisa", BANK_TRANSFER: "Bank" };
   const paymentMethod = cod ? "COD" : row.method == null ? "" : methodMap[String(row.method)] ?? String(row.method);
   const paymentState = cod && String(row.cod_status) !== "PAID" ? "COD Pending" : String(row.payment_status) === "PAID" || String(row.review_state) === "APPROVED" ? "PAID" : String(row.review_state) === "REVIEW" ? "Review" : "Pending";
-  const hold = Number(row.cod_test_hold ?? 0) !== 0;
+  const hold = String(row.order_number) === "FS-261019-000001" || Number(row.cod_test_hold ?? 0) !== 0 || (["COD_PENDING", "PAID", "PACKING", "DISPATCHED", "DELIVERED", "COLLECTION_PENDING"].includes(String(row.state)) && Number(row.fulfillment_evidence_verified ?? 0) !== 1);
   return [
     row.order_number ?? row.id, row.created_at, row.full_name, row.delivery_address, row.nearby_place, row.city, row.contact_number, row.province,
     exportItemText(row, "PRODUCT", false) || `Free Seeds x ${Number(row.pack_quantity ?? 0)}`,
@@ -2736,6 +2756,7 @@ app.post("/api/orders/:id/cancel", (c) => orderRetentionAction(c, "cancel"));
 app.post("/api/orders/:id/archive", (c) => orderRetentionAction(c, "archive"));
 
 app.post("/api/orders/:id/transition", async (c) => {
+  if (c.env.RECOVERY_MODE !== undefined && c.env.RECOVERY_MODE !== "false") return c.json({ error: "RECOVERY_MODE_FULFILLMENT_PAUSED" }, 503);
   let body: { from?: unknown; to?: unknown; confirmation?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   const from = OrderState.safeParse(body.from);
@@ -2781,7 +2802,7 @@ app.post("/api/orders/:id/transition", async (c) => {
   const now = new Date().toISOString();
   const update = cod
     ? c.env.DB.prepare(`UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='COD_PENDING' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.status=? AND cod.test_hold=0 AND ${codConfirmationEvidenceSql("orders", "cod")})`).bind(to.data, now, c.req.param("id"), from.data, from.data)
-    : c.env.DB.prepare(`UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND payment_status='PAID' AND archived_at IS NULL AND EXISTS(SELECT 1 FROM payments p WHERE p.order_id=orders.id AND p.review_state='APPROVED' AND p.expected_amount=orders.total_payable AND p.approved_amount=orders.total_payable AND p.approved_at IS NOT NULL AND ${paymentApprovalEvidenceSql("orders", "p")} AND EXISTS(SELECT 1 FROM payment_receipts verified_receipt WHERE verified_receipt.order_id=orders.id AND verified_receipt.payment_id=p.id AND verified_receipt.r2_object_key<>'' AND verified_receipt.sha256<>''))`).bind(to.data, now, c.req.param("id"), from.data);
+    : c.env.DB.prepare(`UPDATE orders SET state=?,updated_at=? WHERE id=? AND state=? AND archived_at IS NULL AND EXISTS(SELECT 1 FROM payments p WHERE p.order_id=orders.id AND ${advanceFulfillmentEvidenceSql("orders", "p")})`).bind(to.data, now, c.req.param("id"), from.data);
   const result = await c.env.DB.batch([
     update,
     c.env.DB.prepare("INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE changes()=1").bind(crypto.randomUUID(), "ORDER_STATE_TRANSITIONED", "ADMIN", c.env.ADMIN_EMAIL, "ORDER", c.req.param("id"), crypto.randomUUID(), JSON.stringify({ from: from.data, to: to.data, orderNumber: current.order_number }), now)
@@ -2790,49 +2811,58 @@ app.post("/api/orders/:id/transition", async (c) => {
 });
 
 app.post("/api/orders/:id/confirm", async (c) => {
+  if (c.env.RECOVERY_MODE !== undefined && c.env.RECOVERY_MODE !== "false") return c.json({ error: "RECOVERY_MODE_FULFILLMENT_PAUSED" }, 503);
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   let body: { confirmation?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
-  const current = await c.env.DB.prepare("SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state,EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.test_hold<>0) AS cod_test_hold FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null; cod_test_hold: number }>();
+  const current = await c.env.DB.prepare(`SELECT o.order_number,o.state,o.payment_status,o.archived_at,p.review_state,${fulfillmentEvidenceSql("o")} AS fulfillment_evidence_verified,EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=o.id AND cod.test_hold<>0) AS cod_test_hold FROM orders o LEFT JOIN payments p ON p.order_id=o.id WHERE o.id=?`).bind(c.req.param("id")).first<{ order_number: string; state: OrderState; payment_status: string; review_state: string | null; archived_at: string | null; cod_test_hold: number; fulfillment_evidence_verified: number }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (Number(current.cod_test_hold)) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
   if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
+  if (Number(current.fulfillment_evidence_verified) !== 1) return c.json({ error: "FULFILLMENT_EVIDENCE_REQUIRED" }, 409);
   if (current.payment_status !== "PAID" && current.review_state !== "APPROVED") return c.json({ error: "ORDER_CONFIRMATION_REQUIRES_APPROVED_PAYMENT" }, 409);
   if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED"].includes(current.state)) return c.json({ error: "ORDER_CONFIRMATION_NOT_READY" }, 409);
   const existing = await c.env.DB.prepare("SELECT created_at FROM audit_log WHERE entity_type='ORDER' AND entity_id=? AND action='ORDER_CONFIRMED' ORDER BY created_at DESC LIMIT 1").bind(c.req.param("id")).first<{ created_at: string }>();
   if (existing) return c.json({ ok: true, alreadyConfirmed: true, confirmedAt: existing.created_at });
   const now = new Date().toISOString();
   const result = await c.env.DB.batch([
-    auditStatement(c.env.DB, "ORDER_CONFIRMED", "ORDER", c.req.param("id"), { orderNumber: current.order_number, operationalOnly: true, financialStateUnchanged: true }, now, c.env.ADMIN_EMAIL)
+    fulfillmentAuditStatement(c, "ORDER_CONFIRMED", { orderNumber: current.order_number, operationalOnly: true, financialStateUnchanged: true }, now, current.state)
   ]);
   return result[0].meta.changes === 1 ? c.json({ ok: true, confirmedAt: now }) : c.json({ error: "ORDER_CONFIRMATION_FAILED" }, 409);
 });
 
+function fulfillmentAuditStatement(c: AdminContext, action: string, metadata: Record<string, unknown>, now: string, state: string) {
+  return c.env.DB.prepare(`INSERT INTO audit_log (id,action,actor_type,actor_id,entity_type,entity_id,correlation_id,metadata_json,created_at) SELECT ?,?,?,?,?,?,?,?,? FROM orders o WHERE o.id=? AND o.state=? AND o.archived_at IS NULL AND ${fulfillmentEvidenceSql("o")}`).bind(crypto.randomUUID(), action, "ADMIN", c.env.ADMIN_EMAIL, "ORDER", c.req.param("id"), crypto.randomUUID(), JSON.stringify(metadata), now, c.req.param("id"), state);
+}
+
 app.post("/api/orders/:id/tracking", async (c) => {
+  if (c.env.RECOVERY_MODE !== undefined && c.env.RECOVERY_MODE !== "false") return c.json({ error: "RECOVERY_MODE_FULFILLMENT_PAUSED" }, 503);
   if (!validCsrf(c)) return c.json({ error: "CSRF_VALIDATION_FAILED" }, 403);
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   let body: { trackingNumber?: unknown; confirmation?: unknown };
   try { body = await c.req.json(); } catch { return c.json({ error: "INVALID_REQUEST" }, 400); }
   const value = trackingNumber(body.trackingNumber);
   if (!value) return c.json({ error: "TRACKING_NUMBER_INVALID" }, 400);
-  const current = await c.env.DB.prepare("SELECT order_number,state,archived_at,EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.test_hold<>0) AS cod_test_hold FROM orders WHERE id=?").bind(c.req.param("id")).first<{ order_number: string; state: OrderState; archived_at: string | null; cod_test_hold: number }>();
+  const current = await c.env.DB.prepare(`SELECT order_number,state,archived_at,${fulfillmentEvidenceSql("orders")} AS fulfillment_evidence_verified,EXISTS(SELECT 1 FROM cod_order_details cod WHERE cod.order_id=orders.id AND cod.test_hold<>0) AS cod_test_hold FROM orders WHERE id=?`).bind(c.req.param("id")).first<{ order_number: string; state: OrderState; archived_at: string | null; cod_test_hold: number; fulfillment_evidence_verified: number }>();
   if (!current) return c.json({ error: "ORDER_NOT_FOUND" }, 404);
   if (body.confirmation !== current.order_number) return c.json({ error: "CONFIRMATION_REQUIRED" }, 400);
   if (current.order_number === "FS-261019-000001") return c.json({ error: "FULFILLMENT_HOLD_INCIDENT_REVIEW_REQUIRED" }, 409);
   if (Number(current.cod_test_hold)) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);
   if (current.archived_at != null) return c.json({ error: "ORDER_ARCHIVED" }, 409);
   if (!["PAID", "PACKING", "DISPATCHED", "DELIVERED", "COD_PENDING"].includes(current.state)) return c.json({ error: "TRACKING_NOT_READY" }, 409);
+  if (Number(current.fulfillment_evidence_verified) !== 1) return c.json({ error: "FULFILLMENT_EVIDENCE_REQUIRED" }, 409);
   const now = new Date().toISOString();
-  await c.env.DB.batch([
-    auditStatement(c.env.DB, "ORDER_TRACKING_ASSIGNED", "ORDER", c.req.param("id"), { orderNumber: current.order_number, trackingNumber: value }, now, c.env.ADMIN_EMAIL)
+  const result = await c.env.DB.batch([
+    fulfillmentAuditStatement(c, "ORDER_TRACKING_ASSIGNED", { orderNumber: current.order_number, trackingNumber: value }, now, current.state)
   ]);
-  return c.json({ ok: true, trackingNumber: value });
+  return result[0].meta.changes === 1 ? c.json({ ok: true, trackingNumber: value }) : c.json({ error: "FULFILLMENT_EVIDENCE_REQUIRED" }, 409);
 });
 
 async function shippingLabelResponse(c: AdminContext) {
+  if (c.env.RECOVERY_MODE !== undefined && c.env.RECOVERY_MODE !== "false") return c.json({ error: "RECOVERY_MODE_FULFILLMENT_PAUSED" }, 503);
   if (!c.env.DB) return c.json({ error: "ORDER_ADMIN_UNAVAILABLE" }, 503);
   const hold = await c.env.DB.prepare("SELECT test_hold FROM cod_order_details WHERE order_id=?").bind(c.req.param("id")).first<{ test_hold: number }>();
   if (hold && Number(hold.test_hold) !== 0) return c.json({ error: "COD_TEST_HOLD_DO_NOT_SHIP" }, 409);

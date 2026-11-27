@@ -35,7 +35,10 @@ class FulfillmentDb {
       sql,
       args,
       bind: (...next: unknown[]) => this.statement(sql, next),
-      first: async <T>() => this.first(sql) as T | null,
+      first: async <T>() => {
+        const row = this.first(sql);
+        return row ? { ...row, fulfillment_evidence_verified: this.paymentApprovalEvidenceVerified ? 1 : 0 } as T : null;
+      },
       all: async <T>() => ({ results: [] as T[] }),
       run: async () => ({ meta: { changes: this.execute({ sql, args }) } })
     };

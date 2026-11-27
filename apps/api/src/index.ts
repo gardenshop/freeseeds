@@ -14,6 +14,7 @@ type Env = {
     RECEIPTS: R2Bucket;
     EVENTS: Queue;
     DEPLOYMENT_STATE: string;
+    RECOVERY_MODE?: string;
     WHATSAPP_PROVIDER: string;
     META_PROVIDER_ENABLED: string;
     WHATSAPP_CHECKOUT_MODE?: string;
@@ -45,6 +46,19 @@ type Env = {
 };
 
 const app = new Hono<Env>();
+
+function isRecoveryMode(env: Env["Bindings"]): boolean {
+  // Only omission or an explicit false resumes normal operation.
+  return env.RECOVERY_MODE !== undefined && env.RECOVERY_MODE !== "false";
+}
+
+app.use("*", async (c, next) => {
+  if (isRecoveryMode(c.env) && c.req.method === "POST" && !["/webhooks/whatsapp", "/receipts/ingest"].includes(c.req.path)) {
+    c.header("Retry-After", "300");
+    return c.json({ error: "RECOVERY_MODE" }, 503);
+  }
+  await next();
+});
 
 function isD1QuotaError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
@@ -1283,7 +1297,7 @@ async function recordReceiptMediaDiagnostic(db:D1Database,eventId:string,mediaId
     .bind(crypto.randomUUID(),"RECEIPT_INGESTION_BLOCKED","SYSTEM","WHATSAPP_RECEIPT_EVENT",messageIdHash,messageIdHash,JSON.stringify({messageIdHash,mediaIdHash,reason,stage,candidateCount}),now).run();
 }
 
-async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }): Promise<boolean> {
+async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: ReturnType<typeof createWhatsAppProvider>, event: { id: string; from: string; payload: unknown }, suppressReply = false): Promise<boolean> {
   const message = event.payload && typeof event.payload === "object" ? event.payload as { image?: { id?: string }; document?: { id?: string }; context?: { id?: string } } : {};
   const mediaId = message.image?.id ?? message.document?.id;
   if (!mediaId) return false;
@@ -1336,6 +1350,7 @@ async function processReceiptMedia(db: D1Database, bucket: R2Bucket, provider: R
     }
   }
   const receiptText=data.language === "ur" ? `\u0622\u0631\u0688\u0631 ${record.order_number} \u06a9\u06cc \u0631\u0633\u06cc\u062f \u0645\u0648\u0635\u0648\u0644 \u06c1\u0648 \u06af\u0626\u06cc\u06d4 \u0627\u062f\u0627\u0626\u06cc\u06af\u06cc \u0627\u06cc\u0688\u0645\u0646 \u06a9\u06d2 \u062cا\u0626ز\u06d2 \u0645ی\u06ba \u06c1\u06d2\u06d4 \u062a\u0635\u062f\u06cc\u0642 \u06a9\u06d2 \u0628عد \u0627طلاع \u062f\u06cc \u062c\u0627\u0626\u06d2 \u06af\u06cc\u06d4` : `Receipt received for order ${record.order_number}. Your payment is under Admin review. We will notify you after verification.`;
+  if (suppressReply) return true;
   const orderStatus=await contentFor(db,"ORDER_STATUS","Use Check Order to see the current order and payment status.",{},`CHAT:${event.from}`,data.language??"en");
   const image=await contentImageFor(db,bucket,"RECEIPT",`CHAT:${event.from}`);
   await sendConversationReply(db,provider,event.from,event.id,receiptText,{image,buttons:[{id:"CHECK_ORDER",title:whatsAppActionLabel(orderStatus,"CHECK_ORDER")}],},`conversation_reply:${event.id}`,{orderId:record.id,kind:"PAYMENT_RECEIPT_ACKNOWLEDGEMENT",locale:data.language});
@@ -1373,12 +1388,38 @@ app.post("/webhooks/whatsapp", async (c) => {
     return c.json({ error: "WHATSAPP_PHONE_NUMBER_MISMATCH" }, 403);
   }
   const inbound = provider.parseInboundEvent(payload);
+  const recoveryMode = isRecoveryMode(c.env);
   if (c.env.DB && !(await admitWhatsAppSenders(c.env.DB, inbound))) {
     c.header("Retry-After", "60");
     return c.json({ error: "WHATSAPP_SENDER_RATE_LIMITED", retryAfterSeconds: 60 }, 429);
   }
   const orderIntentAutomationEnabled = c.env.ORDER_INTENT_AUTOMATION_ENABLED === "true";
-  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId, true) : 0;
+  const captureIntentReceipts = !recoveryMode || Boolean(c.env.DB && await c.env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='whatsapp_delivery_receipts'").first());
+  const eventCount = c.env.DB ? await persistWebhookRecords(c.env.DB, payload, raw, correlationId, captureIntentReceipts) : 0;
+  if (recoveryMode) {
+    if (c.env.DB) for (const event of inbound) {
+      if (event.kind === "media") {
+        await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event, true);
+        continue;
+      }
+      // Persist suppression before any optional review work, so a later replay
+      // cannot turn an acknowledged recovery input into a new checkout.
+      await c.env.DB.prepare("UPDATE whatsapp_events SET status='RECOVERY_SUPPRESSED' WHERE provider_event_id=?").bind(`message:${event.id}`).run();
+      const conversation = await c.env.DB.prepare("SELECT state,state_data FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string; state_data: string }>();
+      if (conversation && ["PAYMENT_REFERENCE", "PAYMENT_REVIEW"].includes(conversation.state)) {
+        let data: ConversationData;
+        try { data = JSON.parse(conversation.state_data) as ConversationData; } catch { continue; }
+        const message = event.payload as { text?: { body?: string } };
+        if (data.orderId && typeof message.text?.body === "string") await saveCustomerTransactionReference(c.env.DB, event.from, data.orderId, message.text.body, event.id);
+      }
+    }
+    return c.json({ accepted: true, eventCount, autoReplies: 0, recoveryMode: true });
+  }
+  const activeInbound: typeof inbound = [];
+  for (const event of inbound) {
+    const stored = c.env.DB ? await c.env.DB.prepare("SELECT status FROM whatsapp_events WHERE provider_event_id=?").bind(`message:${event.id}`).first<{ status: string }>() : null;
+    if (stored?.status !== "RECOVERY_SUPPRESSED") activeInbound.push(event);
+  }
   if (c.env.DB) {
     for (const receipt of parseWhatsAppDeliveryReceipts(payload)) {
       const intents = await c.env.DB.prepare(`SELECT intent_id FROM order_confirmation_intents
@@ -1389,10 +1430,10 @@ app.post("/webhooks/whatsapp", async (c) => {
       }
     }
   }
-  if (c.env.DB) await persistInboundConversationActivity(c.env.DB, inbound);
+  if (c.env.DB) await persistInboundConversationActivity(c.env.DB, activeInbound);
   let autoReplies = 0;
   let handledEvents = 0;
-  for (const event of inbound) {
+  for (const event of activeInbound) {
     if (event.kind === "media") { if (c.env.DB && await processReceiptMedia(c.env.DB, c.env.RECEIPTS, provider, event)) handledEvents += 1; continue; }
       if (c.env.DB && await processGuidedConversation(c.env.DB, c.env.RECEIPTS, provider, event, c.env.META_FLOW_ID ?? "1133458765899784", c.env.META_APP_SECRET, c.env.WHATSAPP_CHECKOUT_MODE ?? "guided", c.env.EVENTS, c.env.COD_V1_ENABLED === "true", c.env.COD_ROLLOUT_MODE, c.env.COD_TESTER_WA_ID, c.env.PAYMENT_REMINDERS_V2_ENABLED === "true", c.env.PAYMENT_AUTOMATION_V2_ENABLED === "true", orderIntentAutomationEnabled)) { handledEvents += 1; continue; }
     const activeConversation = c.env.DB ? await c.env.DB.prepare("SELECT state FROM whatsapp_conversations WHERE wa_id=?").bind(event.from).first<{ state: string }>() : null;
@@ -1737,6 +1778,7 @@ app.all("*", (c) => c.json({ error: "NOT_FOUND" }, 404));
 export default {
   fetch: app.fetch,
   async scheduled(controller: ScheduledController, env: Env["Bindings"]): Promise<void> {
+    if (isRecoveryMode(env)) return;
     const remindersEnabled = env.PAYMENT_REMINDERS_V2_ENABLED === "true" && env.PAYMENT_AUTOMATION_V2_ENABLED === "true";
     const recoveryEnabled = env.PAYMENT_CHOICE_RECOVERY_ENABLED === "true";
      const orderIntentAutomationEnabled = env.ORDER_INTENT_AUTOMATION_ENABLED === "true";
@@ -1800,6 +1842,12 @@ export default {
   },
   async queue(batch: MessageBatch<{ kind: string; idempotencyKey: string; entityId: string; schemaVersion: 1 }>, env: Env["Bindings"]): Promise<void> {
     for (const message of batch.messages) {
+      if (isRecoveryMode(env)) {
+        // Keep durable jobs/attempts intact, including unknown future kinds.
+        // Queue retention/DLQ is an operator boundary, never an auto-replay.
+        message.retry({ delaySeconds: 300 });
+        continue;
+      }
       try {
         if (!env.DB) { message.ack(); continue; }
         const job = await env.DB.prepare("SELECT status, attempts FROM outbox_jobs WHERE idempotency_key=?").bind(message.body.idempotencyKey).first<{ status: string; attempts: number }>();

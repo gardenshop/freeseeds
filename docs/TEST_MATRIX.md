@@ -1,5 +1,20 @@
 # Test Matrix
 
+## RELEASE-BLOCKER-CLOSE-001 (2026-11-27)
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Focused recovery/quarantine/migration/financial/FEP/intent/security | PASS143 | Eight files: recovery-mode, release-migration-compat, cod-admin, admin-fulfillment, admin-payment, order-intent, free-messaging, hono-security. |
+| Full regression | PASS499/SKIP1 | 41 Vitest files. New synthetic tests include0048/0051 handler parity, delivery-anchor preservation during recovery, file backup/restore integrity, immutable claims and no silent historical backfill. |
+| Per-order quarantine | PASS local | Actual confirm/tracking/transition/both-label/detail/CSV routes deny PAID/PACKING missing-audit conflicts while unrelated valid paid orders proceed. Evidence loss between precheck/write is denied atomically. No conflict row changes. |
+| COD-compatible recovery/resume | PASS local | Six test-held COD stay held; valid unrelated confirmed COD resumes and stale duplicate transition fails. API recovery blocks new intake/sends, freezes Cron, retries Queue without outbox changes; signed status/receipt/reference review preserved. Admin direct send/fulfillment paused, Access remains required. |
+| Node/TypeScript/build/lint | PASS52/52; PASS | Eight documented Node scripts; `npm.cmd run build` (`tsc --noEmit`), lint. Test-only TS spread error repaired, focused tests/build rerun. |
+| Dependency audit/protection | PASS production0;923/923 | Six registered dev-tool findings retained;0050 byte hash unchanged. No dependency/config/migration file edited. |
+| Local recovery bundles | PASS dry-run only | Wrangler4.149.0 API/Admin `--dry-run --var RECOVERY_MODE:true`; exact source/artifact hashes in blocker-close report. No upload. |
+| Production | UNCHANGED | Only required DDL/Meta permission/status tooltip reads. No deploy/migration/account/send/payment/export or data mutation. Old production does not yet enforce the candidate's new guards. |
+
+External gates remain separately required; no live test, restore rehearsal, deployment or launch PASS is inferred. See `GFS_ORDERFLOW_RELEASE_BLOCKER_CLOSE_001.md`.
+
 ## GFS ORDERFLOW INTENT-030 closeout (2026-11-26 UTC)
 
 | Gate | Result | Evidence |

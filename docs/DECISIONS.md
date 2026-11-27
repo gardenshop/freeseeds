@@ -1,3 +1,13 @@
+## RELEASE-BLOCKER-CLOSE-001 decision (2026-11-27)
+
+Owner separately confirmed canonical Production resources, Meta operator authorization and actual receiving-account credits for both historical conflicts. This supersedes the earlier combined unresolved response for those four items. No historical audit, payment/order state or dispatch was changed; missing machine-readable settlement/TID proof is still quarantined pending a separately authorized evidence-recording procedure. Test scope and secure backup/isolated restore destination are still to be supplied, not execution approvals.
+
+- Use current-schema API/Admin with `RECOVERY_MODE=true` as COD-compatible intake/automation/fulfillment-off rollback, not V1. No live flag/version changed. Retain safe receipt/reference/status capture, stored amounts and guarded financial review.
+- Quarantine is per-order evidence, not a blanket halt: missing settlement/TID-hash proof blocks confirmation/tracking/labels/dispatch and marks export HOLD, while valid unrelated orders remain eligible under ordinary gates. Preserve historical states and six test holds; never fabricate audit evidence to release a conflict.
+- Candidate0049→0050→0051 is tested on synthetic0048, including cross-ledger claims, state/locale guards and restored backup data. Read-only live required DDL matches; custom markers and empty Wrangler ledger are distinct mechanisms. Use targeted files only after authorization. Remote import atomicity is not proven by SQLite transactions.
+- Current Meta tooltip says Active–Quality pending templates can be sent for a rating. It is not rejection/unavailability; this corrects a status-only blocker but does not authorize sending or establish stage/locale mapping. Display name In Review is separate from observed Connected/High; no send failure was induced to infer restrictions.
+- External confirmations are independent: canonical resources, authorized Meta operator, each bank credit, controlled contact/send scope and secure backup destination. Prior combined unresolved response grants no approval. No production/account/message/payment/migration/deployment mutation occurred.
+
 ## LAUNCH-001 preflight decision (2026-11-27)
 
 The owner answered the consolidated confirmation request that one or more gates remain unresolved. Treat all unverified gates as open; do not infer approval or proceed with live release actions.

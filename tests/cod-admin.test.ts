@@ -85,6 +85,16 @@ function mutationHeaders(session: { token: string; cookie: string }) {
   return { ...auth, origin: "https://admin.example.test", cookie: session.cookie, "x-csrf-token": session.token, "content-type": "application/json" };
 }
 
+function extendFulfillmentReadSchema() {
+  for (const [table, columns] of Object.entries({
+    orders: ["internal_sequence", "internal_sequence_date", "province", "created_at", "cancelled_at", "cancelled_by", "cancellation_reason", "archived_by", "archive_reason", "pack_quantity", "delivery_fee", "fertilizer_fee"],
+    payments: ["submitted_at", "rejection_reason", "created_at"],
+    customers: ["full_name", "delivery_address", "nearby_place", "city", "contact_number", "normalized_phone", "normalized_contact_number", "whatsapp_number", "normalized_whatsapp_number", "whatsapp_username"],
+    payment_receipts: ["mime_type", "size_bytes", "submitted_at", "created_at"]
+  })) for (const column of columns) sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT`);
+  sqlite.exec("CREATE TABLE order_items(id TEXT,order_id TEXT,item_type TEXT,product_code TEXT,description TEXT,quantity INTEGER,unit_price_pkr INTEGER,line_total_pkr INTEGER,created_at TEXT)");
+}
+
 beforeEach(() => {
   sqlite = new DatabaseSync(":memory:");
   sqlite.exec(`
@@ -990,6 +1000,79 @@ describe("COD Admin configuration and reconciliation", () => {
     expect(page).toContain("COD collection fee: PKR 125");
     expect(page).not.toContain("remittance");
     expect(page).not.toContain("evidence reference");
+  });
+
+  it.each(["PAID", "PACKING"])("quarantines synthetic %s records with exact receipt/amount but no approval audit across actual handlers", async (state) => {
+    extendFulfillmentReadSchema();
+    const now = new Date().toISOString();
+    sqlite.prepare("INSERT INTO customers(id,wa_id,full_name) VALUES('quarantine-customer','923000000099','SYNTHETIC DO NOT SHIP')").run();
+    for (const [id, valid] of [["quarantined", false], ["unrelated", true]] as const) {
+      sqlite.prepare("INSERT INTO orders(id,order_number,customer_id,state,payment_status,total_payable,created_at,updated_at) VALUES(?,?, 'quarantine-customer',?,'PAID',1000,?,?)").run(id, `SIM-${id}`, state, now, now);
+      sqlite.prepare("INSERT INTO payments(id,order_id,method,expected_amount,review_state,approved_amount,approved_by,approved_at,customer_transaction_reference,updated_at) VALUES(?,?,'JAZZCASH',1000,'APPROVED',1000,'admin@example.test',?,?,?)").run(`${id}-payment`, id, now, `SYNTHETIC-TID-${id}`, now);
+      sqlite.prepare("INSERT INTO payment_receipts(id,order_id,payment_id,r2_object_key,sha256) VALUES(?,?,?,'synthetic/receipt','synthetic-sha')").run(`${id}-receipt`, id, `${id}-payment`);
+      if (valid) sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,metadata_json,created_at) VALUES(?,'PAYMENT_APPROVED','ADMIN','PAYMENT',?,?,?)").run(`${id}-approval`, `${id}-payment`, JSON.stringify({ orderId: id, amountPkr: 1000, settlementEvidenceRef: "synthetic-evidence", transactionReferenceHash: "synthetic-hash" }), now);
+    }
+    const session = await csrf();
+    const mutate = (id: string, path: string, extra: Record<string, unknown> = {}) => app.fetch(new Request(`https://admin.example.test/api/orders/${id}/${path}`, { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: `SIM-${id}`, ...extra }) }), env());
+    const before = sqlite.prepare("SELECT * FROM payments WHERE order_id='quarantined'").get();
+    for (const [path, extra] of [["tracking", { trackingNumber: "SYNTHETIC-TRACK" }], ["confirm", {}], ["transition", { from: state, to: state === "PAID" ? "PACKING" : "DISPATCHED" }]] as const) {
+      expect((await mutate("quarantined", path, extra)).status, path).toBe(409);
+      expect((await mutate("unrelated", path, extra)).status, path).toBe(200);
+    }
+    for (const path of ["shipping-label", "label"]) {
+      expect((await app.fetch(new Request(`https://admin.example.test/api/orders/quarantined/${path}`, { headers: auth }), env())).status).toBe(409);
+      expect((await app.fetch(new Request(`https://admin.example.test/api/orders/unrelated/${path}`, { headers: auth }), env())).status).toBe(200);
+    }
+    const detail = await app.fetch(new Request("https://admin.example.test/api/orders/quarantined", { headers: auth }), env());
+    expect(await detail.json()).toMatchObject({ order: { fulfillmentHold: true, canPrintShippingLabel: false, canConfirmOrder: false } });
+    const csv = await (await app.fetch(new Request("https://admin.example.test/api/orders/export", { headers: auth }), env())).text();
+    expect(csv.split("\r\n").find((row) => row.includes("SIM-quarantined"))).toContain(`${state} / HOLD`);
+    expect(csv.split("\r\n").find((row) => row.includes("SIM-unrelated"))).not.toContain("HOLD");
+    expect(sqlite.prepare("SELECT * FROM payments WHERE order_id='quarantined'").get()).toEqual(before);
+    expect(sqlite.prepare("SELECT state FROM orders WHERE id='quarantined'").get()).toEqual({ state });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE entity_type='ORDER' AND entity_id='quarantined'").get()).toEqual({ count: 0 });
+  });
+
+  it("keeps six synthetic test-held COD sidecars blocked while confirmed unrelated COD can resume safely", async () => {
+    const now = new Date().toISOString();
+    for (let index = 0; index < 7; index++) {
+      const id = `synthetic-held-${index}`;
+      sqlite.prepare("INSERT INTO orders(id,order_number,state,payment_status,total_payable,updated_at) VALUES(?,?,'COD_PENDING','COD_PENDING',200,?)").run(id, `SIM-HOLD-${index}`, now);
+      sqlite.prepare("INSERT INTO payments(id,order_id,method,expected_amount,review_state,updated_at) VALUES(?,?,NULL,200,'COD_PENDING',?)").run(`${id}-payment`, id, now);
+      sqlite.prepare("INSERT INTO cod_order_details(order_id,base_amount_pkr,cod_fee_pkr,quoted_total_pkr,status,test_hold,created_at,updated_at) VALUES(?,200,125,325,'COD_PENDING',?,?,?)").run(id, index < 6 ? 1 : 0, now, now);
+      sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,metadata_json,created_at) VALUES(?,'COD_ORDER_CONFIRMED','CUSTOMER','ORDER',?,'{\"totalPkr\":325}',?)").run(`${id}-consent`, id, now);
+    }
+    const session = await csrf();
+    for (let index = 0; index < 7; index++) {
+      const path = `https://admin.example.test/api/orders/synthetic-held-${index}`;
+      const post = (action: string, body: Record<string, unknown>, recovery = "false") => app.fetch(new Request(`${path}/${action}`, { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: `SIM-HOLD-${index}`, ...body }) }), Object.assign({}, env(), { RECOVERY_MODE: recovery }) as never);
+      expect((await post("transition", { from: "COD_PENDING", to: "PACKING" }, "true")).status).toBe(503);
+      expect((await post("tracking", { trackingNumber: "SYNTHETIC-TRACK" }, "true")).status).toBe(503);
+      expect((await post("tracking", { trackingNumber: "SYNTHETIC-TRACK" })).status).toBe(index < 6 ? 409 : 200);
+      expect((await post("transition", { from: "COD_PENDING", to: "PACKING" })).status).toBe(index < 6 ? 409 : 200);
+      if (index === 6) {
+        expect((await post("transition", { from: "COD_PENDING", to: "PACKING" })).status).toBe(409);
+        expect((await post("transition", { from: "PACKING", to: "DISPATCHED" })).status).toBe(200);
+        expect((await post("transition", { from: "PACKING", to: "DISPATCHED" })).status).toBe(409);
+      }
+    }
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM cod_order_details WHERE test_hold=1 AND status='COD_PENDING' AND cod_fee_pkr=125 AND quoted_total_pkr=325").get()).toEqual({ count: 6 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='ORDER_STATE_TRANSITIONED'").get()).toEqual({ count: 2 });
+  });
+
+  it("rechecks tracking and confirmation evidence inside the audit write after a concurrent evidence loss", async () => {
+    const now = new Date().toISOString();
+    sqlite.prepare("INSERT INTO orders(id,order_number,state,payment_status,total_payable,updated_at) VALUES('advance-order','SIM-CAS','PAID','PAID',1000,?)").run(now);
+    sqlite.prepare("INSERT INTO payments(id,order_id,method,expected_amount,review_state,approved_amount,approved_at,updated_at) VALUES('advance-payment','advance-order','JAZZCASH',1000,'APPROVED',1000,?,?)").run(now, now);
+    sqlite.exec("INSERT INTO payment_receipts VALUES('receipt','advance-order','advance-payment','synthetic/receipt','synthetic-sha')");
+    const session = await csrf();
+    for (const path of ["tracking", "confirm"]) {
+      sqlite.prepare("INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,metadata_json,created_at) VALUES('cas-approval','PAYMENT_APPROVED','ADMIN','PAYMENT','advance-payment',?,?)").run(JSON.stringify({ orderId: "advance-order", amountPkr: 1000, settlementEvidenceRef: "synthetic-evidence", transactionReferenceHash: "synthetic-hash" }), now);
+      db.beforeNextBatch(() => sqlite.exec("DELETE FROM audit_log WHERE id='cas-approval'"));
+      const response = await app.fetch(new Request(`https://admin.example.test/api/orders/advance-order/${path}`, { method: "POST", headers: mutationHeaders(session), body: JSON.stringify({ confirmation: "SIM-CAS", trackingNumber: "SYNTHETIC-TRACK" }) }), env());
+      expect(response.status).toBe(409);
+    }
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE entity_type='ORDER'").get()).toEqual({ count: 0 });
   });
 
   it("blocks advance fulfillment until the approved amount, stored receipt and settlement audit agree", async () => {
