@@ -2,9 +2,9 @@
 
 ## TEST-ISOLATION-001 (2026-11-27)
 
-- **Full:** Vitest520 passed/1 skipped; TypeScript build PASS; lint PASS; production dependency audit0.
+- **Full:** Vitest522 passed/1 skipped; TypeScript build PASS; lint PASS; production dependency audit0.
 - **Focused:** test budget, relay split/signature, isolated input, Admin Graph send, FEP/free gates, ordinary guided API/payment/COD and locale tests PASS.
-- **Budget evidence:** ten allowed,11th blocked; 24 concurrent provider sends admit10; API/Admin guard instances share one D1 anchor; mismatched windows rejected; duplicate payloads suppressed; unknown acceptance blocks; other recipient/deadline/wrong deployment rejected; blocked media send never uploads.
+- **Budget evidence:** ten allowed,11th blocked; 24 concurrent provider sends admit10; API/Admin guard instances share one D1 anchor; mismatched windows rejected; duplicate payloads suppressed; unknown acceptance blocks; other recipient/deadline/wrong deployment rejected; blocked media send never uploads. Relay-enabled production guard blocks only the candidate contact while an ordinary synthetic recipient still sends.
 - **End-to-end synthetic:** signed CTWA opening and synthetic nonbillable FEP status yield EN/UR localized sample messages; duplicate locale webhook suppressed; Orders/Payments/CAPI remain0. No live phone/Meta evidence claimed.
 - **Node:** safe synthetic/regression scripts72/72; credential bridge1/1 with dummy values. Not run: live monitoring probe (would contact production), V1 rollback harness (`GFS_LEGACY_ROOT` unavailable), temp Git-staging preflight harness. Six development findings retained.
 - **Vault:** DPAPI CurrentUser and recovery-wrapped AES-256-GCM roundtrips, synthetic SQL memory restore, CHECK constraint and tamper detection PASS; after fixing a no-data pipe metadata-open race, five consecutive named-pipe/Wrangler two-open read checks PASS; no plaintext file retained.

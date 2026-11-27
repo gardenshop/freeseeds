@@ -106,3 +106,18 @@ export function createWhatsAppTestOutboundGuard(
     }
   };
 }
+
+export function createWhatsAppRelayRecipientBlocker(enabled: string | undefined, recipient: string | undefined): WhatsAppOutboundGuard | undefined {
+  if (enabled !== "true" || !recipient || !/^\+?\d{8,15}$/.test(recipient)) return undefined;
+  const blockedRecipient = normalizedPhone(recipient);
+  const assertRecipient = (to: string) => {
+    if (normalizedPhone(to) === blockedRecipient) throw new Error("WHATSAPP_TEST_RECIPIENT_ROUTED_TO_CANDIDATE");
+  };
+  return {
+    assertRecipient,
+    async send<T>(to: string, _payload: unknown, performSend: () => Promise<T>): Promise<T> {
+      assertRecipient(to);
+      return performSend();
+    }
+  };
+}

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, createWhatsAppTestOutboundGuard, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatNeutralLanguagePrompt, formatPaymentMessage, formatWhatsAppText, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, parseWhatsAppDeliveryReceipts, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage, type FreeMessagingDecision, type OrderIntentPersistence } from "@gfs/core";
+import { applyFertilizerDecision, cancellationReasonFromAction, cancellationReasonRows, cancellationRecovery, cancellationStageForState, codQuote, codReferenceHmac, createWhatsAppProvider, createWhatsAppRelayRecipientBlocker, createWhatsAppTestOutboundGuard, customerTransactionReferenceHash, decryptMetaFlowRequest, encryptMetaFlowResponse, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatNeutralLanguagePrompt, formatPaymentMessage, formatWhatsAppText, getLatestOrderForWaId, getPersistedOrderSummary, InteractiveButton, isAllowedInstantFormLead, isInsideWhatsAppServiceWindow, isPaymentMethodComplete, isPaymentMethodLocaleComplete, isTerminalOutboxStatus, logWhatsAppContentMediaError, maskCancellationReference, MetaCapiProvider, MetaFlowEnvelope, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeMobileContactNumber, normalizePaymentMethodRow, normalizeWhatsAppWaId, OrderCooldownError, OutboundImage, parseFlowSubmission, parseMetaInstantFormLead, parseWhatsAppDeliveryReceipts, PaymentMethod, persistFlowSubmission, persistInboundConversationActivity, persistInstantFormSubmission, persistWebhookRecords, provinceDeliveryListRows, publishedWhatsAppContent, quoteOrder, renderWhatsAppContent, retryDelaySeconds, sanitizeCancellationSuggestion, selectPaymentMethod, selectPublishedWhatsAppContentMedia, storeReceipt, verifyPaymentQrAsset, whatsAppActionLabel, WhatsAppTemplateKey, type CancellationFeedbackState, type CancellationReasonCode, type CancellationStage, type FreeMessagingDecision, type OrderIntentPersistence } from "@gfs/core";
 import { handleMetaFlowPayload } from "./flow-endpoint";
 import { admitWhatsAppSenders } from "./rate-limit";
 import { createPaymentV2Schedule, enqueueDuePaymentV2Stages, isPaymentReminderV2ServiceWindowOpen, resolvePaymentReminderCodFallback, setPaymentReminderV2OptOut } from "./payment-reminders-v2";
@@ -54,6 +54,12 @@ type Env = {
 const app = new Hono<Env>();
 
 function whatsappProvider(env: Env["Bindings"], kind = env.WHATSAPP_PROVIDER, enabled = env.META_PROVIDER_ENABLED === "true") {
+  const testOutboundGuard = createWhatsAppTestOutboundGuard(env.DB, {
+    enabled: env.WHATSAPP_TEST_MODE,
+    deploymentState: env.DEPLOYMENT_STATE,
+    recipient: env.WHATSAPP_TEST_RECIPIENT,
+    windowStart: env.WHATSAPP_TEST_WINDOW_START
+  });
   return createWhatsAppProvider(kind, {
     enabled,
     graphVersion: env.META_GRAPH_VERSION ?? "v26.0",
@@ -61,12 +67,7 @@ function whatsappProvider(env: Env["Bindings"], kind = env.WHATSAPP_PROVIDER, en
     phoneNumberId: env.META_PHONE_NUMBER_ID,
     verifyToken: env.WEBHOOK_VERIFY_TOKEN,
     appSecret: env.META_APP_SECRET,
-    outboundGuard: createWhatsAppTestOutboundGuard(env.DB, {
-      enabled: env.WHATSAPP_TEST_MODE,
-      deploymentState: env.DEPLOYMENT_STATE,
-      recipient: env.WHATSAPP_TEST_RECIPIENT,
-      windowStart: env.WHATSAPP_TEST_WINDOW_START
-    })
+    outboundGuard: testOutboundGuard ?? createWhatsAppRelayRecipientBlocker(env.WHATSAPP_TEST_RELAY_ENABLED, env.WHATSAPP_TEST_RECIPIENT)
   });
 }
 

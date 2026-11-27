@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
-import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, createWhatsAppTestOutboundGuard, customerTransactionReferenceHash, evaluateStoredFreeWhatsAppOutbound, formatWhatsAppText, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, runtimeWhatsAppActionId, storedWhatsAppActionId, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
+import { canTransition, configuredPaymentMethodNames, codReferenceHmac, createMetaActivationService, createWhatsAppProvider, createWhatsAppRelayRecipientBlocker, createWhatsAppTestOutboundGuard, customerTransactionReferenceHash, evaluateStoredFreeWhatsAppOutbound, formatWhatsAppText, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, MetaActivationAction, normalizeCodEvidenceReference, normalizeCustomerTransactionReference, normalizeWhatsAppWaId, OrderState, approvedPurchaseValue, createPurchaseEvent, hasCompleteEnabledPaymentMethod, hasPaymentMessagePlaceholders, isPaymentMethodComplete, isPaymentMethodLocaleComplete, normalizePaymentMethodRow, parseProductInput, parseProvinceDeliveryRateInput, parseWhatsAppContentDraft, paymentInstructions, PaymentMethod, publishedWhatsAppContent, runtimeWhatsAppActionId, storedWhatsAppActionId, storePaymentQr, storeWhatsAppContentMedia, validatePaymentAmount, validateWhatsAppContentImage, WhatsAppActionId, whatsAppActionIdsForTemplate, whatsAppActionLabel, WhatsAppContent, WhatsAppTemplateKey, WHATSAPP_TEMPLATE_KEYS } from "@gfs/core";
 import { analyticsCsv, AnalyticsInputError, parseAnalyticsFilters, readInboundAnalytics } from "./analytics";
 import { ConversationInputError, parseConversationFilters, readConversation, readConversations, readConversationSummary } from "./conversations";
 import { conversationsDashboardPageHtml } from "./conversations-dashboard";
@@ -8,7 +8,7 @@ import { CancellationInputError, cancellationDashboardPageHtml, parseCancellatio
 import { readAttributionReport } from "./attribution";
 import { classifyOrderReconciliation } from "./order-reconciliation";
 
-  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; RECOVERY_MODE?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string; WHATSAPP_TEST_MODE?: string; WHATSAPP_TEST_RECIPIENT?: string; WHATSAPP_TEST_WINDOW_START?: string } };
+  type Env = { Bindings: { DB: D1Database; RECEIPTS: R2Bucket; EVENTS?: Queue; DEPLOYMENT_STATE: string; ADMIN_EMAIL: string; RECOVERY_MODE?: string; META_CAPI_ENABLED?: string; REFERENCE_REQUESTS_ENABLED?: string; PAYMENT_CHOICE_RECOVERY_ENABLED?: string; COD_REFERENCE_HMAC_KEY?: string; META_ACCESS_TOKEN?: string; META_GRAPH_VERSION?: string; META_PHONE_NUMBER_ID?: string; META_WABA_ID?: string; META_APP_ID?: string; META_FLOW_ID?: string; META_CALLBACK_URL?: string; META_PROVIDER_ENABLED?: string; WEBHOOK_VERIFY_TOKEN?: string; META_APP_SECRET?: string; FLOW_PRIVATE_KEY?: string; FLOW_PUBLIC_KEY?: string; WHATSAPP_TEST_MODE?: string; WHATSAPP_TEST_RECIPIENT?: string; WHATSAPP_TEST_WINDOW_START?: string; WHATSAPP_TEST_RELAY_ENABLED?: string } };
 const app = new Hono<Env>();
 app.use("/orders", async (c, next) => { c.header("Cache-Control", "no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
 app.use("/api/orders", async (c, next) => { c.header("Cache-Control", "private, no-store, max-age=0"); c.header("X-Content-Type-Options", "nosniff"); await next(); });
@@ -705,7 +705,12 @@ app.onError((error, c) => {
 });
 
 function metaActivation(c: { env: Env["Bindings"] }) {
-  return createMetaActivationService({ accessToken: c.env.META_ACCESS_TOKEN, graphVersion: c.env.META_GRAPH_VERSION, phoneNumberId: c.env.META_PHONE_NUMBER_ID, wabaId: c.env.META_WABA_ID, appId: c.env.META_APP_ID, callbackUrl: c.env.META_CALLBACK_URL, providerEnabled: c.env.META_PROVIDER_ENABLED === "true", webhookVerifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET, flowPrivateKey: c.env.FLOW_PRIVATE_KEY, flowPublicKey: c.env.FLOW_PUBLIC_KEY, sendTestRecipient: c.env.WHATSAPP_TEST_RECIPIENT, outboundGuard: createWhatsAppTestOutboundGuard(c.env.DB, { enabled: c.env.WHATSAPP_TEST_MODE, deploymentState: c.env.DEPLOYMENT_STATE, recipient: c.env.WHATSAPP_TEST_RECIPIENT, windowStart: c.env.WHATSAPP_TEST_WINDOW_START }) });
+  return createMetaActivationService({ accessToken: c.env.META_ACCESS_TOKEN, graphVersion: c.env.META_GRAPH_VERSION, phoneNumberId: c.env.META_PHONE_NUMBER_ID, wabaId: c.env.META_WABA_ID, appId: c.env.META_APP_ID, callbackUrl: c.env.META_CALLBACK_URL, providerEnabled: c.env.META_PROVIDER_ENABLED === "true", webhookVerifyToken: c.env.WEBHOOK_VERIFY_TOKEN, appSecret: c.env.META_APP_SECRET, flowPrivateKey: c.env.FLOW_PRIVATE_KEY, flowPublicKey: c.env.FLOW_PUBLIC_KEY, sendTestRecipient: c.env.WHATSAPP_TEST_RECIPIENT, outboundGuard: adminOutboundGuard(c.env) });
+}
+
+function adminOutboundGuard(env: Env["Bindings"]) {
+  return createWhatsAppTestOutboundGuard(env.DB, { enabled: env.WHATSAPP_TEST_MODE, deploymentState: env.DEPLOYMENT_STATE, recipient: env.WHATSAPP_TEST_RECIPIENT, windowStart: env.WHATSAPP_TEST_WINDOW_START })
+    ?? createWhatsAppRelayRecipientBlocker(env.WHATSAPP_TEST_RELAY_ENABLED, env.WHATSAPP_TEST_RECIPIENT);
 }
 
 function adminWhatsAppProvider(env: Env["Bindings"]) {
@@ -715,7 +720,7 @@ function adminWhatsAppProvider(env: Env["Bindings"]) {
     phoneNumberId: env.META_PHONE_NUMBER_ID,
     accessToken: env.META_ACCESS_TOKEN,
     appSecret: env.META_APP_SECRET,
-    outboundGuard: createWhatsAppTestOutboundGuard(env.DB, { enabled: env.WHATSAPP_TEST_MODE, deploymentState: env.DEPLOYMENT_STATE, recipient: env.WHATSAPP_TEST_RECIPIENT, windowStart: env.WHATSAPP_TEST_WINDOW_START })
+    outboundGuard: adminOutboundGuard(env)
   });
 }
 

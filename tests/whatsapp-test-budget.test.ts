@@ -1,7 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 import apiWorker from "../apps/api/src/index.js";
-import { createWhatsAppProvider, createWhatsAppTestOutboundGuard, WHATSAPP_TEST_MESSAGE_LIMIT, WHATSAPP_TEST_WINDOW_MS } from "../packages/core/src/index.js";
+import { createWhatsAppProvider, createWhatsAppRelayRecipientBlocker, createWhatsAppTestOutboundGuard, WHATSAPP_TEST_MESSAGE_LIMIT, WHATSAPP_TEST_WINDOW_MS } from "../packages/core/src/index.js";
 
 function fixture(start = "2026-11-27T13:00:00.000Z") {
   const sqlite = new DatabaseSync(":memory:");
@@ -93,6 +93,23 @@ describe("isolated WhatsApp test budget", () => {
     await expect(test.guard.send("+15555550124", { type: "text" }, providerSend)).rejects.toThrow("WHATSAPP_TEST_RECIPIENT_REJECTED");
     expect(providerSend).not.toHaveBeenCalled();
     expect(test.sqlite.prepare("SELECT COUNT(*) AS n FROM outbound_messages").get()).toEqual({ n: 0 });
+  });
+
+  it("blocks only the relay recipient on production outbound paths", async () => {
+    const guard = createWhatsAppRelayRecipientBlocker("true", "+15555550123");
+    const performSend = vi.fn(async () => ({ providerMessageId: "synthetic-ordinary-id" }));
+    await expect(guard!.send("+15555550123", { type: "text" }, performSend)).rejects.toThrow("WHATSAPP_TEST_RECIPIENT_ROUTED_TO_CANDIDATE");
+    await expect(guard!.send("+15555550124", { type: "text" }, performSend)).resolves.toEqual({ providerMessageId: "synthetic-ordinary-id" });
+    expect(performSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks only the candidate recipient on the relay-enabled production path", async () => {
+    const guard = createWhatsAppRelayRecipientBlocker("true", "+15555550123");
+    const send = vi.fn(async () => ({ providerMessageId: "synthetic-ordinary-provider-id" }));
+    expect(() => guard!.assertRecipient("+15555550123")).toThrow("WHATSAPP_TEST_RECIPIENT_ROUTED_TO_CANDIDATE");
+    await expect(guard!.send("+15555550123", { type: "text" }, send)).rejects.toThrow("WHATSAPP_TEST_RECIPIENT_ROUTED_TO_CANDIDATE");
+    await expect(guard!.send("+15555550124", { type: "text" }, send)).resolves.toEqual({ providerMessageId: "synthetic-ordinary-provider-id" });
+    expect(send).toHaveBeenCalledTimes(1);
   });
 
   it("enforces the fixed thirty-minute deadline and isolated deployment state", async () => {
