@@ -1,5 +1,9 @@
 # GFS-ORDERFLOW-TEST-ISOLATION-001
 
+## RELEASE-READINESS-003 update (2026-11-28)
+
+The approved `getfreeseeds-v2-restore-fep-002` now exists and read-only checks show `PRAGMA quick_check=ok` with zero application tables (Cloudflare `_cf_KV` internal metadata excluded). The existing nonempty `restore-check` was not reset. The API test config binds to the new target; the Admin test config is isolated, provider-off and has no route. No export/restore/migration/Worker upload occurred; the local encrypted export is blocked by the missing recovery passphrase. See `GFS_ORDERFLOW_RELEASE_READINESS_003.md`.
+
 ## Result
 
 **Local implementation and synthetic acceptance PASS. Live CTWA test, production export/restore, deployment and launch remain NO-GO pending separate approvals.** Live outbound count is **0/10** and the 30-minute timer was not started. Verified starting checkout: `gardenshop/freeseeds`, `codex/gfs-order-001-rev2`, local and origin SHA `80706543de9d33a174b2c7370c51882ce49e40a3`. The approved private test contact is intentionally absent from source, test fixtures, logs and this report. Chrome DevTools MCP `list_pages` was called first. Visible Cloudflare account matched Get Free Seeds. No production message, route, setting, Worker, D1, payment, order, CAPI or campaign was changed.

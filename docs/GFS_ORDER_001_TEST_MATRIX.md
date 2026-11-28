@@ -17,7 +17,7 @@ The comparison uses the authenticated Cloudflare deployment metadata: production
 
 ## ZERO-MISSED-LEADS-002 validation
 
-- Full Vitest: **533 passed, 1 skipped** across44 files, including the same-fixture legacy/candidate test, 8 synthetic inbound events across7 contacts, concurrent CTWA openings without platform fields, returning messages both with and without retained FEP evidence, duplicate replay and six accepted/delivered fake-provider responses.
+- Full Vitest: **534 passed, 1 skipped** across44 files, including the same-fixture legacy/candidate test, 8 synthetic inbound events across7 contacts, concurrent CTWA openings without platform fields, returning messages both with and without retained FEP evidence, duplicate replay and six accepted/delivered fake-provider responses.
 - Focused reliability suite: **278 passed, 1 skipped** across10 files. TypeScript `npm.cmd run build` and `npm.cmd run lint`: **PASS**.
 - Documented Node safety/controller/stress suite: **52/52 PASS**. Credential-bridge process-scope test with dummy secret values: **PASS**; no real credential read or network request.
 - API and Admin Wrangler `deploy --dry-run`: **PASS**, local bundles only; no upload. Production dependency audit: **0 findings**. Full dependency audit still reports the **six registered moderate dev-tool findings**; lockfile unchanged.

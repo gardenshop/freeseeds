@@ -2,7 +2,7 @@
 
 ## ZERO-MISSED-LEADS-002 current policy (2026-11-28)
 
-Owner status update: the alternate display name `Free Seeds In Pakistan` is already under review; do not resubmit/change it. Authorized Chrome DevTools MCP was restored. Phone Numbers list shows an In Review name label, Profile shows the active name Rejected, and phone status is Connected/High. Messaging Limits shows Current, but registration-expiry and Graph API-scope fields were not displayed; the prior Graph EXPIRED result remains unreconciled.
+Owner status update: the alternate display name `Free Seeds In Pakistan` is already under review; do not resubmit/change it. Authorized Chrome DevTools MCP was restored. Phone Numbers list shows an In Review name label, Profile shows the active name Rejected, and phone status is Connected/High. Messaging Limits shows Current. A read-only Graph v26/Admin status reports name_status DECLINED, registrationStatus EXPIRED, WABA subscribed and messaging/management permissions granted; those credentials are from the Admin context and production API token parity remains unverified.
 
 This policy supersedes historical device/platform and isolated-test-attestation rules below. A single opening response may use authenticated, signed Meta referral evidence (`source_type=ad`, nonempty `ctwa_clid`, provider timestamp) within the actual 24-hour customer-service window. The click ID is hashed before storage. No device/OS field, `source_platform`, or test attestation is used, and the first response does not depend on already-observed FEP pricing/expiry. Missing referral evidence remains unresolved and is not sent.
 

@@ -8,9 +8,11 @@
 
 The `Source changes remain uncommitted` text in the older baseline paragraph below is a historical prepublication snapshot; use RELEASE-READINESS-003 for the current branch/approval state.
 
+Current read-only Graph v26/Admin status reports `registrationStatus=EXPIRED`, active `name_status=DECLINED`, WABA subscribed, and WhatsApp management/messaging scopes granted. This is the Admin-configured token; production API token parity is not proven. Phone Manager separately reports Connected/High and an In Review name label; do not treat Connected as registration or resubmit the owner-confirmed pending display name. This paragraph supersedes the older Meta-status sentence below.
+
 Source commit `cbcb7fb9aa333c95557a5c25c2f5df98a090596e` and documentation follow-up are pushed on `codex/gfs-order-001-rev2`. Authorized Chrome DevTools MCP was reconnected; Phone Numbers showed an In Review name entry, Profile showed active name Rejected, phone Connected/High, Messaging Limits Current. The pending text was not separately exposed; the owner reports `Free Seeds In Pakistan` is already under review and explicitly says do not resubmit/change it. Registration expiry and Graph scopes remain unreconciled with prior Graph EXPIRED; Connected is not treated as registration proof. Meta Business Agent shows Set up/off. No Meta mutation or direct CDP fallback was used.
 
-Final local validation: **533 Vitest passed/1 skipped (44 files)**; focused reliability suite278/1; TypeScript/lint PASS; documented Node safety52/52; dummy credential process test PASS; API/Admin dry-runs PASS; production dependency audit0; six development findings preserved; protected hashes923/923 identical. Full details are in the test matrix. No Worker or migration was applied.
+Final local validation: **534 Vitest passed/1 skipped (44 files)**; focused reliability suite278/1; TypeScript/lint PASS; documented Node safety52/52; dummy credential process test PASS; API/Admin dry-runs PASS; production dependency audit0; six development findings preserved; protected hashes923/923 identical. Full details are in the test matrix. No Worker or production migration was applied.
 
 Local changes are on branch `codex/gfs-order-001-rev2`, based on published `11b43328caddff502fae2e7b4673932e7acd918b53`; changes remain uncommitted until scoped verification/publishing. Inbound accounting, initial-reply Queue/DLQ lifecycle, actual delivery/read reconciliation, billing incidents and active send block, read-only Admin aggregates/alert, signed CTWA opening path and exact coverage fixture are implemented/tested locally. See [continuation report](GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md).
 
@@ -22,7 +24,9 @@ Do not apply candidate migration `0052`, deploy Workers, change callback/routes,
 
 ## RELEASE-READINESS-003 current disposition
 
-This section supersedes the earlier uncommitted/prepublication paragraph and historical display-name submission suggestion above. The owner says the alternate display name is already under review; do not resubmit/change it. Current Meta read is Profile active name Rejected, list has an In Review name label, phone Connected/High, Messaging Limits Current; Graph registration expiry/API scopes remain unreconciled. The final release-readiness report consolidates the outstanding owner approvals for encrypted export, isolated restore, and isolated candidate/relay preparation. Existing test-contact and 10-attempt/30-minute approvals are reused. No test send, export, restore, deployment, Meta edit or migration occurred.
+This section supersedes the earlier uncommitted/prepublication paragraph and historical display-name submission suggestion above. The owner says the alternate display name is already under review; do not resubmit/change it. Current Meta read is Profile active name Rejected, list has an In Review name label, phone Connected/High, Messaging Limits Current; Graph registration expiry/API scopes remain unreconciled. The owner approved nonprod backup/restore and isolated candidate preparation. The target D1 exists, passes quick_check with zero application tables, and is not restored; a current Time Travel bookmark exists. No encrypted export was performed because the process recovery passphrase is absent. Candidate API/Admin configs are prepared, but no Worker was uploaded. Existing test-contact and 10-attempt/30-minute approvals are reused. No test send, restore, Meta edit or production migration occurred.
+
+Sections below are historical 2026-11-27 snapshots. Their statements that target creation/export/restore were unauthorized or that the proposed target did not exist are superseded by this current release-readiness state; do not reset the existing nonempty restore-check database.
 
 ## FEP-LIVE-002 (2026-11-27)
 

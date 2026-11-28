@@ -16,7 +16,8 @@ type AdminContext = Context<Env>;
 const CSRF_COOKIE = "__Host-gfs_admin_csrf";
 
 function authorized(c: { req: { header(name: string): string | undefined }; env: Env["Bindings"] }): boolean {
-  return c.req.header("cf-access-authenticated-user-email") === c.env.ADMIN_EMAIL;
+  const configuredEmail=typeof c.env.ADMIN_EMAIL==="string"?c.env.ADMIN_EMAIL.trim():"";
+  return Boolean(configuredEmail)&&c.req.header("cf-access-authenticated-user-email")===configuredEmail;
 }
 
 function authorizedForAdmin(c: AdminContext): boolean {

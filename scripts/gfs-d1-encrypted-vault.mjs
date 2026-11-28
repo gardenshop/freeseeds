@@ -382,7 +382,7 @@ async function exportProductionD1ToVault(vaultPath, outputName) {
   if (!containsString(d1Info, EXPECTED_PRODUCTION_D1_ID)) throw new Error("CANONICAL_D1_IDENTITY_MISMATCH");
   const restoreInfo = runWranglerJson(wranglerPath, repoRoot, ["d1", "info", restoreTargetName, "--json", "--config", configPath]);
   if (!containsString(restoreInfo, restoreTargetId)) throw new Error("RESTORE_TARGET_IDENTITY_MISMATCH");
-  const restoreTables = runWranglerJson(wranglerPath, repoRoot, ["d1", "execute", restoreTargetName, "--remote", "--json", "--command", "SELECT COUNT(*) AS table_count FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%';", "--config", configPath]);
+  const restoreTables = runWranglerJson(wranglerPath, repoRoot, ["d1", "execute", restoreTargetName, "--remote", "--json", "--command", "SELECT COUNT(*) AS table_count FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT GLOB '_cf_*';", "--config", configPath]);
   const tableCount = findNumberField(restoreTables, "table_count");
   if (tableCount !== 0) throw new Error("RESTORE_TARGET_NOT_EMPTY");
   const pipeName = `\\\\.\\pipe\\gfs-orderflow-export-${randomBytes(12).toString("hex")}`;

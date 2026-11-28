@@ -110,6 +110,15 @@ describe("GFS-109 admin controls", () => {
     }
   });
 
+  it("fails closed when the Admin email allowlist is not configured", async () => {
+    const db=new AdminMemoryDb();
+    const unconfigured={DB:db as unknown as D1Database,DEPLOYMENT_STATE:"ISOLATED_WHATSAPP_TEST"} as never;
+    for(const path of ["/analytics","/api/analytics","/api/meta-activation/state"]){
+      const response=await app.fetch(new Request(`https://admin.example.test${path}`),unconfigured);
+      expect(response.status).toBe(403);
+    }
+  });
+
   it("renders a responsive, privacy-safe Admin home navigation", async () => {
     const response = await app.fetch(new Request("https://admin.example.test/", { headers: auth }), env(new AdminMemoryDb()));
     expect(response.status).toBe(200);

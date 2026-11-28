@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "getfreeseeds-admin-wa-test",
+  "account_id": "cb5066a6d71ecdee0bd7ed8aacb4d3c2",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-27",
+  "workers_dev": false,
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
+  "d1_databases": [{ "binding": "DB", "database_name": "getfreeseeds-v2-restore-fep-002", "database_id": "ad9523b1-4cd3-42ca-833a-2c8d462c366e" }],
+  "vars": {
+    "DEPLOYMENT_STATE": "ISOLATED_WHATSAPP_TEST",
+    "ADMIN_EMAIL": "disabled@invalid.local",
+    "WHATSAPP_TEST_MODE": "false",
+    "META_PROVIDER_ENABLED": "false",
+    "META_CAPI_ENABLED": "false",
+    "META_INSTANT_FORM_ENABLED": "false",
+    "REFERENCE_REQUESTS_ENABLED": "false",
+    "COD_V1_ENABLED": "false",
+    "COD_ROLLOUT_MODE": "DISABLED",
+    "PAYMENT_AUTOMATION_V2_ENABLED": "false",
+    "PAYMENT_REMINDERS_V2_ENABLED": "false",
+    "PAYMENT_UTILITY_TEMPLATES_APPROVED": "false",
+    "PAYMENT_CHOICE_RECOVERY_ENABLED": "false",
+    "ORDER_INTENT_AUTOMATION_ENABLED": "false"
+  }
+}
