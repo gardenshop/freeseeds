@@ -418,14 +418,18 @@ async function exportProductionD1ToVault(vaultPath, outputName) {
   server.close();
   const container = await readFile(encrypted.target);
   let plaintext;
+  let recoveryPlaintext;
   try {
     plaintext = decryptBuffer(container);
     if (!plaintext.length) throw new Error("D1_EXPORT_EMPTY");
+    recoveryPlaintext = decryptBuffer(container, { recoveryPassphrase, preferRecovery: true });
+    if (!recoveryPlaintext.equals(plaintext)) throw new Error("D1_RECOVERY_KEY_MISMATCH");
   } catch {
     await unlink(encrypted.target).catch(() => undefined);
     throw new Error("D1_EXPORT_INTEGRITY_FAILED");
   } finally {
     plaintext?.fill(0);
+    recoveryPlaintext?.fill(0);
     container.fill(0);
   }
   const stat = await import("node:fs/promises").then((fs) => fs.stat(encrypted.target));

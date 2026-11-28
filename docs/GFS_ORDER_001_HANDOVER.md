@@ -6,7 +6,11 @@
 
 ## Post-publish and Meta owner update (2026-11-28)
 
+Registration recovery attempt: the single owner-authorized SMS-code request returned `META_GRAPH_REQUEST_FAILED`/HTTP400 and was not applied; no SMS/OTP was issued or entered. Do not retry until Meta support/owner confirms the correct existing-number recovery action. No PIN was requested.
+
 The `Source changes remain uncommitted` text in the older baseline paragraph below is a historical prepublication snapshot; use RELEASE-READINESS-003 for the current branch/approval state.
+
+Backup/restore/isolated candidate state and the exact owner-local export prerequisite are maintained in `GFS_ORDERFLOW_BACKUP_RESTORE_RELEASE_004.md`; its owner-prep authorization is already granted.
 
 Current read-only Graph v26/Admin status reports `registrationStatus=EXPIRED`, active `name_status=DECLINED`, WABA subscribed, and WhatsApp management/messaging scopes granted. This is the Admin-configured token; production API token parity is not proven. Phone Manager separately reports Connected/High and an In Review name label; do not treat Connected as registration or resubmit the owner-confirmed pending display name. This paragraph supersedes the older Meta-status sentence below.
 
