@@ -4,7 +4,7 @@
 
 **Repository:** `gardenshop/freeseeds`
 **Branch:** `codex/gfs-order-001-rev2`
-**Verified HEAD/remote:** `60e611a8575eaf98bfcc37f8166e18876676414c`
+**Verified base HEAD/remote before this closeout:** `60e611a8575eaf98bfcc37f8166e18876676414c`
 
 **Release decision:** source/test/report package pushed; live WhatsApp remains **NO-GO**. Backup export is not complete because the owner recovery passphrase is absent from the local process environment. No restore, isolated migration, Worker upload, relay activation, production migration/deployment, or live message occurred.
 
@@ -60,8 +60,10 @@ try {
   $env:GFS_D1_VAULT_RECOVERY_PASSPHRASE = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
   $env:GFS_D1_TIME_TRAVEL_REFERENCE = Read-Host 'Enter the fresh Time Travel bookmark ID'
   $env:GFS_D1_TIME_TRAVEL_REFERENCE_CREATED_AT = [DateTimeOffset]::UtcNow.ToString('o')
-  $env:GFS_D1_RESTORE_TARGET_NAME = 'getfreeseeds-v2-restore-fep-002'
-  $env:GFS_D1_RESTORE_TARGET_ID = '<copy privately from apps/api/wrangler.whatsapp-test.jsonc>'
+  $target = Get-Content -LiteralPath 'apps/api/wrangler.whatsapp-test.jsonc' -Raw | ConvertFrom-Json
+  if ($target.d1_databases[0].database_name -ne 'getfreeseeds-v2-restore-fep-002') { throw 'Unexpected restore target' }
+  $env:GFS_D1_RESTORE_TARGET_NAME = $target.d1_databases[0].database_name
+  $env:GFS_D1_RESTORE_TARGET_ID = $target.d1_databases[0].database_id
   $env:GFS_D1_APPROVED_VAULT_PATH = Join-Path $env:LOCALAPPDATA 'GFS-Orderflow-D1Vault'
   $env:GFS_D1_PRODUCTION_EXPORT_AUTHORIZED = 'YES'
   $env:GFS_D1_DESTINATION_APPROVED = 'YES'
@@ -78,6 +80,7 @@ finally {
   [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
   $secure.Dispose()
 }
+exit
 ```
 
 The helper fails closed unless source account/D1, target ID/emptiness, vault ACL/capacity, approval flags and fresh Time Travel age all match. It emits only encrypted-file hash/size. Stop if any check fails. After a successful export, verify checksum and the recovery-wrap with the private passphrase, restore only to `getfreeseeds-v2-restore-fep-002`, verify schema/financial invariants, then apply `0052` only on that isolated target. Never reset `getfreeseeds-v2-restore-check` or restore/deploy to production.
