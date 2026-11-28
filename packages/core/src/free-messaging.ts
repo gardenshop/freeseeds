@@ -129,6 +129,8 @@ export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: s
   try {
     const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(waId.replace(/^\+/, ""))));
     recipientHash = [...digest].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    const globalPause = await db.prepare("SELECT 1 AS paused FROM whatsapp_system_send_pauses WHERE pause_key='WABA_GLOBAL' AND status='ACTIVE'").first<{ paused: number }>();
+    if (Number(globalPause?.paused) === 1) return { eligible: false, reason: "GLOBAL_BILLING_INCIDENT_PAUSE" };
     const block = await db.prepare("SELECT 1 AS blocked FROM whatsapp_send_blocks WHERE recipient_hash=? AND status='ACTIVE'").bind(recipientHash).first<{ blocked: number }>();
     if (Number(block?.blocked) === 1) return { eligible: false, reason: "UNEXPECTED_BILLABLE_MESSAGE_PAUSE" };
   } catch { return { eligible: false, reason: "BILLING_BLOCK_STORAGE_UNAVAILABLE" }; }

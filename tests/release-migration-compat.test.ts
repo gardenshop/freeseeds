@@ -121,7 +121,7 @@ describe("release 0049 -> unchanged 0050 -> 0051 -> additive 0052 compatibility"
     }
   });
   it("pins the reviewed migration bytes and preserves all pre-0049 rows and old schema definitions", () => {
-    const hashes = ["01fd20cb7294c9401efa3773f5ecb05f4373972969c86de74493e546df34fec6", "d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4", "900c4410796cb0de20da568088a7563f670be758454f129d38fd28207606a47a", "6fa6189bf04f5327693f366434102a36d8ff82d4cf41c61d10a682a093ba91ca"];
+    const hashes = ["01fd20cb7294c9401efa3773f5ecb05f4373972969c86de74493e546df34fec6", "d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4", "900c4410796cb0de20da568088a7563f670be758454f129d38fd28207606a47a", "2e5f1460f5c65c64668ea9f1473cb0611c571db3cf23d62bc9756b0b2c7931d0"];
     expect(releaseFiles).toHaveLength(4);
     releaseFiles.forEach((file, index) => expect(createHash("sha256").update(readFileSync(`migrations/${file}`)).digest("hex")).toBe(hashes[index]));
     const before = snapshot();

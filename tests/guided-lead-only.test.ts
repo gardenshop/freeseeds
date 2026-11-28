@@ -3,7 +3,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api, { syncPaymentReminderDeliveryStatuses } from "../apps/api/src/index";
 import admin from "../apps/admin/src/index";
-import { codReferenceHmac, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, karachiOrderDate, MockWhatsAppProvider, persistFlowSubmission, persistInboundLeadAccounting, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { codReferenceHmac, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, karachiOrderDate, MockWhatsAppProvider, persistFlowSubmission, persistInboundLeadAccounting, selectPaymentMethod, storeReceipt, whatsappIdentityHash } from "@gfs/core";
 import { defaultPaymentChoiceRecoveryCopy, enqueueDuePaymentChoiceRecoveryStages, paymentChoiceRecoveryCopy } from "../apps/api/src/payment-choice-recovery";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
@@ -252,44 +252,77 @@ describe("frozen V1 receipt hotfix", () => {
 
   it("compares legacy b426 service-window attempts with candidate coverage on identical sanitized lead fixtures", async () => {
     const now = new Date();
-    const leadMessages = Array.from({ length: 7 }, (_, index) => ({
-      from: String(923000000001 + index),
+    const leadMessages = Array.from({ length: 8 }, (_, index) => ({
+      from: String(923000000001 + (index === 6 ? 0 : index)),
       id: `synthetic-coverage-${index + 1}`,
       timestamp: String(Math.floor(now.getTime() / 1000)),
       type: "text",
       text: { body: "START" },
       ...(index < 5 ? { referral: { ctwa_clid: `synthetic-click-${index + 1}`, source_type: "ad" } } : {})
     }));
-    const returning = leadMessages[6];
-    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES('synthetic-returning-lead',?,'NEW',?,'synthetic-returning-prior',?,?,?)")
-      .run(returning.from, JSON.stringify({ language: "en" }), new Date(now.getTime() - 5 * 60_000).toISOString(), now.toISOString(), now.toISOString());
+    const returningWithoutProof=leadMessages[7];
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES('synthetic-returning-no-proof',?,'LANGUAGE',?,'synthetic-prior-no-proof',?,?,?)")
+      .run(returningWithoutProof.from,JSON.stringify({language:"en"}),new Date(now.getTime()-5*60_000).toISOString(),now.toISOString(),now.toISOString());
     const legacyAttempts = leadMessages.filter((message) => isInsideWhatsAppServiceWindow(new Date(Number(message.timestamp) * 1000).toISOString())).length;
-    expect(legacyAttempts).toBe(7);
+    expect(legacyAttempts).toBe(8);
 
+    const originalBatch=db.batch;
+    let batchQueue=Promise.resolve();
+    db.batch=(async (statements:Parameters<typeof db.batch>[0])=>{
+      const next=batchQueue.then(()=>originalBatch(statements));
+      batchQueue=next.then(()=>undefined,()=>undefined);
+      return next;
+    }) as typeof db.batch;
     injectSyntheticFreeEvidence=false;
-    try { for (const message of leadMessages) expect((await callback([message])).status).toBe(200); }
-    finally { injectSyntheticFreeEvidence=true; }
-    expect(sends).toHaveLength(5);
+    try {
+      const concurrentOpenings=await Promise.all(leadMessages.slice(0,5).map((message)=>callback([message])));
+      expect(concurrentOpenings.every((response)=>response.status===200)).toBe(true);
+      const firstReply=sqlite.prepare("SELECT provider_message_id FROM outbound_messages WHERE kind='LANGUAGE_SELECTION' AND idempotency_key IN (?,?) AND provider_message_id IS NOT NULL").get(`welcome_reply:${leadMessages[0].id}`,`conversation_reply:${leadMessages[0].id}`) as {provider_message_id:string};
+      const responseSeconds=Math.floor(now.getTime()/1000);
+      const expirySeconds=responseSeconds+6*24*60*60;
+      const sentStatus={field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:firstReply.provider_message_id,recipient_id:leadMessages[0].from,status:"sent",timestamp:String(responseSeconds),conversation:{id:"synthetic-existing-conversation",expiration_timestamp:String(expirySeconds),origin:{type:"referral_conversion"}}}]}};
+      const deliveredStatus={field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:firstReply.provider_message_id,recipient_id:leadMessages[0].from,status:"delivered",timestamp:String(Math.floor(Date.now()/1000)),pricing:{pricing_model:"PMP",type:"free_entry_point",category:"referral_conversion"}}]}};
+      expect((await callback([], [sentStatus,deliveredStatus])).status).toBe(200);
+      const priorConversation=sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE wa_id=?").get(leadMessages[0].from) as {state_data:string};
+      expect(JSON.parse(priorConversation.state_data).freeMessagingEvidence.fep).toMatchObject({sourceType:"CTWA_AD",expiryVerified:true,verifiedExpiresAt:new Date(expirySeconds*1000).toISOString()});
+      const storedPricing=JSON.parse(priorConversation.state_data).freeMessagingEvidence.pricing;
+      expect(storedPricing).toMatchObject({verified:true,basis:"FEP",type:"free_entry_point",category:"REFERRAL_CONVERSION",pricingModel:"PMP",form:"FREEFORM",messageCategory:"SERVICE"});
+      expect(storedPricing.billable).toBeUndefined();
+      expect(Date.parse(storedPricing.observedAt)).toBeLessThanOrEqual(Date.now());
+      expect(Date.parse(storedPricing.verifiedAt)).toBeLessThanOrEqual(Date.now());
+      expect(Date.parse(storedPricing.validUntil)).toBeGreaterThan(Date.now()+60_000);
+      expect(await evaluateStoredFreeWhatsAppOutbound(db,leadMessages[0].from,"en")).toMatchObject({eligible:true,basis:"FEP"});
+      expect((await callback([leadMessages[5]])).status).toBe(200);
+      expect(sends).toHaveLength(5);
+      expect(await evaluateStoredFreeWhatsAppOutbound(db,leadMessages[0].from,"en")).toMatchObject({eligible:true,basis:"FEP"});
+      expect((await callback([leadMessages[6]])).status).toBe(200);
+      const returningHash=await whatsappIdentityHash(leadMessages[6].id);
+      expect(sqlite.prepare("SELECT outcome,reason_code FROM whatsapp_lead_accounting WHERE inbound_event_hash=?").get(returningHash)).toEqual({outcome:"RESPONSE_ACCEPTED",reason_code:"RESPONSE_ACCEPTED"});
+      expect((await callback([leadMessages[7]])).status).toBe(200);
+      expect(sends).toHaveLength(6);
+    }
+    finally { injectSyntheticFreeEvidence=true; db.batch=originalBatch; }
+    expect(sends).toHaveLength(6);
     // The b426ba47 Worker (source commit 901f3f6) attempted the same CSW-open welcome path without a free-pricing gate.
     expect(sqlite.prepare(`SELECT COUNT(*) AS received,SUM(eligible) AS eligible,SUM(attempted) AS attempted,SUM(accepted) AS accepted,
       SUM(delivered) AS delivered,SUM(read) AS read,SUM(outcome LIKE 'SUPPRESSED%') AS suppressed,SUM(outcome LIKE 'UNRESOLVED%') AS unresolved
-      FROM whatsapp_lead_accounting`).get()).toEqual({ received: 7, eligible: 5, attempted: 5, accepted: 5, delivered: 0, read: 0, suppressed: 0, unresolved: 2 });
-    expect(sqlite.prepare("SELECT outcome,reason_code FROM whatsapp_lead_accounting WHERE outcome='UNRESOLVED_FREE_ELIGIBILITY'").get()).toEqual({ outcome: "UNRESOLVED_FREE_ELIGIBILITY", reason_code: "FREE_BILLING_UNKNOWN_OR_MISMATCHED" });
+      FROM whatsapp_lead_accounting`).get()).toEqual({ received: 8, eligible: 6, attempted: 6, accepted: 6, delivered: 1, read: 0, suppressed: 0, unresolved: 2 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_lead_accounting WHERE outcome='UNRESOLVED_FREE_ELIGIBILITY' AND reason_code='FREE_BILLING_UNKNOWN_OR_MISMATCHED'").get()).toEqual({ count: 2 });
 
     injectSyntheticFreeEvidence=false;
     try { await callback([leadMessages[0]]); }
     finally { injectSyntheticFreeEvidence=true; }
-    expect(sends).toHaveLength(5);
+    expect(sends).toHaveLength(6);
     const replies = sqlite.prepare("SELECT provider_message_id FROM outbound_messages WHERE kind='LANGUAGE_SELECTION' AND provider_message_id IS NOT NULL ORDER BY created_at,id").all() as Array<{ provider_message_id: string }>;
-    expect(replies).toHaveLength(5);
-    expect(new Set(replies.map(({ provider_message_id }) => provider_message_id)).size).toBe(5);
+    expect(replies).toHaveLength(6);
+    expect(new Set(replies.map(({ provider_message_id }) => provider_message_id)).size).toBe(6);
     const statusCallback=await callback([], [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: replies.map(({ provider_message_id }, index) => ({ id: provider_message_id, recipient_id: leadMessages[index].from, status: index < 2 ? "read" : "delivered", timestamp: String(Math.floor(Date.now() / 1000)) })) } }]);
     expect(statusCallback.status).toBe(200);
     expect(await statusCallback.json()).toMatchObject({ eventCount: 5 });
-    expect(sqlite.prepare("SELECT status,COUNT(*) AS count FROM outbound_messages WHERE kind='LANGUAGE_SELECTION' AND provider_message_id IS NOT NULL GROUP BY status").all()).toEqual([{ status: "DELIVERED", count: 3 }, { status: "READ", count: 2 }]);
-    expect(sqlite.prepare("SELECT SUM(accepted) AS accepted,SUM(delivered) AS delivered,SUM(read) AS read FROM whatsapp_lead_accounting").get()).toEqual({ accepted: 5, delivered: 5, read: 2 });
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_events WHERE status IN ('RESPONSE_DELIVERED','RESPONSE_READ') AND event_type<>'STATUS'").get()).toEqual({ count: 5 });
-    expect(sqlite.prepare("SELECT COUNT(*) AS responses FROM whatsapp_lead_responses").get()).toEqual({ responses: 5 });
+    expect(sqlite.prepare("SELECT status,COUNT(*) AS count FROM outbound_messages WHERE kind='LANGUAGE_SELECTION' AND provider_message_id IS NOT NULL GROUP BY status").all()).toEqual([{ status: "DELIVERED", count: 4 }, { status: "READ", count: 2 }]);
+    expect(sqlite.prepare("SELECT SUM(accepted) AS accepted,SUM(delivered) AS delivered,SUM(read) AS read FROM whatsapp_lead_accounting").get()).toEqual({ accepted: 6, delivered: 6, read: 2 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_events WHERE status IN ('RESPONSE_DELIVERED','RESPONSE_READ') AND event_type<>'STATUS'").get()).toEqual({ count: 6 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS responses FROM whatsapp_lead_responses").get()).toEqual({ responses: 6 });
     expect(sqlite.prepare("SELECT COUNT(*) AS duplicate_leads FROM (SELECT inbound_event_hash FROM whatsapp_lead_responses GROUP BY inbound_event_hash HAVING COUNT(*)>1)").get()).toEqual({ duplicate_leads: 0 });
   });
 
@@ -1027,23 +1060,27 @@ describe("durable WhatsApp billable-delivery protection", () => {
     const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: "SYNTHETIC BILLING INCIDENT", nearbyPlace: "SYNTHETIC ONLY", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, "SYNTHETIC-BILLING-INCIDENT-ORDER", sender);
     const paymentBefore = sqlite.prepare("SELECT * FROM payments").all();
     const orderBefore = sqlite.prepare("SELECT * FROM orders").all();
-    await callback([], [status("synthetic-sent-billable", "sent", true), status("synthetic-unknown-billable", "delivered", true, ""), status("synthetic-nonbillable", "read", false), status("synthetic-unknown", "delivered", undefined), status("synthetic-failed", "failed", true)]);
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_billing_incidents").get()).toEqual({ count: 0 });
+    await callback([], [status("synthetic-sent-billable", "sent", true), status("synthetic-unknown-billable", "delivered", true, ""), status("synthetic-nonbillable", "read", false), status("synthetic-unknown", "delivered", undefined), status("synthetic-failed", "failed", true), { field:"messages",value:{metadata:{phone_number_id:phoneId},statuses:[{id:"synthetic-billable-no-timestamp",status:"delivered",pricing:{billable:true,category:"utility",pricing_model:"PMP",type:"regular"}}] } }]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_billing_incidents").get()).toEqual({ count: 2 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_billing_incidents WHERE recipient_hash IS NULL").get()).toEqual({ count: 2 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_system_send_pauses WHERE status='ACTIVE'").get()).toEqual({ count: 1 });
     const billable = status("synthetic-billable-delivered-id", "delivered", true);
     expect((await callback([], [billable])).status).toBe(200);
     expect((await callback([], [billable])).status).toBe(200);
     const read = status("synthetic-billable-read-id", "read", true);
     expect((await callback([], [read])).status).toBe(200);
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_billing_incidents").get()).toEqual({ count: 2 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_billing_incidents").get()).toEqual({ count: 4 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_send_blocks WHERE status='ACTIVE'").get()).toEqual({ count: 1 });
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='WHATSAPP_BILLABLE_DELIVERY_INCIDENT'").get()).toEqual({ count: 2 });
-    const incidentData = JSON.stringify({ incidents: sqlite.prepare("SELECT * FROM whatsapp_billing_incidents").all(), blocks: sqlite.prepare("SELECT * FROM whatsapp_send_blocks").all(), audit: sqlite.prepare("SELECT entity_id,metadata_json FROM audit_log WHERE action='WHATSAPP_BILLABLE_DELIVERY_INCIDENT'").all() });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_system_send_pauses WHERE status='ACTIVE'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='WHATSAPP_BILLABLE_DELIVERY_INCIDENT'").get()).toEqual({ count: 4 });
+    const incidentData = JSON.stringify({ incidents: sqlite.prepare("SELECT * FROM whatsapp_billing_incidents").all(), blocks: sqlite.prepare("SELECT * FROM whatsapp_send_blocks").all(), globalPause:sqlite.prepare("SELECT * FROM whatsapp_system_send_pauses").all(), audit: sqlite.prepare("SELECT entity_id,metadata_json FROM audit_log WHERE action='WHATSAPP_BILLABLE_DELIVERY_INCIDENT'").all() });
     expect(incidentData).not.toContain("synthetic-billable-delivered-id");
     expect(incidentData).not.toContain(sender);
     expect(sqlite.prepare("SELECT * FROM orders").all()).toEqual(orderBefore);
     expect(sqlite.prepare("SELECT * FROM payments").all()).toEqual(paymentBefore);
     expect(order.orderId).toBeTruthy();
-    expect(await evaluateStoredFreeWhatsAppOutbound(db, sender)).toMatchObject({ eligible: false, reason: "UNEXPECTED_BILLABLE_MESSAGE_PAUSE" });
+    expect(await evaluateStoredFreeWhatsAppOutbound(db, sender)).toMatchObject({ eligible: false, reason: "GLOBAL_BILLING_INCIDENT_PAUSE" });
+    expect(await evaluateStoredFreeWhatsAppOutbound(db, "923001234568")).toMatchObject({ eligible: false, reason: "GLOBAL_BILLING_INCIDENT_PAUSE" });
   });
 
   it("blocks subsequent API sends across inbound callbacks and fails closed if the durable block table is missing", async () => {
@@ -1059,6 +1096,7 @@ describe("durable WhatsApp billable-delivery protection", () => {
     expect(sends).toHaveLength(1);
     expect(sqlite.prepare("SELECT outcome,reason_code,eligible,attempted,accepted,delivered,read FROM whatsapp_lead_accounting WHERE inbound_event_hash=(SELECT inbound_event_hash FROM whatsapp_lead_accounting LIMIT 1)").get()).toMatchObject({ outcome: "RESPONSE_READ", reason_code: "RESPONSE_ACCEPTED", eligible: 1, attempted: 1, accepted: 1, delivered: 1, read: 1 });
     sqlite.exec("DROP TABLE whatsapp_send_blocks");
+    sqlite.exec("DROP TABLE whatsapp_system_send_pauses");
     expect(await evaluateStoredFreeWhatsAppOutbound(db, "923001234568")).toMatchObject({ eligible: false, reason: "BILLING_BLOCK_STORAGE_UNAVAILABLE" });
   });
 });

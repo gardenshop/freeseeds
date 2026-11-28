@@ -4,18 +4,20 @@
 
 | Case | Legacy b426 service-window rule | Candidate result | Test/evidence |
 |---|---|---|---|
-| Five signed CTWA ad referrals, no device/platform fields, within CSW | 5 reply attempts | 5 eligible, attempted, provider-accepted and delivered; 2 read | `guided-lead-only.test.ts` executes API with mocked provider and signed synthetic callbacks |
-| One new lead with no referral and one returning customer with no referral, both within CSW | 2 reply attempts under legacy CSW-only path | 2 `UNRESOLVED_FREE_ELIGIBILITY` with exact unknown-free reason; no send | Same fixture; free-only is preserved and lead remains visible |
+| Five new signed CTWA ad referrals, no device/platform fields, within CSW | 5 reply attempts | 5 eligible, attempted, provider-accepted and delivered; 2 read | Same webhook payload sends run concurrently in API test; mock provider and signed status callbacks |
+| Returning message without a new referral, with retained verified FEP status/pricing/actual expiry | 1 CSW reply attempt | 1 eligible, attempted, accepted and delivered using prior authenticated conversation evidence | Same fixture sends a subsequent message without referral; no undocumented device/test field |
+| Returning message without a new referral and without prior durable free evidence | 1 CSW reply attempt | `UNRESOLVED_FREE_ELIGIBILITY`; no send | Verifies returning status alone does not fabricate FEP or monthly quota evidence |
+| New ordinary inquiry without referral/free evidence, within CSW | 1 CSW reply attempt | `UNRESOLVED_FREE_ELIGIBILITY` with exact reason `FREE_BILLING_UNKNOWN_OR_MISMATCHED`; no send | Valid message structure, origin unknown; preserved rather than called malformed or free |
 | Duplicate replay of one accepted event | Existing idempotency key reused | 0 duplicate provider responses | Same fixture; same provider message count |
-| Confirmed billable `DELIVERED`/`READ` callbacks | Legacy has no durable billing pause | Idempotent incident/audit and active hashed recipient block; no paid fallback/resume | Billing-incident guided API tests |
+| Explicit billable `DELIVERED`/`READ` (including missing recipient/timestamp) | Legacy has no durable billing pause | Idempotent hash-only incident/audit, recipient block when address is present, and WABA-wide pause; no paid fallback/resume | Billing-incident guided API tests |
 | Positive or exhausted approximate service-tier quota | Legacy does not prove shared free quota | `FREE_SERVICE_ALLOWANCE_DISABLED` | `free-messaging.test.ts`; no count enables a send |
 | D1 missing, orphan Queue, known non-acceptance and stale processing | Legacy behavior differs/has no complete lead ledger | 503/retry/audit; unknown acceptance terminal and unresolved | Hono, guided, Queue and recovery tests |
 
-The comparison uses the authenticated Cloudflare deployment metadata: production version `b426ba47`, source commit `901f3f6`. Its verified reply path checks CSW before direct send; it has no matching source-level FEP/pricing gate. Candidate totals above are **synthetic only**, not live coverage. Received counts are unique inbound provider-event IDs, not unique customer identities. Returning/missing-referral leads remain unresolved rather than being falsely called free.
+The comparison uses the authenticated Cloudflare deployment metadata: production version `b426ba47`, source commit `901f3f6`. Its verified reply path checks CSW before direct send; it has no matching source-level FEP/pricing gate. Candidate totals above are **synthetic only**, not live coverage. The 8 inbound events span7 contacts: 5 first-time signed CTWA leads, one new no-referral inquiry, one returning contact without prior free evidence, and an additional no-referral return from a contact with retained actual FEP evidence. Returning messages need no repeat ad when evidence is valid; without evidence they remain unresolved.
 
 ## ZERO-MISSED-LEADS-002 validation
 
-- Full Vitest: **533 passed, 1 skipped** across44 files, including the same-fixture legacy/candidate test, 7 synthetic inbound events, duplicate replay, five signed CTWA openings without platform fields and five accepted/delivered fake-provider statuses.
+- Full Vitest: **533 passed, 1 skipped** across44 files, including the same-fixture legacy/candidate test, 8 synthetic inbound events across7 contacts, concurrent CTWA openings without platform fields, returning messages both with and without retained FEP evidence, duplicate replay and six accepted/delivered fake-provider responses.
 - Focused reliability suite: **278 passed, 1 skipped** across10 files. TypeScript `npm.cmd run build` and `npm.cmd run lint`: **PASS**.
 - Documented Node safety/controller/stress suite: **52/52 PASS**. Credential-bridge process-scope test with dummy secret values: **PASS**; no real credential read or network request.
 - API and Admin Wrangler `deploy --dry-run`: **PASS**, local bundles only; no upload. Production dependency audit: **0 findings**. Full dependency audit still reports the **six registered moderate dev-tool findings**; lockfile unchanged.

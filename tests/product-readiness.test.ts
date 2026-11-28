@@ -28,8 +28,8 @@ describe("product readiness safeguards", () => {
   it("classifies inbound messages, media, and statuses without storing payloads", () => {
     const records = parseWebhookRecords({ entry: [{ changes: [{ value: { messages: [{ id: "synthetic-message", from: "synthetic-user", type: "text" }, { id: "synthetic-media", from: "synthetic-user", type: "image", image: { id: "synthetic-media" } }], statuses: [{ id: "synthetic-status", status: "delivered" }] } }] }] });
     expect(records).toEqual([
-      { providerEventId: "message:synthetic-message", eventType: "MESSAGE", status: "RECEIVED" },
-      { providerEventId: "message:synthetic-media", eventType: "MEDIA", status: "RECEIVED" },
+      { providerEventId: "message:synthetic-message", eventType: "MESSAGE", status: "RECEIVED", recipientId: "synthetic-user" },
+      { providerEventId: "message:synthetic-media", eventType: "MEDIA", status: "RECEIVED", recipientId: "synthetic-user" },
       { providerEventId: "status:synthetic-status", eventType: "STATUS", status: "delivered" }
     ]);
   });

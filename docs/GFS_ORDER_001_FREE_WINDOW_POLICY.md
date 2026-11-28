@@ -2,7 +2,7 @@
 
 ## ZERO-MISSED-LEADS-002 current policy (2026-11-28)
 
-Owner status update: the alternate display name `Free Seeds In Pakistan` is already under review; do not resubmit/change it. The requested current Meta refresh is pending because Chrome DevTools MCP `list_pages` repeatedly timed out. The last successful Phone Manager read showed the active display name Rejected, phone Connected/High; registration expiry remains unresolved.
+Owner status update: the alternate display name `Free Seeds In Pakistan` is already under review; do not resubmit/change it. Authorized Chrome DevTools MCP was restored. Phone Numbers list shows an In Review name label, Profile shows the active name Rejected, and phone status is Connected/High. Messaging Limits shows Current, but registration-expiry and Graph API-scope fields were not displayed; the prior Graph EXPIRED result remains unreconciled.
 
 This policy supersedes historical device/platform and isolated-test-attestation rules below. A single opening response may use authenticated, signed Meta referral evidence (`source_type=ad`, nonempty `ctwa_clid`, provider timestamp) within the actual 24-hour customer-service window. The click ID is hashed before storage. No device/OS field, `source_platform`, or test attestation is used, and the first response does not depend on already-observed FEP pricing/expiry. Missing referral evidence remains unresolved and is not sent.
 
@@ -10,7 +10,7 @@ Subsequent FEP messages require the first-response match, referral-conversion or
 
 The monthly free service allowance remains **disabled for every recipient**. WAM dashboard counts are approximate; the plan has no authoritative pre-send counter covering other senders, human inbox activity, and external API callers. `SERVICE_ALLOWANCE` evidence and an apparently positive dashboard balance do not authorize sending. Re-enable only after Meta supplies an authoritative exact phone/month quota and the implementation proves atomic reservations/idempotency across all send paths and senders.
 
-Only an authenticated DELIVERED/READ status with explicit `pricing.billable=true` creates a durable hash-only incident and active send block for the affected recipient. The existing Admin raises an alert; no automated resumption is provided. Order, payment, COD and fulfillment transitions remain unaffected. Business Agent remains at **Set up**/disabled.
+Only an authenticated DELIVERED/READ status with explicit `pricing.billable=true` creates a durable hash-only incident and active send block for the affected recipient; because one incident cannot be safely distinguished as isolated or systemic, it also trips a WABA-wide automated-send circuit breaker. The existing Admin raises an alert; no automated resumption is provided. Order, payment, COD and fulfillment transitions remain unaffected. Business Agent remains at **Set up**/disabled.
 
 Refreshed read-only Phone Manager UI (2026-11-28) shows the current display name **Rejected**, phone **Connected**, quality **High**. The UI does not expose a separate registration-expiry field; the prior Graph `EXPIRED` report is not refreshed, so registration expiry remains unresolved. No settings were changed. Candidate `0052` is not applied to production.
 

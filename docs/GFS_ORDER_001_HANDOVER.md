@@ -1,10 +1,14 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Handover
 
+> **Current status:** use the ZERO-MISSED-LEADS-002 sections/report below; older base/uncommitted statements in the historical handover record are superseded by the published branch and final closeout.
+
 ## ZERO-MISSED-LEADS-002 prepublication handover snapshot (superseded)
 
 ## Post-publish and Meta owner update (2026-11-28)
 
-Commit `cbcb7fb9aa333c95557a5c25c2f5df98a090596e` is pushed and remote-verified on `codex/gfs-order-001-rev2`. The owner reports `Free Seeds In Pakistan` is already under review and explicitly says do not resubmit or change the display name. Chrome DevTools MCP then timed out repeatedly on `list_pages`; no current review/registration refresh was possible, and no direct CDP fallback or mutation was used. The previous phone detail showed Connected/High and a separate Graph EXPIRED value remains stale; registration status remains unresolved. No Meta action is authorized by this handover.
+The `Source changes remain uncommitted` text in the older baseline paragraph below is a historical prepublication snapshot; use RELEASE-READINESS-003 for the current branch/approval state.
+
+Source commit `cbcb7fb9aa333c95557a5c25c2f5df98a090596e` and documentation follow-up are pushed on `codex/gfs-order-001-rev2`. Authorized Chrome DevTools MCP was reconnected; Phone Numbers showed an In Review name entry, Profile showed active name Rejected, phone Connected/High, Messaging Limits Current. The pending text was not separately exposed; the owner reports `Free Seeds In Pakistan` is already under review and explicitly says do not resubmit/change it. Registration expiry and Graph scopes remain unreconciled with prior Graph EXPIRED; Connected is not treated as registration proof. Meta Business Agent shows Set up/off. No Meta mutation or direct CDP fallback was used.
 
 Final local validation: **533 Vitest passed/1 skipped (44 files)**; focused reliability suite278/1; TypeScript/lint PASS; documented Node safety52/52; dummy credential process test PASS; API/Admin dry-runs PASS; production dependency audit0; six development findings preserved; protected hashes923/923 identical. Full details are in the test matrix. No Worker or migration was applied.
 
@@ -15,6 +19,10 @@ Quota decision: shared monthly service allowance is disabled because WAM insight
 Read-only Meta UI currently reports display name Rejected and phone Connected/High; registration expiry is not shown, and previous Graph EXPIRED is not refreshed. Meta Business Agent remains Set up/off. For a future name recovery, the owner selects a business/website-compliant exact name in WhatsApp Manager > Phone Numbers > Profile > Display name > Edit and submits for review; do not guess a brand/legal name or submit without separate approval. Refresh registration status in the existing authenticated Meta controls; never share an OTP. No settings or sends were changed.
 
 Do not apply candidate migration `0052`, deploy Workers, change callback/routes, export/restore D1, or send. Existing `0049 -> unchanged 0050 -> 0051`, migration history, encrypted backup, isolated restore, rollback and separate release approval remain mandatory. Preserve payment/COD Rs.125/FIN-MO-002, Access/recovery/CAPI, six held records, O01-O23/REV.2, standalone MO, Hoja Seeds, new-number lock and Label Printer boundaries. No inherited dirty docs or `.audit-local/` were staged.
+
+## RELEASE-READINESS-003 current disposition
+
+This section supersedes the earlier uncommitted/prepublication paragraph and historical display-name submission suggestion above. The owner says the alternate display name is already under review; do not resubmit/change it. Current Meta read is Profile active name Rejected, list has an In Review name label, phone Connected/High, Messaging Limits Current; Graph registration expiry/API scopes remain unreconciled. The final release-readiness report consolidates the outstanding owner approvals for encrypted export, isolated restore, and isolated candidate/relay preparation. Existing test-contact and 10-attempt/30-minute approvals are reused. No test send, export, restore, deployment, Meta edit or migration occurred.
 
 ## FEP-LIVE-002 (2026-11-27)
 

@@ -4,6 +4,7 @@ export type WebhookRecord = {
   providerEventId: string;
   eventType: string;
   status: string;
+  recipientId?: string;
 };
 
 type WebhookMessage = { id?: string; from?: string; type?: string; text?: unknown; image?: unknown; document?: unknown };
@@ -25,7 +26,7 @@ export function parseWebhookRecords(payload: unknown): WebhookRecord[] {
     for (const message of change.value?.messages ?? []) {
       if (!message.id || !message.from) continue;
       const eventType = message.image || message.document || message.type === "image" || message.type === "document" ? "MEDIA" : message.type === "interactive" ? "INTERACTIVE" : message.type === "text" || (!message.type && message.text) ? "MESSAGE" : "UNSUPPORTED";
-      records.push({ providerEventId: `message:${message.id}`, eventType, status: eventType === "UNSUPPORTED" ? "UNRESOLVED_UNSUPPORTED_MESSAGE" : "RECEIVED" });
+      records.push({ providerEventId: `message:${message.id}`, eventType, status: eventType === "UNSUPPORTED" ? "UNRESOLVED_UNSUPPORTED_MESSAGE" : "RECEIVED", recipientId: message.from });
     }
     for (const status of change.value?.statuses ?? []) {
       if (!status.id) continue;
@@ -60,28 +61,32 @@ export type WhatsAppFreeWindowStatus = {
   conversationOriginType?: string;
   pricing?: { billable?: boolean; pricingModel?: string; type?: string; category?: string; subtype?: string };
 };
+export type WhatsAppBillableDeliverySignal = { providerMessageId: string; recipientId?: string; status: "DELIVERED" | "READ"; pricing: { billable: true; category?: string } };
 
 export async function whatsappIdentityHash(value: string): Promise<string> {
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
   return [...digest].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function persistInboundLeadAccounting(db: D1Database, inboundEventId: string, outcome: string, reason: string, updatedAt = new Date().toISOString()): Promise<void> {
+export async function persistInboundLeadAccounting(db: D1Database, inboundEventId: string, outcome: string, reason: string, updatedAt = new Date().toISOString(), recipientId?: string): Promise<void> {
   const inboundEventHash = await whatsappIdentityHash(inboundEventId);
+  const normalizedRecipient=recipientId?.replace(/^\+/,"");
+  const recipientHash=normalizedRecipient&&/^\d{8,15}$/.test(normalizedRecipient)?await whatsappIdentityHash(normalizedRecipient):null;
   const eligible = outcome === "ELIGIBLE_RESPONSE_ATTEMPTED" || outcome === "RESPONSE_ACCEPTED" || outcome === "RESPONSE_SENT" || outcome === "RESPONSE_DELIVERED" || outcome === "RESPONSE_READ";
   const attempted = ["ELIGIBLE_RESPONSE_ATTEMPTED", "RESPONSE_ACCEPTED", "RESPONSE_SENT", "RESPONSE_DELIVERED", "RESPONSE_READ", "UNRESOLVED_UNKNOWN_ACCEPTANCE", "UNRESOLVED_PROVIDER_SEND", "UNRESOLVED_PROVIDER_REJECTION", "UNRESOLVED_PROVIDER_DELIVERY_FAILURE", "RETRYABLE_PROVIDER_REJECTION"].includes(outcome);
   const accepted = ["RESPONSE_ACCEPTED", "RESPONSE_SENT", "RESPONSE_DELIVERED", "RESPONSE_READ"].includes(outcome);
   const reasonCode=reason.replace(/[^A-Za-z0-9_.:-]/g,"_").slice(0,100)||outcome;
-  await db.prepare(`INSERT INTO whatsapp_lead_accounting(inbound_event_hash,outcome,reason_code,eligible,attempted,accepted,delivered,read,received_at,response_accepted_at,response_attempts,updated_at)
-    VALUES(?,?,?,?,?,?,0,0,?,?,?,?) ON CONFLICT(inbound_event_hash) DO UPDATE SET
+  await db.prepare(`INSERT INTO whatsapp_lead_accounting(inbound_event_hash,recipient_hash,outcome,reason_code,eligible,attempted,accepted,delivered,read,received_at,response_accepted_at,response_attempts,updated_at)
+    VALUES(?,?,?,?,?,?,?,0,0,?,?,?,?) ON CONFLICT(inbound_event_hash) DO UPDATE SET
     outcome=CASE WHEN excluded.outcome='RECEIVED' THEN whatsapp_lead_accounting.outcome ELSE excluded.outcome END,
     reason_code=CASE WHEN excluded.outcome='RECEIVED' THEN whatsapp_lead_accounting.reason_code ELSE excluded.reason_code END,
+    recipient_hash=COALESCE(whatsapp_lead_accounting.recipient_hash,excluded.recipient_hash),
     eligible=MAX(whatsapp_lead_accounting.eligible,excluded.eligible),attempted=MAX(whatsapp_lead_accounting.attempted,excluded.attempted),
     accepted=MAX(whatsapp_lead_accounting.accepted,excluded.accepted),
     response_accepted_at=COALESCE(whatsapp_lead_accounting.response_accepted_at,excluded.response_accepted_at),
     response_attempts=whatsapp_lead_accounting.response_attempts+CASE WHEN excluded.outcome='ELIGIBLE_RESPONSE_ATTEMPTED' AND whatsapp_lead_accounting.outcome<>'ELIGIBLE_RESPONSE_ATTEMPTED' THEN 1 ELSE 0 END,
     updated_at=excluded.updated_at`)
-    .bind(inboundEventHash, outcome, reasonCode, Number(eligible), Number(attempted), Number(accepted), updatedAt, accepted?updatedAt:null, Number(outcome==="ELIGIBLE_RESPONSE_ATTEMPTED"), updatedAt).run();
+    .bind(inboundEventHash, recipientHash, outcome, reasonCode, Number(eligible), Number(attempted), Number(accepted), updatedAt, accepted?updatedAt:null, Number(outcome==="ELIGIBLE_RESPONSE_ATTEMPTED"), updatedAt).run();
 }
 
 export async function persistAcceptedLeadResponse(db: D1Database, inboundEventId: string, providerMessageId: string, acceptedAt = new Date().toISOString()): Promise<void> {
@@ -90,20 +95,22 @@ export async function persistAcceptedLeadResponse(db: D1Database, inboundEventId
     .bind(inboundEventHash, providerMessageHash, acceptedAt, inboundEventHash).run();
 }
 
-export async function persistBillableWhatsAppIncidents(db: D1Database, statuses: WhatsAppFreeWindowStatus[], evidenceHash: string, detectedAt = new Date().toISOString()): Promise<number> {
+export async function persistBillableWhatsAppIncidents(db: D1Database, statuses: WhatsAppBillableDeliverySignal[], evidenceHash: string, detectedAt = new Date().toISOString()): Promise<number> {
   const statements = [];
   let count = 0;
   for (const status of statuses) {
-    if (status.pricing?.billable !== true || (status.status !== "DELIVERED" && status.status !== "READ") || !status.recipientId) continue;
+    if (status.pricing?.billable !== true || (status.status !== "DELIVERED" && status.status !== "READ")) continue;
     const providerMessageHash = await whatsappIdentityHash(status.providerMessageId);
-    const normalizedRecipient = status.recipientId.replace(/^\+/, "");
-    if (!/^\d{8,15}$/.test(normalizedRecipient)) continue;
-    const recipientHash = await whatsappIdentityHash(normalizedRecipient);
+    const normalizedRecipient = status.recipientId?.replace(/^\+/, "") ?? "";
+    const recipientHash = /^\d{8,15}$/.test(normalizedRecipient) ? await whatsappIdentityHash(normalizedRecipient) : null;
     const category = status.pricing.category ?? "UNKNOWN";
     const categoryHash = await whatsappIdentityHash(category);
     statements.push(
       db.prepare("INSERT OR IGNORE INTO whatsapp_billing_incidents(provider_message_hash,recipient_hash,category_hash,evidence_hash,detected_at,status) VALUES(?,?,?,?,?,'ACTIVE')").bind(providerMessageHash, recipientHash, categoryHash, evidenceHash, detectedAt),
-      db.prepare("INSERT OR IGNORE INTO whatsapp_send_blocks(recipient_hash,incident_provider_message_hash,status,created_at) SELECT recipient_hash,provider_message_hash,'ACTIVE',? FROM whatsapp_billing_incidents WHERE provider_message_hash=?").bind(detectedAt, providerMessageHash),
+      db.prepare("INSERT OR IGNORE INTO whatsapp_send_blocks(recipient_hash,incident_provider_message_hash,status,created_at) SELECT recipient_hash,provider_message_hash,'ACTIVE',? FROM whatsapp_billing_incidents WHERE provider_message_hash=? AND recipient_hash IS NOT NULL").bind(detectedAt, providerMessageHash),
+      db.prepare(`INSERT OR IGNORE INTO whatsapp_system_send_pauses(pause_key,incident_provider_message_hash,reason_code,status,created_at)
+        SELECT 'WABA_GLOBAL',provider_message_hash,'CONFIRMED_BILLABLE_DELIVERY_REQUIRES_OWNER_REVIEW','ACTIVE',?
+        FROM whatsapp_billing_incidents WHERE provider_message_hash=?`).bind(detectedAt,providerMessageHash),
       db.prepare(`INSERT INTO audit_log(id,action,actor_type,entity_type,entity_id,correlation_id,metadata_json,created_at)
         SELECT ?, 'WHATSAPP_BILLABLE_DELIVERY_INCIDENT', 'SYSTEM', 'WHATSAPP_BILLING_INCIDENT', provider_message_hash, ?, ?, ?
         FROM whatsapp_billing_incidents i WHERE i.provider_message_hash=? AND NOT EXISTS(
@@ -135,6 +142,16 @@ export function parseWhatsAppFreeWindowStatuses(payload: unknown): WhatsAppFreeW
       ...(typeof status.conversation?.origin?.type==="string"?{conversationOriginType:status.conversation.origin.type}:{}),
       ...(status.pricing?{pricing:{...(typeof status.pricing.billable==="boolean"?{billable:status.pricing.billable}:{}),...(typeof status.pricing.pricing_model==="string"?{pricingModel:status.pricing.pricing_model}:{}),...(typeof status.pricing.type==="string"?{type:status.pricing.type}:{}),...(typeof status.pricing.category==="string"?{category:status.pricing.category}:{}),...(typeof status.pricing.subtype==="string"?{subtype:status.pricing.subtype}:{})}}:{})
     });
+  }
+  return result;
+}
+
+export function parseWhatsAppBillableDeliveries(payload: unknown): WhatsAppBillableDeliverySignal[] {
+  const root=payload&&typeof payload==="object"?payload as WebhookPayload:{};
+  const result:WhatsAppBillableDeliverySignal[]=[];
+  for(const entry of root.entry??[])for(const change of entry.changes??[])for(const status of change.value?.statuses??[]){
+    if(!status.id||status.pricing?.billable!==true||(status.status!=="delivered"&&status.status!=="read"))continue;
+    result.push({providerMessageId:status.id,...(typeof status.recipient_id==="string"?{recipientId:status.recipient_id}:{}),status:status.status==="read"?"READ":"DELIVERED",pricing:{billable:true,...(typeof status.pricing.category==="string"?{category:status.pricing.category}:{})}});
   }
   return result;
 }
@@ -254,10 +271,10 @@ export async function persistWebhookRecords(db: D1Database, payload: unknown, ra
   await db.batch([...records.map((record) => db.prepare("INSERT OR IGNORE INTO whatsapp_events (id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES (?,?,?,?,?,?,?)").bind(crypto.randomUUID(), record.providerEventId, record.eventType, payloadHash, record.status, correlationId, now)), ...statusUpdates, ...leadResponseUpdates, ...receiptStatements]);
   for (const record of records) if (record.eventType !== "STATUS") {
     const inboundId = record.eventType === "MALFORMED_INBOUND" ? record.providerEventId.slice("malformed:".length) : record.providerEventId.slice("message:".length);
-    await persistInboundLeadAccounting(db, inboundId, record.status, record.status === "RECEIVED" ? "INBOUND_RECEIVED" : record.status, now);
+    await persistInboundLeadAccounting(db, inboundId, record.status, record.status === "RECEIVED" ? "INBOUND_RECEIVED" : record.status, now, record.recipientId);
   }
   const deliveredStatuses = parseWhatsAppFreeWindowStatuses(payload);
-  await persistBillableWhatsAppIncidents(db, deliveredStatuses, payloadHash, now);
+  await persistBillableWhatsAppIncidents(db, parseWhatsAppBillableDeliveries(payload), payloadHash, now);
   for (const status of deliveredStatuses) {
     const matching = await db.prepare(`SELECT CASE WHEN idempotency_key LIKE 'welcome_reply:%' THEN substr(idempotency_key,15)
       ELSE substr(idempotency_key,20) END AS inbound_id FROM outbound_messages

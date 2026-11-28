@@ -498,7 +498,7 @@ describe("actual Admin financial atomicity and duplicate races", () => {
     await apiWorker.queue({messages:[delivery]} as never,{DB:db as unknown as D1Database,DEPLOYMENT_STATE:"READY",META_PROVIDER_ENABLED:"false",META_GRAPH_VERSION:"v26.0"} as never);
     expect(delivery.ack).toHaveBeenCalledOnce();
     expect(delivery.retry).not.toHaveBeenCalled();
-    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(job.idempotencyKey)).toMatchObject({status:"PERMANENT_FAILURE",last_error:"FREE_MESSAGE_BLOCKED:FREE_BILLING_UNKNOWN_OR_MISMATCHED"});
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE idempotency_key=?").get(job.idempotencyKey)).toMatchObject({status:"PERMANENT_FAILURE",last_error:"FREE_MESSAGE_BLOCKED:BILLING_BLOCK_STORAGE_UNAVAILABLE"});
     expect(sqlite.prepare("SELECT review_state,approved_amount FROM payments WHERE id='tid-notice-payment'").get()).toEqual({review_state:"APPROVED",approved_amount:625});
     expect(sqlite.prepare("SELECT state,payment_status FROM orders WHERE id='tid-notice-order'").get()).toEqual({state:"PAID",payment_status:"PAID"});
   });
