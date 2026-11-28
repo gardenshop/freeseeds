@@ -55,7 +55,8 @@ export type MetaActivationActionResult = {
 };
 
 type GraphResult = { ok: true; data: GraphObject } | { ok: false; status?: number };
-type GraphMutationResult = { ok: true; status: number; data?: { success?: boolean; id?: string; messageId?: string } } | { ok: false; status?: number; error?: { code: string; message?: string } };
+type SafeGraphActionError = { code: string; subcode?: string; message?: string; fbtraceId?: string };
+type GraphMutationResult = { ok: true; status: number; data?: { success?: boolean; id?: string; messageId?: string } } | { ok: false; status?: number; error?: SafeGraphActionError };
 
 function stringValue(value: unknown, secret?: string): string | undefined {
   return typeof value === "string" && value.length > 0 && (!secret || !value.includes(secret)) ? value : undefined;
@@ -68,6 +69,18 @@ function graphError(status?: number): { code: string; status?: number } {
 function safeIdentifier(value: unknown, secret?: string): string | undefined {
   const text = stringValue(value, secret);
   return text && /^[A-Za-z0-9._:-]{1,200}$/.test(text) ? text : undefined;
+}
+
+function safeGraphActionError(error: GraphObject | undefined, secret: string): SafeGraphActionError | undefined {
+  if (!error) return undefined;
+  const numericCode=typeof error.code === "number" && Number.isSafeInteger(error.code) ? String(error.code) : undefined;
+  const code=numericCode ?? safeIdentifier(error.code, secret) ?? "META_GRAPH_REQUEST_FAILED";
+  const numericSubcode=typeof error.error_subcode === "number" && Number.isSafeInteger(error.error_subcode) ? String(error.error_subcode) : undefined;
+  const subcode=numericSubcode ?? safeIdentifier(error.error_subcode, secret);
+  const fbtraceId=safeIdentifier(error.fbtrace_id, secret);
+  const type=safeIdentifier(error.type, secret);
+  // Keep an error category, never the provider's free-form message or user data.
+  return { code, ...(subcode ? { subcode } : {}), ...(type ? { message: `GRAPH_${type}` } : {}), ...(fbtraceId ? { fbtraceId } : {}) };
 }
 
 async function readGraph(fetcher: typeof fetch, baseUrl: string, token: string, path: string): Promise<GraphResult> {
@@ -88,7 +101,7 @@ async function postGraph(fetcher: typeof fetch, baseUrl: string, token: string, 
     const response = await fetcher(`${baseUrl}/${path}`, init);
     const parsed = await response.json().catch(() => ({})) as GraphObject;
     const graphErrorBody = parsed.error && typeof parsed.error === "object" ? parsed.error as GraphObject : undefined;
-    const safeError = graphErrorBody ? { code: safeIdentifier(graphErrorBody.code) ?? "META_GRAPH_REQUEST_FAILED" } : undefined;
+    const safeError = safeGraphActionError(graphErrorBody, token);
     const safeData = {
       success: typeof parsed.success === "boolean" ? parsed.success : undefined,
       id: typeof parsed.id === "string" && /^\d+$/.test(parsed.id) ? parsed.id : undefined,
@@ -234,7 +247,7 @@ export function createMetaActivationService(config: MetaActivationConfig) {
         return { action, executed: false, reason, status: await service.status() };
       }
       const reread = await service.status();
-       if (!result.ok) return { action, executed: false, reason: "META_GRAPH_REQUEST_FAILED", error: result.error ? { code: result.error.code, ...(result.status === undefined ? {} : { status: result.status }) } : graphError(result.status), status: reread };
+       if (!result.ok) return { action, executed: false, reason: "META_GRAPH_REQUEST_FAILED", error: result.error ? { ...result.error, ...(result.status === undefined ? {} : { status: result.status }) } : graphError(result.status), status: reread };
        if (result.data?.success === false) return { action, executed: false, reason: "META_GRAPH_REPORTED_FAILURE", status: reread };
        if (action === "send-test" && !result.data?.messageId) return { action, executed: false, reason: "META_MESSAGE_ID_MISSING", status: reread };
        return { action, executed: true, reason: action === "send-test" ? "META_TEST_MESSAGE_SENT" : "GRAPH_MUTATION_APPLIED", status: reread, ...(action === "send-test" ? { messageId: result.data?.messageId, httpStatus: result.status } : {}) };

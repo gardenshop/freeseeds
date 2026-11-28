@@ -8,6 +8,8 @@ After authorized MCP reconnection, Phone Numbers list shows an In Review name la
 
 The consolidated nonproduction-preparation authorization was granted in `GFS_ORDERFLOW_RELEASE_READINESS_003.md`. The previously approved test contact and 10-attempt/30-minute scope are reused, not re-requested. The one authorized request-code attempt returned `META_GRAPH_REQUEST_FAILED`/HTTP400, was not applied, and issued no OTP; no retry is authorized. Export is blocked by the absent local recovery passphrase; no export/restore, migration, candidate upload or live send occurred.
 
+EXECUTION-CLOSE-006 repaired safe Meta action diagnostics: future authorized Graph failures retain only numeric code/subcode, sanitized type and trace ID. The prior HTTP400 cannot be reconstructed because its old sanitizer dropped those fields. Full regression is535/1 skipped; the backup chain remains blocked at the owner-private export prompt.
+
 Monthly free-service allowance is disabled: WAM totals are approximate and cannot establish exact pre-send quota across human, external and other sender traffic. Signed ad referral with hashed `ctwa_clid` and provider timestamp permits the one-time opening reply inside the actual CSW; no platform/OS field or isolated-test attestation. Missing referral/free evidence stays unresolved. User reports are limited to synthetic coverage below.
 
 ## GFS-ORDERFLOW-FEP-LIVE-002 (2026-11-27)

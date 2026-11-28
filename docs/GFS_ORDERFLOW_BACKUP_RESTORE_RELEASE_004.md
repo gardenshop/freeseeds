@@ -85,6 +85,8 @@ exit
 
 The helper fails closed unless source account/D1, target ID/emptiness, vault ACL/capacity, approval flags and fresh Time Travel age all match. It emits only encrypted-file hash/size. Stop if any check fails. After a successful export, verify checksum and the recovery-wrap with the private passphrase, restore only to `getfreeseeds-v2-restore-fep-002`, verify schema/financial invariants, then apply `0052` only on that isolated target. Never reset `getfreeseeds-v2-restore-check` or restore/deploy to production.
 
+**EXECUTION-CLOSE-006:** this automation session cannot open a visible owner-private prompt. The procedure above is the required manual step; recovery passphrase and fresh bookmark were not exposed or supplied. Do not continue restore/migration/candidate upload until its verified export output is available.
+
 ## Final Verification
 
 - Vitest **534 passed, 1 skipped** across44 files; Node safety **52/52**; credential-scope dummy test PASS; TypeScript/lint PASS.

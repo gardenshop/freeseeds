@@ -148,6 +148,21 @@ describe("Meta activation safety boundary", () => {
     expect(JSON.stringify(result)).not.toContain("must not escape");
   });
 
+  it("retains safe Graph action diagnostics without returning provider text or secrets", async () => {
+    const token="fixture-registration-token";
+    const fetcher=vi.fn<typeof fetch>().mockImplementation(async (_input, init) => {
+      if(init?.method==="POST") return new Response(JSON.stringify({error:{message:`Registration unavailable ${token} for customer`,type:"OAuthException",code:100,error_subcode:2388006,fbtrace_id:"safeTrace_123"}}),{status:400});
+      return new Response(JSON.stringify({id:"phone-id",status:"EXPIRED"}),{status:200});
+    });
+    const result=await createMetaActivationService({accessToken:token,phoneNumberId:"phone-id",wabaId:"waba-id",appId:"app-id",fetcher}).action("request-code",{codeMethod:"SMS",locale:"en_US"});
+
+    expect(result).toMatchObject({executed:false,reason:"META_GRAPH_REQUEST_FAILED",error:{code:"100",subcode:"2388006",message:"GRAPH_OAuthException",fbtraceId:"safeTrace_123",status:400}});
+    expect(JSON.stringify(result)).not.toContain(token);
+    expect(JSON.stringify(result)).not.toContain("Registration unavailable");
+    expect(fetcher.mock.calls[0]?.[0]).toBe("https://graph.facebook.com/v26.0/phone-id/request_code");
+    expect(JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body))).toEqual({code_method:"SMS",locale:"en_US"});
+  });
+
   it("fails closed for send-test without verified free-message evidence or a selected locale", async () => {
     const fetcher = vi.fn<typeof fetch>();
     const service = createMetaActivationService({ accessToken: "synthetic-token", providerEnabled: true, phoneNumberId: "synthetic-phone-id", fetcher });
