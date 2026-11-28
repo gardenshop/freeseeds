@@ -1,6 +1,6 @@
 # GFS-ORDERFLOW-FEP-LIVE-002
 
-> **Superseded policy note (2026-11-28):** this is a historical read-only checkpoint. Do not use its isolated-test mobile-attestation instructions or require Android/iOS webhook fields. The current ordinary opening policy uses authenticated signed `source_type=ad`, hashed `ctwa_clid`, provider timestamp and the actual CSW; see `GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md`. Monthly service allowance is disabled until exact shared quota accounting is available.
+> **Superseded policy note (2026-11-28):** this is a historical read-only checkpoint. Do not use its isolated-test mobile-attestation instructions or require Android/iOS webhook fields. The current ordinary opening policy uses authenticated signed `source_type=ad`, hashed `ctwa_clid`, provider timestamp and actual CSW; see `GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md`. Monthly service allowance is disabled until exact shared quota accounting is available. Owner reports `Free Seeds In Pakistan` is already under review and directs no resubmission. Chrome DevTools MCP timed out during refresh, so current review/registration state could not be re-read.
 
 ## Outcome (2026-11-27)
 

@@ -1,6 +1,10 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Handover
 
-## ZERO-MISSED-LEADS-002 current handover (2026-11-28)
+## ZERO-MISSED-LEADS-002 prepublication handover snapshot (superseded)
+
+## Post-publish and Meta owner update (2026-11-28)
+
+Commit `cbcb7fb9aa333c95557a5c25c2f5df98a090596e` is pushed and remote-verified on `codex/gfs-order-001-rev2`. The owner reports `Free Seeds In Pakistan` is already under review and explicitly says do not resubmit or change the display name. Chrome DevTools MCP then timed out repeatedly on `list_pages`; no current review/registration refresh was possible, and no direct CDP fallback or mutation was used. The previous phone detail showed Connected/High and a separate Graph EXPIRED value remains stale; registration status remains unresolved. No Meta action is authorized by this handover.
 
 Final local validation: **533 Vitest passed/1 skipped (44 files)**; focused reliability suite278/1; TypeScript/lint PASS; documented Node safety52/52; dummy credential process test PASS; API/Admin dry-runs PASS; production dependency audit0; six development findings preserved; protected hashes923/923 identical. Full details are in the test matrix. No Worker or migration was applied.
 

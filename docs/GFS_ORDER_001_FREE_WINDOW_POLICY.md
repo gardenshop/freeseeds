@@ -2,6 +2,8 @@
 
 ## ZERO-MISSED-LEADS-002 current policy (2026-11-28)
 
+Owner status update: the alternate display name `Free Seeds In Pakistan` is already under review; do not resubmit/change it. The requested current Meta refresh is pending because Chrome DevTools MCP `list_pages` repeatedly timed out. The last successful Phone Manager read showed the active display name Rejected, phone Connected/High; registration expiry remains unresolved.
+
 This policy supersedes historical device/platform and isolated-test-attestation rules below. A single opening response may use authenticated, signed Meta referral evidence (`source_type=ad`, nonempty `ctwa_clid`, provider timestamp) within the actual 24-hour customer-service window. The click ID is hashed before storage. No device/OS field, `source_platform`, or test attestation is used, and the first response does not depend on already-observed FEP pricing/expiry. Missing referral evidence remains unresolved and is not sent.
 
 Subsequent FEP messages require the first-response match, referral-conversion origin, the provider's actual expiry, and observed non-billable FEP/PMP pricing evidence. No seven-day expiry is synthesized. Unknown/billable pricing, opt-out, storage failure, or active billing block denies the send; there is no paid fallback or Admin bypass.

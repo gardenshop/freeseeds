@@ -8,6 +8,8 @@ Read `rules.md` before making changes.
 
 ## Zero Missed Leads
 
+Post-publication Meta status note: the owner reports `Free Seeds In Pakistan` is already under review and says do not resubmit or change it. The latest requested Phone Manager refresh could not be obtained because Chrome DevTools MCP `list_pages` repeatedly timed out; no direct CDP fallback or Meta mutation was used. Registration expiry remains unresolved and launch stays NO-GO.
+
 The binding lead-accountability, free-only and no-Meta-Business-Agent policies are in `rules.md` and [FREE_WINDOW_POLICY](docs/GFS_ORDER_001_FREE_WINDOW_POLICY.md). The current candidate accounts for unique inbound events and explicit unresolved/suppressed reasons, uses only signed CTWA referral evidence for the one-time opening response, blocks monthly service-allowance sends until exact shared quota accounting is possible, and durably pauses affected automated sends after confirmed billable delivery. Approximate WAM dashboard totals never authorize a send. The candidate is local only: migration `0052` is unapplied, current sender display name is rejected, and live registration expiry remains unverified. **WhatsApp launch remains NO-GO.** See [ZERO-MISSED-LEADS-002](docs/GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md).
 
 Do not enable Meta Business Agent. Do not weaken free-only checks or use paid fallback. Preserve the new-number lock, Hoja Seeds zero-connection rule, existing payment/COD Rs.125/financial controls, bilingual formatting, Access, recovery, CAPI, standalone MO Printing and protected Label Printer project.
