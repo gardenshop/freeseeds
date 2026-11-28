@@ -132,6 +132,10 @@ describe("GFS-109 admin controls", () => {
     expect(html).toContain("container.tabIndex=0");
     expect(html).toContain("Daily inbound events table");
     expect(html).toContain("Abandoned checkout classification table");
+    expect(html).toContain("WhatsApp reliability");
+    expect(html).toContain("Accepted");
+    expect(html).toContain("not delivered");
+    expect(html).toContain("Exact suppression reasons");
     expect(html).toContain("/api/analytics/export?");
   });
 

@@ -10,7 +10,6 @@
   "vars": {
     "DEPLOYMENT_STATE": "ISOLATED_WHATSAPP_TEST",
     "WHATSAPP_TEST_MODE": "false",
-    "WHATSAPP_TEST_MOBILE_ATTESTED": "false",
     "META_PROVIDER_ENABLED": "false",
     "WHATSAPP_PROVIDER": "meta",
     "COD_V1_ENABLED": "false",

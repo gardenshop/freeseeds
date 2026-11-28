@@ -107,6 +107,7 @@ beforeEach(() => {
     CREATE TABLE whatsapp_events(provider_event_id TEXT PRIMARY KEY,created_at TEXT NOT NULL);
     CREATE TABLE outbound_messages(id TEXT PRIMARY KEY,idempotency_key TEXT UNIQUE,order_id TEXT,customer_id TEXT,kind TEXT,status TEXT,attempt_count INTEGER DEFAULT 0,last_error TEXT,provider_message_id TEXT,created_at TEXT,updated_at TEXT);
     CREATE TABLE payment_reminder_v2_opt_outs(customer_id TEXT,wa_id TEXT);
+    CREATE TABLE whatsapp_send_blocks(recipient_hash TEXT PRIMARY KEY,incident_provider_message_hash TEXT,status TEXT,created_at TEXT);
     CREATE TABLE meta_attribution(id TEXT PRIMARY KEY,order_id TEXT NOT NULL,ctwa_clid TEXT);
     CREATE TABLE payment_methods(method TEXT PRIMARY KEY,enabled INTEGER,qr_owner_verified INTEGER,qr_r2_key TEXT,qr_sha256 TEXT);
     CREATE TABLE payment_qr_assets(method TEXT,derivative_r2_key TEXT,derivative_sha256 TEXT,active INTEGER,decoder_agreement INTEGER,payload_match INTEGER,scan_pass INTEGER,independent_ownership_verified INTEGER,independent_evidence_ref TEXT);

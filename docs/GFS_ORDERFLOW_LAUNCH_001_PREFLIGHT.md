@@ -1,8 +1,18 @@
 # GFS-ORDERFLOW-LAUNCH-001-PREFLIGHT
 
+## ZERO-MISSED-LEADS-002 continuation preflight (2026-11-28)
+
+Read-only account identity matched the existing Get Free Seeds Cloudflare/Meta business contexts. Cloudflare still shows API production version `b426ba47` at 100% traffic; this candidate is not deployed. Meta Phone Manager shows display name **Rejected**, phone **Connected**, quality **High**; no separate registration-expiry field is exposed. The previous Graph `EXPIRED` status has not been refreshed. Business Agent remains **Set up**/disabled. Do not submit a name, re-register, switch route/callback, deploy, migrate, export, restore, or send without the applicable separate approval.
+
+Candidate local work adds migration `0052` after the preserved `0049 -> unchanged 0050 -> 0051` chain. Production migration history, approved backup/export, isolated restore, canonical target and COD-compatible rollback remain unresolved. Do not apply `0052` or deploy its code now; the API explicitly fails closed with 503 when the lead ledger is unavailable.
+
+Free policy: signed CTWA ad referral + hashed click ID + provider time allows the one-time CSW opening reply without device fields, attestation or circular FEP dependency. Later FEP still requires actual provider expiry and matching pricing. Monthly service allowance is disabled; WAM is approximate and not a quota. Admin coverage numbers have not been populated from live production D1, so no live lead totals/coverage are claimed.
+
+Validation: full Vitest533/1 skipped; Node safety52/52; credential process-scope test with dummy values PASS; TypeScript/lint PASS; API/Admin Wrangler dry-run PASS; production dependency audit0; full audit retains six registered dev findings; protected hashes923/923 identical. The 7-event comparison is synthetic only; production totals remain unknown.
+
 ## FEP-LIVE-002 Update (2026-11-27)
 
-Meta developer policy refreshed: up to7d maximum, exact per-contact expiry; prior72h public guidance is legacy. Referral schema has no mobile OS field; the isolated owner test uses a test-only mobile attestation, never generalized. Actual Graph status v26.0, sender name declined and registration expired; Business Agent off. Current WAM analytics are approximate and cannot decide the next send; production D1 contains no historical per-contact FEP evidence. Do not initiate test, send, change Meta settings, export D1 or restore until separate candidate/relay, sender-status and backup/target approvals pass. See `GFS_ORDERFLOW_FEP_LIVE_002.md`.
+Historical FEP-LIVE-002 policy details are superseded by the current rules above. No mobile test attestation is used. The current read-only Phone Manager status is recorded in the continuation section; the earlier Graph `EXPIRED` value remains unrefreshed. No test, send, setting change, export or restore occurred. See `GFS_ORDERFLOW_FEP_LIVE_002.md` for historical evidence.
 
 ## TEST-ISOLATION-001 Update (2026-11-27)
 
@@ -80,7 +90,7 @@ The 2026-11-25 cohort in `GFS_ORDER_001_CURRENT_AUDIT.md` remains historical and
 
 | Control | Local evidence | Live status |
 |---|---|---|
-| Initial business response without circular FEP evidence | Separate `FEP_OPENING_RESPONSE` basis; signed inbound referral, policy version, provider time, open CSW and atomic one-time claim are required. | No qualifying live referral/response sampled. The actual webhook's explicit Android/iOS field availability is unverified; no platform is inferred from ad/source IDs. |
+| Initial business response without circular FEP evidence | Separate `FEP_OPENING_RESPONSE` basis; authenticated signed `source_type=ad`, hashed `ctwa_clid`, provider time, open CSW and atomic one-time claim. No OS field or test attestation. | No qualifying live referral/response sampled. Missing referral evidence remains unresolved and is not sent. |
 | FEP start and duration | Active FEP is persisted only after a matching first-response status with referral-conversion origin and actual provider `conversation.expiration_timestamp`. | No per-contact status observed; no 168-hour assumption. Meta's “up to seven days” is only a maximum. |
 | FEP price and service allowance | Guard requires provider free-entry-point/PMP/non-billable evidence. Free service-tier allowance is distinct from FEP. | WhatsApp Manager last-30-day insights (Oct30-Nov26) show 61,254 Free Entry Point and924 free customer-service messages,0 paid, approximate charges$0. This is an account aggregate, not per-contact proof or remaining allowance. Current separate business-initiated tier is10,000 per rolling24h; 2,440/5,000 high-quality unique customers were shown toward the next tier. This is not a free-service quota. |
 | CSW, templates and retries | Every attempt/retry uses the common free-only guard, locale and recipient checks; CSW remains distinct from FEP. No paid fallback. | Current WABA shows one Connected/High phone; display name `Get Free Seeds` remains `In Review`. Exactly two Utility templates are listed, English `gfs_payment_reminder_15m` and Urdu `gfs_payment_reminder_30m`, both `Active - Quality pending`,0 sent/0 opened in the displayed period. No approved exact mapping for T+10/T+25/T+30/COD/payment/shipment copies. |

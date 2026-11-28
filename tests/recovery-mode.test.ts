@@ -46,7 +46,7 @@ async function callback(value: Record<string, unknown>, mode: string | undefined
 }
 
 function textMessage(id: string, text = "START") {
-  return { id, from: sender, timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: text }, referral: { ctwa_clid: "synthetic-click", source_type: "ad", platform: "android" } };
+  return { id, from: sender, timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: text }, referral: { ctwa_clid: "synthetic-click", source_type: "ad" } };
 }
 
 async function existingOrder() {
@@ -195,11 +195,10 @@ describe("COD-compatible API recovery mode", () => {
     expect(queueSend).not.toHaveBeenCalled();
   });
 
-  it.each(["absent", "false"])("preserves default normal inbound behavior for %j and resumes only on fresh input", async (mode) => {
+  it.each(["absent", "false"])("permits the signed CTWA opening without a monthly service quota for %j", async (mode) => {
     const now = new Date();
     const nowIso = now.toISOString();
-    const serviceAllowance = { pricing: { verified: true, billable: false, basis: "SERVICE_ALLOWANCE", type: "free_customer_service", category: "SERVICE", subtype: "free_tier", pricingModel: "PMP", remainingServiceMessages: 1, evidenceRef: "synthetic-service-allowance", observedAt: nowIso, verifiedAt: nowIso, validUntil: new Date(now.getTime() + 60 * 60_000).toISOString(), form: "FREEFORM", messageCategory: "SERVICE" } };
-    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES('synthetic-normal-conversation',?,'NEW',?,NULL,NULL,?,?)").run(sender, JSON.stringify({ language: "en", freeMessagingEvidence: serviceAllowance }), nowIso, nowIso);
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES('synthetic-normal-conversation',?,'NEW',?,NULL,NULL,?,?)").run(sender, JSON.stringify({ language: "en" }), nowIso, nowIso);
     expect((await callback({ messages: [textMessage("synthetic-normal", "Hello")] }, mode)).status).toBe(200);
     expect(network).toHaveBeenCalledTimes(1);
     expect(sqlite.prepare("SELECT state FROM whatsapp_conversations").get()).toEqual({ state: "LANGUAGE" });

@@ -30,6 +30,32 @@ class AnalyticsDb {
   }
 }
 
+class ReliabilityAnalyticsDb extends AnalyticsDb {
+  prepare(sql: string): FakeStatement {
+    if (!sql.includes("FROM whatsapp_lead_accounting") && !sql.includes("FROM outbox_jobs") && !sql.includes("FROM whatsapp_billing_incidents")) return super.prepare(sql);
+    const statement = (args: unknown[]): FakeStatement => ({
+      bind: (...next: unknown[]) => statement(next),
+      all: async <T>() => {
+        this.calls.push({ sql, args });
+        let results: unknown[] = [];
+        if (sql.includes("GROUP BY a.reason_code")) results = [{ reason_code: "FREE_BILLING_UNKNOWN_OR_MISMATCHED", count: 1 }, { reason_code: "FREE_WINDOW_CLOSED", count: 1 }];
+        else if (sql.includes("FROM whatsapp_lead_accounting a")) results = [
+          { outcome: "RESPONSE_READ", reason_code: null, eligible: 1, attempted: 1, accepted: 1, delivered: 1, read: 1, received_at: "2026-10-30T00:00:00.000Z", response_accepted_at: "2026-10-30T00:00:00.100Z", response_attempts: 1, accepted_responses: 1 },
+          { outcome: "RESPONSE_DELIVERED", reason_code: null, eligible: 1, attempted: 1, accepted: 1, delivered: 1, read: 0, received_at: "2026-10-30T00:00:00.000Z", response_accepted_at: "2026-10-30T00:00:00.200Z", response_attempts: 3, accepted_responses: 3 },
+          { outcome: "RESPONSE_ACCEPTED", reason_code: null, eligible: 1, attempted: 1, accepted: 1, delivered: 0, read: 0, received_at: "2026-10-30T00:00:00.000Z", response_accepted_at: "2026-10-30T00:00:01.000Z", response_attempts: 2, accepted_responses: 1 },
+          { outcome: "SUPPRESSED_FREE_MESSAGE", reason_code: "FREE_WINDOW_CLOSED", eligible: 0, attempted: 0, accepted: 0, delivered: 0, read: 0, received_at: "2026-10-30T00:00:00.000Z", response_accepted_at: null, response_attempts: 0, accepted_responses: 0 },
+          { outcome: "RETRYABLE_PROVIDER_REJECTION", reason_code: "PROVIDER_RETRY", eligible: 1, attempted: 1, accepted: 0, delivered: 0, read: 0, received_at: "2026-10-30T00:00:00.000Z", response_accepted_at: null, response_attempts: 1, accepted_responses: 0 },
+          { outcome: "UNRESOLVED_FREE_ELIGIBILITY", reason_code: "FREE_BILLING_UNKNOWN_OR_MISMATCHED", eligible: 0, attempted: 0, accepted: 0, delivered: 0, read: 0, received_at: "2026-10-30T00:00:00.000Z", response_accepted_at: null, response_attempts: 0, accepted_responses: 0 }
+        ];
+        else if (sql.includes("FROM outbox_jobs")) results = [{ status: "PENDING", count: 2 }, { status: "DEAD_LETTER", count: 1 }];
+        else if (sql.includes("FROM whatsapp_billing_incidents")) results = [{ count: 2 }];
+        return { results: results as T[], meta: { rows_read: 1 } };
+      }
+    });
+    return statement([]);
+  }
+}
+
 const auth = { "cf-access-authenticated-user-email": "admin@example.test" };
 const environment = (db: AnalyticsDb) => ({ DB: db as unknown as D1Database, ADMIN_EMAIL: "admin@example.test", DEPLOYMENT_STATE: "LOCAL" }) as never;
 
@@ -151,5 +177,37 @@ describe("GFS-339 inbound analytics", () => {
     const text = await csv.text();
     expect(text).toContain("customer_inbound_messages");
     expect(text).not.toMatch(/wa_id|provider_event_id|order_id|customer-id/i);
+  });
+
+  it("reconciles reliability outcomes, keeps delivery distinct, and computes latency and duplicate attempts", async () => {
+    const db = new ReliabilityAnalyticsDb();
+    const response = await app.fetch(new Request("https://admin.example.test/api/analytics?from=2026-10-30&to=2026-10-30", { headers: auth }), environment(db));
+    const body = await response.json() as { whatsappReliability: Record<string, unknown> & { reconciliation: Record<string, unknown>; suppressionReasons: unknown[] } };
+    const reliability = body.whatsappReliability;
+    expect(reliability).toMatchObject({ available: true, received: 6, eligible: 4, accepted: 3, delivered: 2, read: 1, failed: 1, suppressed: 1, unresolved: 1, responseCoveragePct: 75, duplicateResponseAttempts: 3, duplicateAcceptedResponses: 2, p50LatencyMs: 200, p95LatencyMs: 1000, activeBillingIncidents: 2, queueBacklog: 2, deadLetter: 1 });
+    expect(reliability.reconciliation).toEqual({ classified: 6, received: 6, balanced: true });
+    expect(reliability.suppressionReasons).toEqual([{ reasonCode: "FREE_BILLING_UNKNOWN_OR_MISMATCHED", count: 1 }, { reasonCode: "FREE_WINDOW_CLOSED", count: 1 }]);
+    expect(db.calls.every(({ sql }) => /^\s*(SELECT|WITH)\b/i.test(sql) && !/\b(INSERT|UPDATE|DELETE|REPLACE)\b/i.test(sql))).toBe(true);
+    const accountQuery = db.calls.find(({ sql }) => sql.includes("FROM whatsapp_lead_accounting a") && sql.includes("received_at>=?"));
+    expect(accountQuery?.args).toEqual(["2026-10-30T00:00:00.000Z", "2026-10-31T00:00:00.000Z"]);
+  });
+
+  it("returns explicit unavailable reliability when migration schema is absent without failing legacy analytics", async () => {
+    class MissingReliabilitySchema extends AnalyticsDb {
+      prepare(sql: string): FakeStatement {
+        if (sql.includes("whatsapp_lead_accounting") || sql.includes("FROM outbox_jobs") || sql.includes("whatsapp_billing_incidents")) return {
+          bind: () => this.prepare(sql),
+          all: async () => { throw new Error("no such table: whatsapp_lead_accounting"); }
+        };
+        return super.prepare(sql);
+      }
+    }
+    const db = new MissingReliabilitySchema();
+    const response = await app.fetch(new Request("https://admin.example.test/api/analytics?from=2026-10-30&to=2026-10-30", { headers: auth }), environment(db));
+    expect(response.status).toBe(200);
+    const body = await response.json() as { inbound: { customerMessages: number }; whatsappReliability: { available: boolean } };
+    expect(body.inbound.customerMessages).toBe(14);
+    expect(body.whatsappReliability.available).toBe(false);
+    expect(db.calls.every(({ sql }) => /^\s*(SELECT|WITH)\b/i.test(sql) && !/\b(INSERT|UPDATE|DELETE|REPLACE)\b/i.test(sql))).toBe(true);
   });
 });

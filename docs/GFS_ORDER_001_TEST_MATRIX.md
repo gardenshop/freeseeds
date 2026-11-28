@@ -1,8 +1,30 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Test Matrix
 
-## FEP-LIVE-002 (2026-11-27)
+## ZERO-MISSED-LEADS-002 current synthetic coverage
 
-Focused synthetic acceptance: CTWA opening with owner-only test mobile attestation works without an undocumented device field; same event without attestation is blocked. FEP status split test supplies expiry/origin on SENT and `pricing.type/category` on DELIVERED with `billable` absent; the merged actual timestamp/duration drives EN/UR samples. Pricing `billable=true`, wrong type/category, mismatched conversation ID, stale/future status, >24h opening, >7d expiry, missing delivery/read and missing mobile proof fail closed. No provider field or expiry is fabricated. No actual WAM message/test window started. Current historical data does not contain FEP rows; see report.
+| Case | Legacy b426 service-window rule | Candidate result | Test/evidence |
+|---|---|---|---|
+| Five signed CTWA ad referrals, no device/platform fields, within CSW | 5 reply attempts | 5 eligible, attempted, provider-accepted and delivered; 2 read | `guided-lead-only.test.ts` executes API with mocked provider and signed synthetic callbacks |
+| One new lead with no referral and one returning customer with no referral, both within CSW | 2 reply attempts under legacy CSW-only path | 2 `UNRESOLVED_FREE_ELIGIBILITY` with exact unknown-free reason; no send | Same fixture; free-only is preserved and lead remains visible |
+| Duplicate replay of one accepted event | Existing idempotency key reused | 0 duplicate provider responses | Same fixture; same provider message count |
+| Confirmed billable `DELIVERED`/`READ` callbacks | Legacy has no durable billing pause | Idempotent incident/audit and active hashed recipient block; no paid fallback/resume | Billing-incident guided API tests |
+| Positive or exhausted approximate service-tier quota | Legacy does not prove shared free quota | `FREE_SERVICE_ALLOWANCE_DISABLED` | `free-messaging.test.ts`; no count enables a send |
+| D1 missing, orphan Queue, known non-acceptance and stale processing | Legacy behavior differs/has no complete lead ledger | 503/retry/audit; unknown acceptance terminal and unresolved | Hono, guided, Queue and recovery tests |
+
+The comparison uses the authenticated Cloudflare deployment metadata: production version `b426ba47`, source commit `901f3f6`. Its verified reply path checks CSW before direct send; it has no matching source-level FEP/pricing gate. Candidate totals above are **synthetic only**, not live coverage. Received counts are unique inbound provider-event IDs, not unique customer identities. Returning/missing-referral leads remain unresolved rather than being falsely called free.
+
+## ZERO-MISSED-LEADS-002 validation
+
+- Full Vitest: **533 passed, 1 skipped** across44 files, including the same-fixture legacy/candidate test, 7 synthetic inbound events, duplicate replay, five signed CTWA openings without platform fields and five accepted/delivered fake-provider statuses.
+- Focused reliability suite: **278 passed, 1 skipped** across10 files. TypeScript `npm.cmd run build` and `npm.cmd run lint`: **PASS**.
+- Documented Node safety/controller/stress suite: **52/52 PASS**. Credential-bridge process-scope test with dummy secret values: **PASS**; no real credential read or network request.
+- API and Admin Wrangler `deploy --dry-run`: **PASS**, local bundles only; no upload. Production dependency audit: **0 findings**. Full dependency audit still reports the **six registered moderate dev-tool findings**; lockfile unchanged.
+- Protected Label Printer manifest: **923 identical, 0 changed, 0 missing**. Only read-only hashes were computed; no file in that sibling project was opened for editing.
+- No Meta send, campaign, callback/routing change, Worker upload, migration, D1 export/restore or live-coverage claim. `0052` remains unapplied; release stays **NO-GO**.
+
+## FEP-LIVE-002 historical matrix (2026-11-27; superseded)
+
+Historical test results below used an owner-only attestation and are superseded. Current tests require only signed ad-referral evidence for the single opening response, merge matching status evidence without OS/test fields, and keep monthly service allowance disabled. The new sanitized legacy/candidate comparison and synthetic totals are recorded at the top of this matrix; no WAM message or live coverage is claimed.
 
 FEP-LIVE-002 regression: Vitest524 passed/1 skipped, build/lint PASS; safe Node72+credential bridge1 PASS; production audit0. No live message, Meta mutation, export/restore, callback change or deployment. See `GFS_ORDERFLOW_FEP_LIVE_002.md`.
 

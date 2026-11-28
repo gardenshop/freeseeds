@@ -91,7 +91,7 @@ describe("Hono security and Worker authorization boundaries", () => {
     expect(accessOrders.status).toBe(403);
   });
 
-  it("rejects unsigned API webhooks and accepts a valid synthetic Meta signature", async () => {
+  it("rejects unsigned API webhooks and refuses signed events without durable storage", async () => {
     const payload = JSON.stringify({
       object: "whatsapp_business_account",
       entry: [{ changes: [{ field: "messages", value: { metadata: { phone_number_id: "synthetic-phone-number" }, messages: [] } }] }]
@@ -99,8 +99,8 @@ describe("Hono security and Worker authorization boundaries", () => {
     const rejected = await signedWebhook(payload, "sha256=invalid");
     expect(rejected.status).toBe(403);
 
-    const accepted = await signedWebhook(payload);
-    expect(accepted.status).toBe(200);
-    expect(await accepted.json()).toMatchObject({ accepted: true, eventCount: 0, autoReplies: 0 });
+    const unavailable = await signedWebhook(payload);
+    expect(unavailable.status).toBe(503);
+    expect(await unavailable.json()).toEqual({ error: "WHATSAPP_WEBHOOK_DURABILITY_UNAVAILABLE" });
   });
 });

@@ -93,7 +93,7 @@ beforeEach(() => {
 
 afterEach(() => { vi.unstubAllGlobals(); sqlite.close(); });
 
-describe("release 0049 -> unchanged 0050 -> 0051 compatibility", () => {
+describe("release 0049 -> unchanged 0050 -> 0051 -> additive 0052 compatibility", () => {
   it("restores a synthetic SQLite backup with financial claims, COD totals, receipts and intent guards intact", () => {
     migrate();
     receipt("NORMAL", "cod", "synthetic-backup-claim");
@@ -121,8 +121,8 @@ describe("release 0049 -> unchanged 0050 -> 0051 compatibility", () => {
     }
   });
   it("pins the reviewed migration bytes and preserves all pre-0049 rows and old schema definitions", () => {
-    const hashes = ["01fd20cb7294c9401efa3773f5ecb05f4373972969c86de74493e546df34fec6", "d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4", "900c4410796cb0de20da568088a7563f670be758454f129d38fd28207606a47a"];
-    expect(releaseFiles).toHaveLength(3);
+    const hashes = ["01fd20cb7294c9401efa3773f5ecb05f4373972969c86de74493e546df34fec6", "d3aad32271a7988fd44d34fc36e03486c68d4551237dc68c696bb3bafba4e5b4", "900c4410796cb0de20da568088a7563f670be758454f129d38fd28207606a47a", "6fa6189bf04f5327693f366434102a36d8ff82d4cf41c61d10a682a093ba91ca"];
+    expect(releaseFiles).toHaveLength(4);
     releaseFiles.forEach((file, index) => expect(createHash("sha256").update(readFileSync(`migrations/${file}`)).digest("hex")).toBe(hashes[index]));
     const before = snapshot();
     const schema = sqlite.prepare("SELECT type,name,sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' ORDER BY name").all();
@@ -132,7 +132,7 @@ describe("release 0049 -> unchanged 0050 -> 0051 compatibility", () => {
       if (name !== "cod_schema_migrations") expect(after[name]).toEqual(rows);
     }
     for (const definition of schema) expect(sqlite.prepare("SELECT type,name,sql FROM sqlite_schema WHERE name=?").get(String(definition.name))).toEqual(definition);
-    expect(sqlite.prepare("SELECT version FROM cod_schema_migrations WHERE version>='0048' ORDER BY version").all()).toEqual([{ version: "0048" }, { version: "0049" }, { version: "0051" }]);
+    expect(sqlite.prepare("SELECT version FROM cod_schema_migrations WHERE version>='0048' ORDER BY version").all()).toEqual([{ version: "0048" }, { version: "0049" }, { version: "0051" }, { version: "0052" }]);
     // 0050 deliberately has no custom marker; objects, not invented ledger rows, prove it.
     expect(sqlite.prepare("SELECT count(*) AS n FROM order_confirmation_intents").get()).toEqual({ n: 0 });
     expect(sqlite.prepare("SELECT count(*) AS n FROM d1_migrations").get()).toEqual({ n: 0 });
@@ -234,8 +234,9 @@ describe("release 0049 -> unchanged 0050 -> 0051 compatibility", () => {
     const financial = ["orders", "payments", "payment_receipts", "cod_order_details"].map((table) => sqlite.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all());
     const payload = JSON.stringify({ object: "whatsapp_business_account", entry: [{ changes: [{ field: "messages", value: { metadata: { phone_number_id: "synthetic-phone-id" }, messages: [{ from: "923000000000", id: "synthetic-recovery-input", type: "text", text: { body: "CONFIRM_COD_ORDER" } }] } }] }] });
     const inbound = await api.fetch(new Request("https://api.example.test/webhooks/whatsapp", { method: "POST", headers: { "content-type": "application/json", "x-hub-signature-256": `sha256=${createHmac("sha256", "synthetic-secret").update(payload).digest("hex")}` }, body: payload }), env);
-    expect(inbound.status).toBe(200);
-    expect(await inbound.json()).toMatchObject({ recoveryMode: true, autoReplies: 0 });
+    expect(inbound.status).toBe(migrated ? 200 : 503);
+    if (migrated) expect(await inbound.json()).toMatchObject({ recoveryMode: true, autoReplies: 0 });
+    else expect(await inbound.json()).toEqual({ error: "WHATSAPP_WEBHOOK_DURABILITY_UNAVAILABLE" });
     await api.scheduled({ scheduledTime: Date.parse(now) } as ScheduledController, env);
     expect(send).not.toHaveBeenCalled();
     expect(globalThis.fetch).not.toHaveBeenCalled();

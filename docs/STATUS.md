@@ -1,10 +1,18 @@
 # GFS ORDERFLOW / Get Free Seeds Status
 
+## ZERO-MISSED-LEADS-002 current status (2026-11-28)
+
+Local candidate source/test work is complete for the current tranche: durable hashed inbound outcomes/reasons, idempotent accepted-response evidence, monotonic sent/delivered/read reconciliation, initial-reply retry/DLQ handling, hash-only billable-delivery incidents with active automated-send blocks, Admin aggregates/incident alert, signed CTWA opening without OS/test attestation, and monthly service allowance disabled by default. Full Vitest533/1 skipped/44 files; focused reliability278/1; TypeScript/lint, Node safety52/52, dummy credential-scope, API/Admin dry-runs and protected hashes923/923 pass. Production dependency audit0; full audit retains six registered dev findings. New additive migration `0052` is local only. The 0049→unchanged0050→0051 production-history/backup gates remain; `0052` is **not applied**. Live coverage must not be inferred from local synthetic tests.
+
+Current read-only Phone Manager: display name **Rejected**, number **Connected**, quality **High**. Phone Manager did not expose a separate registration-expiry state; the prior Graph `EXPIRED` report is not refreshed, so registration status remains a live gate. Meta Business Agent remains at **Set up**/disabled. No settings, callback, route, Worker, D1, message, campaign or billing changes occurred.
+
+Monthly free-service allowance is disabled: WAM totals are approximate and cannot establish exact pre-send quota across human, external and other sender traffic. Signed ad referral with hashed `ctwa_clid` and provider timestamp permits the one-time opening reply inside the actual CSW; no platform/OS field or isolated-test attestation. Missing referral/free evidence stays unresolved. User reports are limited to synthetic coverage below.
+
 ## GFS-ORDERFLOW-FEP-LIVE-002 (2026-11-27)
 
 Current official pricing and WABA settings were read-only checked. WABA Message Pricing now shows rolling30d66,349 FEP/981 free service, MTD Nov1-27 57,489 FEP/892 free service, paid0/$0 approximate; prior supplied61,254/924 is an earlier snapshot. These are account aggregates, not next-send proof. Business Agent remains Set up/off, AI Provider0. Meta status is Graphv26.0, WABA subscribed, phone quality GREEN, display name DECLINED, registration EXPIRED. No settings changed.
 
-Production D1 aggregate shows12,304 conversations but0 structured CTWA opening/click-hash/first-response/FEP/expiry/pricing records; webhook history contains hashes/status, no raw referral/pricing fields. Historical analytics cannot prove per-contact duration>72h. Current referral schema has no device OS field; test-only owner mobile attestation is isolated, normal production stays fail-closed. Status parser merges matched status fields, tolerates deprecated/missing `billable` only with explicit free type/category, and records actual expiry. Page CTA eligibility is unverified. No live test because sender registration/name and separate candidate/relay deployment remain gated. Prefer the proposed empty `getfreeseeds-v2-restore-fep-002` after separate creation approval. See `GFS_ORDERFLOW_FEP_LIVE_002.md` and `GFS_ORDER_001_FREE_WINDOW_POLICY.md`.
+Historical FEP-LIVE-002 notes record the previous D1 aggregate read. Current policy is the ZERO-MISSED-LEADS-002 section above: no mobile test attestation; signed ad-referral evidence for the one-time opener; actual provider expiry/pricing for later FEP; monthly service allowance disabled. See `GFS_ORDERFLOW_FEP_LIVE_002.md` and `GFS_ORDER_001_FREE_WINDOW_POLICY.md` for historical/corrected policy boundaries.
 
 ## GFS-ORDERFLOW-TEST-ISOLATION-001 (2026-11-27)
 
@@ -40,7 +48,7 @@ The current Admin aggregate snapshot is timestamped in `GFS_ORDERFLOW_MCP_RECOVE
 
 ## GFS-ORDERFLOW-FEP-001 local status (2026-11-26)
 
-Official Meta pricing and webhook references were read-only checked. The local guard now supports one qualifying initial mobile-CTWA response without preexisting FEP expiry/post-delivery pricing; signed referral/hash/provider timestamps and an explicit Android/iOS origin are required. Subsequent FEP activation is stored only from a matched provider response status with `referral_conversion`, actual `conversation.expiration_timestamp`, `free_entry_point`/PMP/nonbillable evidence. Service-tier allowance remains independently verified and count-based. No FEP/stock architecture or paid fallback was added; raw CTWA IDs/payloads are not persisted.
+Official Meta pricing and webhook references were read-only checked. Current candidate supports one qualifying signed CTWA ad-referral response without pre-existing FEP expiry/pricing or an OS field. Subsequent FEP activation requires matching provider status, `referral_conversion`, actual `conversation.expiration_timestamp`, and `free_entry_point`/PMP pricing evidence. Service-tier allowance is disabled until exact shared pre-send quota accounting is available. No paid fallback; click IDs are hashed and raw webhook payloads are not persisted in conversation evidence.
 
 Current WABA/account-level limit and pricing aggregates plus sender/template states were read in the authorized session; no per-contact referral/platform/expiry/billability or client rendering was verified. Phone is Connected/High, but display name is In Review and both Utility templates remain Active - Quality pending. Unknown FEP eligibility stays fail-closed. No campaign, message, payment, migration, Worker config, order or route was changed; the existing D1 Time Travel bookmark ID was retrieved read-only. WhatsApp launch remains **NO-GO**; PENDING-001 aggregates are refreshed but row-level reconciliation remains incomplete. LAUNCH-001 preflight is PARTIAL.
 

@@ -87,6 +87,15 @@ describe("isolated WhatsApp test budget", () => {
     expect(test.sqlite.prepare("SELECT status FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET'").get()).toEqual({ status: "UNKNOWN" });
   });
 
+  it("counts and safely permits a retry only after a known provider 429 rejection", async () => {
+    const test = fixture();
+    const payload = { messaging_product: "whatsapp", to: test.settings.recipient, type: "text", text: { body: "known-retry" } };
+    await expect(test.guard.send(test.settings.recipient!, payload, async () => { throw new Error("META_MESSAGE_SEND_429"); })).rejects.toThrow("WHATSAPP_TEST_RETRYABLE_REJECTION");
+    const retry = await test.guard.send(test.settings.recipient!, payload, async () => ({ providerMessageId: "synthetic-retried-provider-id" }));
+    expect(retry).toEqual({ providerMessageId: "synthetic-retried-provider-id" });
+    expect(test.sqlite.prepare("SELECT status,attempt_count FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET'").get()).toEqual({ status: "SENT", attempt_count: 2 });
+  });
+
   it("rejects other recipients before reservation or provider call", async () => {
     const test = fixture();
     const providerSend = vi.fn(async () => ({ providerMessageId: "synthetic" }));

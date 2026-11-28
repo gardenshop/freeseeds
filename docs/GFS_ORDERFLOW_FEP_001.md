@@ -2,6 +2,8 @@
 
 **Status: local implementation and synthetic acceptance complete; WhatsApp launch NO-GO.** No campaign, template, billing, sender, migration, deployment, customer or Meta/Cloudflare setting was changed.
 
+**Policy supersession (2026-11-28):** ordinary CTWA opening evidence uses the authenticated signed `source_type=ad` referral, hashed `ctwa_clid`, provider timestamp and actual CSW. No Android/iOS field or isolated-test attestation is required or used. Monthly service allowance is disabled until authoritative shared pre-send quota accounting exists. See `GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md`.
+
 ## Verified Rules
 
 Official read-only sources:
@@ -10,13 +12,13 @@ Official read-only sources:
 - [WhatsApp status webhooks](https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages/status)
 - [WhatsApp message webhooks](https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/reference/messages)
 
-A first business response within24 hours of a qualifying **mobile** Click-to-WhatsApp referral can open an FEP. The first response is a distinct policy basis: it must not require an already active FEP, future expiry timestamp, or post-delivery pricing receipt before sending. The local guard permits only one initial free-form response when a signed inbound webhook provides `source_type=ad`, a hashed `ctwa_clid`, explicit `ANDROID`/`IOS` platform, provider timestamp inside CSW, and the versioned opening-response policy; a database CAS consumes the one-time claim. No mobile origin is inferred from campaign ID, ad traffic or `ctwa_clid` alone.
+A first business response within24 hours of a qualifying Click-to-WhatsApp ad referral can open an FEP. The first response is a distinct policy basis: it must not require an already active FEP, future expiry timestamp, or post-delivery pricing receipt before sending. The local guard permits only one initial free-form response when a signed inbound webhook provides documented `source_type=ad`, a hashed `ctwa_clid`, provider timestamp inside CSW, and the versioned opening-response policy; a database CAS consumes the one-time claim. No OS/device field or isolated test attestation is used.
 
 Subsequent FEP use is recognized only from a matching signed outgoing-message status and exact per-contact `conversation.expiration_timestamp`, `conversation.origin.type=referral_conversion`, and `pricing` evidence (`type=free_entry_point`, `category=referral_conversion`, `pricing_model=PMP`, `billable=false`). SENT proof is pending until DELIVERED/READ; FAILED clears pending proof. The exact provider expiry is used; Meta's “up to seven days” maximum is not a duration default.
 
 The 24-hour customer-service window and FEP are separate. Free-form messages still require an open CSW. Outside CSW, the pure guard accepts only an exact approved template ID/locale/category/validity plus active verified FEP. No template sender fallback or paid send was added.
 
-Current official pricing also reports a 1,000 free service-message tier per business phone/month. The local service-allowance path requires a separately verified positive remaining-message counter and a matching `free_customer_service`/`service`/`free_tier`/PMP proof. A prior free-service delivery, 90-day total or aggregate analytics do not prove the next message is free.
+Current pricing describes a monthly free-service tier, but no authoritative pre-send shared balance is available across other senders and human/external activity. The local `SERVICE_ALLOWANCE` path therefore remains disabled; a prior free-service delivery, 90-day total or aggregate analytics do not prove the next message is free.
 
 ## Existing Account Evidence
 
@@ -47,6 +49,6 @@ The latest Manager insight period, **2026-10-30 through 2026-11-26**, displayed 
 
 ## Production Release Gate
 
-S0-A06 remains open until an authorized controlled test on an explicitly approved synthetic contact captures the actual signed mobile referral/platform, first-response status, exact per-contact FEP expiry, matching pricing webhook and any service-counter evidence. If the referral webhook does not expose mobile platform, do not infer it; obtain another supported independent per-contact evidence source or retain fail-closed suppression. Recheck template quality/approval, sender display name, opt-out, English/Urdu client rendering and A10 rollback readiness before a separately authorized send. Do not use ordinary customers, activate the existing campaign, submit templates or send a live test without separate authorization. Unknown evidence means **NO SEND**, not paid fallback.
+S0-A06 remains open until the sender name/registration discrepancy, candidate deployment/migration, actual per-contact FEP expiry/pricing and rollback gates are resolved. The current opening path uses signed `source_type=ad`, hashed `ctwa_clid`, provider timestamp and CSW only; no mobile-platform field or test attestation is used. Monthly service allowance is disabled because no exact account-wide pre-send quota exists. Recheck template quality/approval, opt-out, English/Urdu client rendering and A10 rollback readiness before a separately authorized send. Do not use ordinary customers, activate the existing campaign, submit templates or send a live test without separate authorization. Unknown evidence means **NO SEND**, not paid fallback.
 
 Current stage acceptance: S0 80% audited; S1 INTENT-030 100% local; S2 aggregate read PASS but row-level/denominator exit partial; S3 TID-001 100% local; S4 local implementation PASS/live per-contact gates PARTIAL; S5 0%; S6 0%; S7 0%; S8 0%; S9 0%. Two of ten stage exits are complete; eight remain. WhatsApp launch stays **NO-GO**. Preserve PENDING-001, FIN-MO-002 before S5/S6, authorized Pakistan Post integration, six dev findings, tracking/private labels, new-number lock and O01-O23/REV.2. **Next task: close PENDING row-level evidence and remaining LAUNCH-001 gates; do not deploy from this report.**

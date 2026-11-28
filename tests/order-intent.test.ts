@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { anchorOrderIntentOnDelivery, cancelOrderIntent, expireDueOrderIntents, expireOrderIntent, formatIntentRemainingTime, orderIntentCodConfirmationText, orderIntentNewOrderButton, orderIntentOptionRows, orderIntentOptionsText, orderIntentReminderText, queueDueOrderIntentReminders, switchIntentAdvanceToCod, ORDER_INTENT_DURATION_MS, ORDER_INTENT_VERSION } from "../apps/api/src/order-intent.js";
 import worker, { finalizeCodOrder } from "../apps/api/src/index.js";
 import { enqueueDuePaymentChoiceRecoveryStages } from "../apps/api/src/payment-choice-recovery.js";
+import { persistInboundLeadAccounting } from "../packages/core/src/webhook.js";
 import { parseWhatsAppDeliveryReceipts, persistInboundConversationActivity, persistWebhookRecords } from "../packages/core/src/webhook.js";
 import { evaluateStoredFreeWhatsAppOutbound } from "../packages/core/src/free-messaging.js";
 
@@ -130,6 +131,7 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     sqlite.exec(readFileSync("migrations/0049_cod_mo_global_reference_claims.sql", "utf8"));
     sqlite.exec(readFileSync("migrations/0050_order_confirmation_intents.sql", "utf8"));
     sqlite.exec(readFileSync("migrations/0051_order_confirmation_intent_state_guards.sql", "utf8"));
+    sqlite.exec(readFileSync("migrations/0052_whatsapp_lead_accounting_and_billing_incidents.sql", "utf8"));
   });
 
   it("anchors T0 and all stages to the first qualifying provider timestamp", async () => {
@@ -223,18 +225,18 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES('ref-event','message:inbound-synthetic','MESSAGE','synthetic-signed-webhook-hash','RECEIVED','synthetic-correlation',?)").run(new Date(start).toISOString());
     const db=makeDb();
     const referralEvent={id:"inbound-synthetic",from:"synthetic-wa-id",providerTimestamp:new Date(start).toISOString(),referral:{ctwaClid:"synthetic-click-id-never-persisted",sourceType:"ad"}};
-    await persistInboundConversationActivity(db,[referralEvent],{ownerMobileTestAttestation:true});
-    await persistInboundConversationActivity(db,[referralEvent],{ownerMobileTestAttestation:true});
+    await persistInboundConversationActivity(db,[referralEvent]);
+    await persistInboundConversationActivity(db,[referralEvent]);
     sqlite.prepare("INSERT INTO whatsapp_events(id,provider_event_id,event_type,payload_hash,status,correlation_id,created_at) VALUES('old-ref-event','message:inbound-old','MESSAGE','synthetic-old-signed-webhook-hash','RECEIVED','synthetic-correlation',?)").run(new Date(start).toISOString());
-    await persistInboundConversationActivity(db,[{id:"inbound-old",from:"synthetic-wa-id",providerTimestamp:new Date(start-60_000).toISOString(),referral:{ctwaClid:"synthetic-old-click-id",sourceType:"ad",platform:"ios"}}]);
+    await persistInboundConversationActivity(db,[{id:"inbound-old",from:"synthetic-wa-id",providerTimestamp:new Date(start-60_000).toISOString(),referral:{ctwaClid:"synthetic-old-click-id",sourceType:"ad"}}]);
     const state=JSON.parse(String(sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()?.state_data)) as {freeMessagingEvidence:{openingResponse:Record<string,unknown>;fep?:unknown;pricing?:unknown}};
-    expect(state.freeMessagingEvidence.openingResponse).toMatchObject({sourceType:"CTWA_AD",mobileOriginAttestation:"OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST",referralAt:new Date(start).toISOString(),policyVerified:true,sourceEvidenceRef:"synthetic-signed-webhook-hash"});
+    expect(state.freeMessagingEvidence.openingResponse).toMatchObject({sourceType:"CTWA_AD",referralAt:new Date(start).toISOString(),policyVerified:true,sourceEvidenceRef:"synthetic-signed-webhook-hash"});
     expect(state.freeMessagingEvidence.openingResponse).not.toHaveProperty("platform");
     expect(sqlite.prepare("SELECT last_inbound_message_id,last_inbound_at FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()).toEqual({last_inbound_message_id:"inbound-synthetic",last_inbound_at:new Date(start).toISOString()});
     expect(state.freeMessagingEvidence.openingResponse).not.toHaveProperty("ctwaClid");
     expect(state.freeMessagingEvidence).not.toHaveProperty("fep");
     expect(state.freeMessagingEvidence).not.toHaveProperty("pricing");
-    expect(await evaluateStoredFreeWhatsAppOutbound(db,"synthetic-wa-id","ur",new Date(start+60_000),{allowFepOpeningResponse:true,allowOwnerMobileTestAttestation:true})).toMatchObject({eligible:true,basis:"FEP_OPENING_RESPONSE",locale:"ur"});
+    expect(await evaluateStoredFreeWhatsAppOutbound(db,"synthetic-wa-id","ur",new Date(start+60_000),{allowFepOpeningResponse:true})).toMatchObject({eligible:true,basis:"FEP_OPENING_RESPONSE",locale:"ur"});
   });
 
   it("activates later FEP only from matched Meta referral-conversion pricing and provider expiry webhooks", async () => {
@@ -244,20 +246,20 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     const providerHashBytes=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(providerMessageId)));
     const providerMessageIdHash=[...providerHashBytes].map((byte)=>byte.toString(16).padStart(2,"0")).join("");
     seedIntent(new Date(start).toISOString(),"en");
-    const opening={sourceType:"CTWA_AD",mobileOriginAttestation:"OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST",clickIdHash:"9".repeat(64),referralAt:new Date(start-60_000).toISOString(),policyVerified:true,policyRef:"META-PMP-CTWA-FEP-2026-10-01",sourceEvidenceRef:"synthetic-referral-proof",firstResponseAttemptedAt:new Date(start).toISOString(),firstResponseKeyHash:"synthetic-attempt-key-hash",firstBusinessResponseAt:new Date(start).toISOString(),firstResponseMessageIdHash:providerMessageIdHash};
+    const opening={sourceType:"CTWA_AD",clickIdHash:"9".repeat(64),referralAt:new Date(start-60_000).toISOString(),policyVerified:true,policyRef:"META-PMP-CTWA-FEP-2026-10-01",sourceEvidenceRef:"synthetic-referral-proof",firstResponseAttemptedAt:new Date(start).toISOString(),firstResponseKeyHash:"synthetic-attempt-key-hash",firstBusinessResponseAt:new Date(start).toISOString(),firstResponseMessageIdHash:providerMessageIdHash};
     sqlite.prepare("UPDATE whatsapp_conversations SET state_data=? WHERE id='conversation-synthetic'").run(JSON.stringify({language:"en",freeMessagingEvidence:{openingResponse:opening}}));
     sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,customer_id,kind,status,attempt_count,provider_message_id,created_at,updated_at) VALUES('outbound-language','conversation_reply:inbound-synthetic',NULL,NULL,'LANGUAGE_SELECTION','SENT',1,?,?,?)").run(providerMessageId,new Date(start).toISOString(),new Date(start).toISOString());
+    await persistInboundLeadAccounting(makeDb(),"inbound-synthetic","ELIGIBLE_RESPONSE_ATTEMPTED","TEST_FIXTURE_ELIGIBLE",new Date(start).toISOString());
     const payload={entry:[{changes:[{value:{statuses:[{id:providerMessageId,recipient_id:"synthetic-wa-id",status:"sent",timestamp:String(Math.floor((start+10_000)/1000)),conversation:{id:"synthetic-conversation-id",expiration_timestamp:String(Math.floor(Date.parse(expiresAt)/1000)),origin:{type:"referral_conversion"}}},{id:providerMessageId,recipient_id:"synthetic-wa-id",status:"delivered",timestamp:String(Math.floor((start+30_000)/1000)),pricing:{pricing_model:"PMP",type:"free_entry_point",category:"referral_conversion"}}]}}]}]};
     const raw=new TextEncoder().encode(JSON.stringify(payload)).buffer as ArrayBuffer;
     vi.useFakeTimers();
     vi.setSystemTime(start+40_000);
-    expect(await persistWebhookRecords(makeDb(),payload,raw,"synthetic-status-correlation",false)).toBe(2);
-    const stored=JSON.parse(String(sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()?.state_data)) as {freeMessagingEvidence:{fep:{verifiedExpiresAt:string;expiryEvidenceRef:string;mobileOriginAttestation?:string;platform?:string;firstBusinessResponseAt:string};pricing:{type:string;category:string;pricingModel:string;billable?:boolean}}};
+    expect(await persistWebhookRecords(makeDb(),payload,raw,"synthetic-status-correlation",false)).toBe(1);
+    const stored=JSON.parse(String(sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE id='conversation-synthetic'").get()?.state_data)) as {freeMessagingEvidence:{fep:{verifiedExpiresAt:string;expiryEvidenceRef:string;firstBusinessResponseAt:string};pricing:{type:string;category:string;pricingModel:string;billable?:boolean}}};
     expect(stored.freeMessagingEvidence.fep).toMatchObject({verifiedExpiresAt:expiresAt});
     expect(stored.freeMessagingEvidence.pricing).toMatchObject({type:"free_entry_point",category:"REFERRAL_CONVERSION",pricingModel:"PMP"});
     expect(stored.freeMessagingEvidence.pricing.billable).toBeUndefined();
-    expect(stored.freeMessagingEvidence.fep.mobileOriginAttestation).toBe("OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST");
-    expect(await evaluateStoredFreeWhatsAppOutbound(makeDb(),"synthetic-wa-id","en",new Date(start+60_000),{allowOwnerMobileTestAttestation:true})).toMatchObject({eligible:true,basis:"FEP",locale:"en"});
+    expect(await evaluateStoredFreeWhatsAppOutbound(makeDb(),"synthetic-wa-id","en",new Date(start+60_000))).toMatchObject({eligible:true,basis:"FEP",locale:"en"});
   });
 
   it("applies 0049 then unchanged 0050 then 0051 without backfilling legacy orders or adding inventory tables", async () => {
@@ -457,9 +459,10 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     const db = makeDb();
     vi.useFakeTimers();
     vi.setSystemTime(start + 10 * 60_000 + 30_000);
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>(async () => Response.json({ error: { message: "Synthetic rate limit" } }, { status: 429 })));
     let retryCount = 0;
     const message = { body: { kind: "WHATSAPP_ORDER_INTENT_STAGE", idempotencyKey: "intent-stage-10", entityId: "order-synthetic", schemaVersion: 1 }, ack: () => undefined, retry: () => { retryCount += 1; } };
-    const env = { DB: db, DEPLOYMENT_STATE: "READY", META_PROVIDER_ENABLED: "false", ORDER_INTENT_AUTOMATION_ENABLED: "true", META_GRAPH_VERSION: "v26.0" } as never;
+    const env = { DB: db, DEPLOYMENT_STATE: "READY", META_PROVIDER_ENABLED: "true", META_ACCESS_TOKEN: "synthetic-token", META_PHONE_NUMBER_ID: "synthetic-phone-id", ORDER_INTENT_AUTOMATION_ENABLED: "true", META_GRAPH_VERSION: "v26.0" } as never;
     await worker.queue({ messages: [message] } as never, env);
     expect(retryCount).toBe(1);
     expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE idempotency_key='intent-stage-10'").get()).toEqual({ status: "RETRY" });
@@ -499,11 +502,12 @@ describe("GFS-ORDERFLOW INTENT-030", () => {
     vi.useFakeTimers();
     vi.setSystemTime(start + 24 * 60_000 + 30_000);
     const message = { body: { kind: "WHATSAPP_ORDER_INTENT_STAGE", idempotencyKey: "intent-stage-10", entityId: "order-synthetic", schemaVersion: 1 }, ack: vi.fn(), retry: vi.fn() };
-    const env = { DB: makeDb(), DEPLOYMENT_STATE: "READY", META_PROVIDER_ENABLED: "true", META_ACCESS_TOKEN: "synthetic-token", META_PHONE_NUMBER_ID: "synthetic-phone-id", ORDER_INTENT_AUTOMATION_ENABLED: "true", META_GRAPH_VERSION: "v26.0" } as never;
+    const db = makeDb();
+    const env = { DB: db, DEPLOYMENT_STATE: "READY", META_PROVIDER_ENABLED: "true", META_ACCESS_TOKEN: "synthetic-token", META_PHONE_NUMBER_ID: "synthetic-phone-id", ORDER_INTENT_AUTOMATION_ENABLED: "true", META_GRAPH_VERSION: "v26.0" } as never;
     await worker.queue({ messages: [message] } as never, env);
 
-    expect(message.ack).toHaveBeenCalledOnce();
     expect(message.retry).not.toHaveBeenCalled();
+    expect(message.ack).toHaveBeenCalledOnce();
     expect(sqlite.prepare("SELECT status,last_error FROM order_confirmation_intent_stages WHERE stage_minutes=10").get()).toEqual({ status: "SENT", last_error: null });
     expect(fetchMock).toHaveBeenCalledOnce();
     const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as { interactive: { body: { text: string }; action: { buttons: Array<{ reply: { title: string } }> } } };

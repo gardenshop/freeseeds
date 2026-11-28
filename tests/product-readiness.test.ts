@@ -26,7 +26,7 @@ describe("product readiness safeguards", () => {
   });
 
   it("classifies inbound messages, media, and statuses without storing payloads", () => {
-    const records = parseWebhookRecords({ entry: [{ changes: [{ value: { messages: [{ id: "synthetic-message", type: "text" }, { id: "synthetic-media", type: "image", image: { id: "synthetic-media" } }], statuses: [{ id: "synthetic-status", status: "delivered" }] } }] }] });
+    const records = parseWebhookRecords({ entry: [{ changes: [{ value: { messages: [{ id: "synthetic-message", from: "synthetic-user", type: "text" }, { id: "synthetic-media", from: "synthetic-user", type: "image", image: { id: "synthetic-media" } }], statuses: [{ id: "synthetic-status", status: "delivered" }] } }] }] });
     expect(records).toEqual([
       { providerEventId: "message:synthetic-message", eventType: "MESSAGE", status: "RECEIVED" },
       { providerEventId: "message:synthetic-media", eventType: "MEDIA", status: "RECEIVED" },
@@ -37,7 +37,7 @@ describe("product readiness safeguards", () => {
   it("keeps callback status monotonic across concurrent, duplicate, delayed, and reordered deliveries", async () => {
     const sqlite = new DatabaseSync(":memory:");
     try {
-      sqlite.exec("CREATE TABLE outbound_messages(provider_message_id TEXT,status TEXT,last_error TEXT,updated_at TEXT);");
+      sqlite.exec("CREATE TABLE outbound_messages(idempotency_key TEXT,kind TEXT,provider_message_id TEXT,status TEXT,last_error TEXT,updated_at TEXT);");
       sqlite.exec("CREATE TABLE whatsapp_events(provider_event_id TEXT UNIQUE,event_type TEXT,payload_hash TEXT,status TEXT,correlation_id TEXT,created_at TEXT,id TEXT PRIMARY KEY);");
       sqlite.exec("INSERT INTO outbound_messages(provider_message_id,status,last_error,updated_at) VALUES('synthetic-provider-message','PENDING',NULL,'2026-01-01T00:00:00.000Z');");
       const d1 = {

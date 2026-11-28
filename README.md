@@ -6,6 +6,12 @@ The system uses Cloudflare Workers, D1, private R2, Queues, and Cloudflare Acces
 
 Read `rules.md` before making changes.
 
+## Zero Missed Leads
+
+The binding lead-accountability, free-only and no-Meta-Business-Agent policies are in `rules.md` and [FREE_WINDOW_POLICY](docs/GFS_ORDER_001_FREE_WINDOW_POLICY.md). The current candidate accounts for unique inbound events and explicit unresolved/suppressed reasons, uses only signed CTWA referral evidence for the one-time opening response, blocks monthly service-allowance sends until exact shared quota accounting is possible, and durably pauses affected automated sends after confirmed billable delivery. Approximate WAM dashboard totals never authorize a send. The candidate is local only: migration `0052` is unapplied, current sender display name is rejected, and live registration expiry remains unverified. **WhatsApp launch remains NO-GO.** See [ZERO-MISSED-LEADS-002](docs/GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md).
+
+Do not enable Meta Business Agent. Do not weaken free-only checks or use paid fallback. Preserve the new-number lock, Hoja Seeds zero-connection rule, existing payment/COD Rs.125/financial controls, bilingual formatting, Access, recovery, CAPI, standalone MO Printing and protected Label Printer project.
+
 ## Order Lifecycle REV.2
 
 ### Release Blocker Close (2026-11-27)
@@ -22,9 +28,9 @@ See [final verification](docs/GFS_ORDERFLOW_FINAL_VERIFICATION_001.md) for the v
 
 Permanent master project reference: **GFS ORDERFLOW** (GFS-ORDER-001 REV.2, stages S0-S9, historical decisions and future subtasks). Keep existing file names, branch and task IDs. Label Printer, standalone Money Order Printing and Hoja Seeds remain entirely separate.
 
-Owner-provided Facebook profile context for future operator identity checks: `ayesha.butt55@hotmail.com`. This identifies the profile email the owner reports using; it is not a credential or independent proof of the active Meta session. Never store or request authentication factors. The owner completes any Meta authenticity challenge personally in the existing profile.
+Owner identity/contact data is not stored in this project README. Verify the authorized operator in the existing authenticated profile before any external mutation. Never store or request authentication factors. The owner completes any Meta authenticity challenge personally in the existing profile.
 
-Read the [master plan](docs/GFS_ORDER_001_MASTER_PLAN.md), [current audit](docs/GFS_ORDER_001_CURRENT_AUDIT.md), [task register](docs/GFS_ORDER_001_TASK_REGISTER.md), [handover](docs/GFS_ORDER_001_HANDOVER.md), [INTENT-030 closeout](docs/GFS_ORDERFLOW_INTENT_030.md), [TID-001 closeout](docs/GFS_ORDERFLOW_TID_001.md), [FEP-001 closeout](docs/GFS_ORDERFLOW_FEP_001.md), [PENDING-001 closeout](docs/GFS_ORDERFLOW_PENDING_001.md), [LAUNCH-001 preflight](docs/GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md) and [MCP recovery](docs/GFS_ORDERFLOW_MCP_RECOVERY_001.md). S0 remains partial and WhatsApp launch is **NO-GO** until recorded release gates pass. MCP/list_pages now works; current aggregate Admin/Meta evidence is recorded. Per-order PENDING, per-contact FEP, sender/template and rollback gates remain open. No production migration, message or Worker deployment occurred.
+Read the [master plan](docs/GFS_ORDER_001_MASTER_PLAN.md), [current audit](docs/GFS_ORDER_001_CURRENT_AUDIT.md), [task register](docs/GFS_ORDER_001_TASK_REGISTER.md), [handover](docs/GFS_ORDER_001_HANDOVER.md), [INTENT-030 closeout](docs/GFS_ORDERFLOW_INTENT_030.md), [TID-001 closeout](docs/GFS_ORDERFLOW_TID_001.md), [FEP-001 closeout](docs/GFS_ORDERFLOW_FEP_001.md), [PENDING-001 closeout](docs/GFS_ORDERFLOW_PENDING_001.md), [ZERO-MISSED-LEADS-002](docs/GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md), [LAUNCH-001 preflight](docs/GFS_ORDERFLOW_LAUNCH_001_PREFLIGHT.md) and [MCP recovery](docs/GFS_ORDERFLOW_MCP_RECOVERY_001.md). S0 remains partial and WhatsApp launch is **NO-GO** until recorded release gates pass. Per-order PENDING, per-contact pricing, billing-protection migration, sender/template and rollback gates remain open. No production migration, message or Worker deployment occurred.
 
 The [message sequence](docs/GFS_ORDER_001_MESSAGE_SEQUENCE.md), [free-window policy](docs/GFS_ORDER_001_FREE_WINDOW_POLICY.md), [tracking contract](docs/GFS_ORDER_001_TRACKING_CONTRACT.md), [amount contract](docs/GFS_ORDER_001_AMOUNT_CONTRACT.md) and [test matrix](docs/GFS_ORDER_001_TEST_MATRIX.md) define gated work. Customer locale is pinned per intent and reused by delayed messages; bidi isolation preserves paragraph and ID order in WhatsApp. The30-minute timer is confirmation-only; household eligibility locks are not physical stock reservations. No inventory/warehouse dependency or scarcity claim is permitted. TID approval requires actual settlement evidence. Extend Free Seeds' native private individual HTML label without a dependency on the protected Garden Shop Label Printer project.
 

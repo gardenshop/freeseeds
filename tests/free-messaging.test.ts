@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { evaluateFreeWhatsAppOutbound, FEP_OPENING_POLICY_VERSION, OWNER_CONFIRMED_TEST_MOBILE_POLICY, type FreeMessagingEvidence } from "../packages/core/src/free-messaging.js";
+import { evaluateFreeWhatsAppOutbound, FEP_OPENING_POLICY_VERSION, type FreeMessagingEvidence } from "../packages/core/src/free-messaging.js";
 
 const NOW = Date.parse("2026-11-26T10:00:00.000Z");
 const EVIDENCE: FreeMessagingEvidence = {
   fep: {
     sourceType: "CTWA_AD",
-    platform: "ANDROID",
     clickIdHash: "a".repeat(64),
     referralAt: new Date(NOW - 15 * 60_000).toISOString(),
     firstBusinessResponseAt: new Date(NOW - 14 * 60_000).toISOString(),
@@ -43,10 +42,9 @@ function evaluate(overrides: Partial<Parameters<typeof evaluateFreeWhatsAppOutbo
 }
 
 describe("fail-closed free-only WhatsApp guard", () => {
-  it("allows one qualifying mobile CTWA opening response without requiring an already-open FEP or delivered pricing receipt", () => {
+  it("allows one signed CTWA opening response without an OS field or prior FEP/pricing receipt", () => {
     const opening = {
       sourceType: "CTWA_AD",
-      platform: "ANDROID",
       clickIdHash: "f".repeat(64),
       referralAt: new Date(NOW - 2 * 60_000).toISOString(),
       policyVerified: true,
@@ -54,25 +52,27 @@ describe("fail-closed free-only WhatsApp guard", () => {
       sourceEvidenceRef: "synthetic-signed-referral"
     };
     expect(evaluate({ evidence: { openingResponse: opening }, allowFepOpeningResponse: true })).toMatchObject({ eligible: true, basis: "FEP_OPENING_RESPONSE" });
-    expect(evaluate({ evidence: { openingResponse: { ...opening, platform: "UNKNOWN" } }, allowFepOpeningResponse: true })).toMatchObject({ eligible: false, reason: "FREE_BILLING_UNKNOWN_OR_MISMATCHED" });
+    expect(evaluate({ evidence: { openingResponse: { ...opening, platform: "UNKNOWN" } }, allowFepOpeningResponse: true })).toMatchObject({ eligible: true, basis: "FEP_OPENING_RESPONSE" });
+    expect(evaluate({ evidence: { openingResponse: { ...opening, sourceType: "UNKNOWN" } }, allowFepOpeningResponse: true })).toMatchObject({ eligible: false, reason: "FREE_BILLING_UNKNOWN_OR_MISMATCHED" });
     expect(evaluate({ evidence: { openingResponse: { ...opening, firstResponseAttemptedAt: new Date(NOW - 60_000).toISOString() } }, allowFepOpeningResponse: true })).toMatchObject({ eligible: false, reason: "FREE_BILLING_UNKNOWN_OR_MISMATCHED" });
     expect(evaluate({ lastInboundAt: new Date(NOW - 25 * 60 * 60_000).toISOString(), evidence: { openingResponse: opening }, allowFepOpeningResponse: true })).toMatchObject({ eligible: false, reason: "SERVICE_WINDOW_CLOSED_OR_MARGIN" });
   });
 
-  it("allows a free-form service message only with verified mobile CTWA, FEP expiry, and matching free-pricing evidence", () => {
+  it("allows later free-form service messages only with verified CTWA, FEP expiry, and matching free-pricing evidence", () => {
     expect(evaluate()).toMatchObject({ eligible: true, reason: "VERIFIED_FREE", basis: "FEP" });
     expect(evaluate({ evidence: { ...EVIDENCE, pricing: { ...EVIDENCE.pricing!, billable: undefined } } })).toMatchObject({ eligible: true, reason: "VERIFIED_FREE", basis: "FEP" });
   });
 
-  it("uses only an explicit isolated-test mobile attestation when the referral schema has no device field", () => {
-    const opening = { sourceType: "CTWA_AD" as const, mobileOriginAttestation: OWNER_CONFIRMED_TEST_MOBILE_POLICY, clickIdHash: "f".repeat(64), referralAt: new Date(NOW - 2 * 60_000).toISOString(), policyVerified: true, policyRef: FEP_OPENING_POLICY_VERSION, sourceEvidenceRef: "synthetic-signed-ctwa" };
-    expect(evaluate({ evidence: { openingResponse: opening }, allowFepOpeningResponse: true })).toMatchObject({ eligible: false, reason: "FREE_BILLING_UNKNOWN_OR_MISMATCHED" });
-    expect(evaluate({ evidence: { openingResponse: opening }, allowFepOpeningResponse: true, allowOwnerMobileTestAttestation: true })).toMatchObject({ eligible: true, basis: "FEP_OPENING_RESPONSE" });
+  it("does not use platform or isolated-test attestation to qualify CTWA", () => {
+    const opening = { sourceType: "CTWA_AD" as const, clickIdHash: "f".repeat(64), referralAt: new Date(NOW - 2 * 60_000).toISOString(), policyVerified: true, policyRef: FEP_OPENING_POLICY_VERSION, sourceEvidenceRef: "synthetic-signed-ctwa" };
+    expect(evaluate({ evidence: { openingResponse: opening }, allowFepOpeningResponse: true })).toMatchObject({ eligible: true, basis: "FEP_OPENING_RESPONSE" });
+    expect(evaluate({ evidence: { openingResponse: { ...opening, clickIdHash: "unknown" } }, allowFepOpeningResponse: true })).toMatchObject({ eligible: false, reason: "FREE_BILLING_UNKNOWN_OR_MISMATCHED" });
   });
 
-  it("fails closed when CTWA, mobile platform, expiry, or free-billing evidence is unknown", () => {
+  it("fails closed when CTWA, expiry, or free-billing evidence is unknown", () => {
     expect(evaluate({ evidence: undefined })).toMatchObject({ eligible: false, reason: "FREE_BILLING_UNKNOWN_OR_MISMATCHED" });
-    expect(evaluate({ evidence: { ...EVIDENCE, fep: { ...EVIDENCE.fep!, platform: "UNKNOWN" } } })).toMatchObject({ eligible: false, reason: "QUALIFYING_CTWA_EVIDENCE_UNKNOWN" });
+    expect(evaluate({ evidence: { ...EVIDENCE, fep: { ...EVIDENCE.fep!, platform: "UNKNOWN" } } })).toMatchObject({ eligible: true, basis: "FEP" });
+    expect(evaluate({ evidence: { ...EVIDENCE, fep: { ...EVIDENCE.fep!, sourceType: "UNKNOWN" } as unknown as typeof EVIDENCE.fep } })).toMatchObject({ eligible: false, reason: "QUALIFYING_CTWA_EVIDENCE_UNKNOWN" });
     expect(evaluate({ evidence: { ...EVIDENCE, fep: { ...EVIDENCE.fep!, expiryVerified: false } } })).toMatchObject({ eligible: false, reason: "QUALIFYING_CTWA_EVIDENCE_UNKNOWN" });
     expect(evaluate({ evidence: { ...EVIDENCE, fep: { ...EVIDENCE.fep!, verifiedExpiresAt: new Date(NOW).toISOString() } } })).toMatchObject({ eligible: false, reason: "FEP_EXPIRED_OR_UNVERIFIED" });
     expect(evaluate({ evidence: { ...EVIDENCE, fep: { ...EVIDENCE.fep!, verifiedExpiresAt: new Date(NOW + 30_000).toISOString() } } })).toMatchObject({ eligible: false, reason: "FEP_EXPIRED_OR_UNVERIFIED" });
@@ -97,12 +97,12 @@ describe("fail-closed free-only WhatsApp guard", () => {
     expect(evaluate({ ...args, locale: "en" })).toMatchObject({ eligible: false, reason: "APPROVED_TEMPLATE_REQUIRED" });
   });
 
-  it("requires positive verified service-message allowance and re-evaluates expiry on retry", () => {
+  it("keeps monthly service allowance disabled until authoritative quota accounting exists", () => {
     const allowance: FreeMessagingEvidence = {
       pricing: { verified: true, billable: false, basis: "SERVICE_ALLOWANCE", type: "free_customer_service", subtype: "free_tier", evidenceRef: "synthetic-remaining-free-messages", observedAt: new Date(NOW - 60_000).toISOString(), verifiedAt: new Date(NOW - 60_000).toISOString(), validUntil: new Date(NOW + 5 * 60_000).toISOString(), form: "FREEFORM", category: "SERVICE", messageCategory: "SERVICE", pricingModel: "PMP", remainingServiceMessages: 1 }
     };
-    expect(evaluate({ evidence: allowance })).toMatchObject({ eligible: true, basis: "SERVICE_ALLOWANCE" });
-    expect(evaluate({ evidence: { ...allowance, pricing: { ...allowance.pricing!, remainingServiceMessages: 0 } } })).toMatchObject({ eligible: false, reason: "FREE_SERVICE_ALLOWANCE_UNVERIFIED" });
+    expect(evaluate({ evidence: allowance })).toMatchObject({ eligible: false, reason: "FREE_SERVICE_ALLOWANCE_DISABLED" });
+    expect(evaluate({ evidence: { ...allowance, pricing: { ...allowance.pricing!, remainingServiceMessages: 0 } } })).toMatchObject({ eligible: false, reason: "FREE_SERVICE_ALLOWANCE_DISABLED" });
     expect(evaluate({ now: new Date(NOW + 5 * 60_000), evidence: allowance })).toMatchObject({ eligible: false, reason: "FREE_BILLING_EVIDENCE_STALE" });
   });
 

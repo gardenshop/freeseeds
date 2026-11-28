@@ -72,7 +72,7 @@ export function createWhatsAppTestOutboundGuard(
       try {
         reservation = await db.prepare(`INSERT INTO outbound_messages (id,idempotency_key,kind,status,attempt_count,created_at,updated_at)
           SELECT ?,?,'WHATSAPP_TEST_BUDGET','SENDING',1,?,?
-          WHERE (SELECT COUNT(*) FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET' AND substr(idempotency_key,1,?)=?) < ?
+          WHERE (SELECT COALESCE(SUM(attempt_count),0) FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET' AND substr(idempotency_key,1,?)=?) < ?
             AND NOT EXISTS (SELECT 1 FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET' AND status='UNKNOWN' AND substr(idempotency_key,1,?)=?)
             AND NOT EXISTS (SELECT 1 FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET' AND status='SENDING' AND updated_at<=? AND substr(idempotency_key,1,?)=?)
           ON CONFLICT(idempotency_key) DO NOTHING`)
@@ -82,12 +82,26 @@ export function createWhatsAppTestOutboundGuard(
         throw new Error("WHATSAPP_TEST_BUDGET_UNAVAILABLE");
       }
       if (Number(reservation.meta?.changes ?? 0) !== 1) {
-        let duplicate = false;
-        try { duplicate = Boolean(await db.prepare("SELECT 1 AS found FROM outbound_messages WHERE idempotency_key=? AND kind='WHATSAPP_TEST_BUDGET'").bind(idempotencyKey).first()); } catch { /* Fail closed below. */ }
-        if (duplicate) throw new Error("WHATSAPP_TEST_DUPLICATE_SUPPRESSED");
+        let existing: { status: string } | null;
+        try { existing = await db.prepare("SELECT status FROM outbound_messages WHERE idempotency_key=? AND kind='WHATSAPP_TEST_BUDGET'").bind(idempotencyKey).first<{ status: string }>(); }
+        catch { throw new Error("WHATSAPP_TEST_BUDGET_UNAVAILABLE"); }
+        if (existing?.status === "RETRYABLE") {
+          let retry: D1Result;
+          try {
+            retry = await db.prepare(`UPDATE outbound_messages SET status='SENDING',attempt_count=attempt_count+1,updated_at=?
+              WHERE idempotency_key=? AND kind='WHATSAPP_TEST_BUDGET' AND status='RETRYABLE'
+                AND (SELECT COALESCE(SUM(attempt_count),0) FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET' AND substr(idempotency_key,1,?)=?) < ?
+                AND NOT EXISTS (SELECT 1 FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET' AND status='UNKNOWN' AND substr(idempotency_key,1,?)=?)`)
+              .bind(now, idempotencyKey, prefix.length, prefix, WHATSAPP_TEST_MESSAGE_LIMIT, prefix.length, prefix).run();
+          } catch { throw new Error("WHATSAPP_TEST_BUDGET_UNAVAILABLE"); }
+          if (Number(retry.meta?.changes ?? 0) === 1) reservation = retry;
+          else throw new Error("WHATSAPP_TEST_BUDGET_EXHAUSTED");
+        } else if (existing) throw new Error(existing.status === "UNKNOWN" || existing.status === "SENDING" ? "WHATSAPP_TEST_ACCEPTANCE_UNRESOLVED" : "WHATSAPP_TEST_DUPLICATE_SUPPRESSED");
+        else {
         const unresolved = await db.prepare("SELECT 1 AS found FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET' AND status IN ('UNKNOWN','SENDING') AND substr(idempotency_key,1,?)=?").bind(prefix.length, prefix).first().catch(() => ({ found: 1 }));
         if (unresolved) throw new Error("WHATSAPP_TEST_ACCEPTANCE_UNRESOLVED");
         throw new Error("WHATSAPP_TEST_BUDGET_EXHAUSTED");
+        }
       }
 
       let result: T;
@@ -97,7 +111,16 @@ export function createWhatsAppTestOutboundGuard(
         throw error;
       }
       try { result = await performSend(); }
-      catch {
+      catch (error) {
+        const failureCode = error instanceof Error ? error.message : "";
+        if (failureCode === "META_MESSAGE_SEND_429" || failureCode === "META_MEDIA_UPLOAD_RETRYABLE") {
+          try { await db.prepare("UPDATE outbound_messages SET status='RETRYABLE',last_error=?,updated_at=? WHERE idempotency_key=? AND kind='WHATSAPP_TEST_BUDGET'").bind(failureCode, clock().toISOString(), idempotencyKey).run(); } catch { /* The SENDING reservation remains counted. */ }
+          throw new Error("WHATSAPP_TEST_RETRYABLE_REJECTION");
+        }
+        if (/^META_MESSAGE_SEND_4\d\d$/.test(failureCode) || /^META_MEDIA_UPLOAD_4\d\d$/.test(failureCode)) {
+          try { await db.prepare("UPDATE outbound_messages SET status='REJECTED',last_error=?,updated_at=? WHERE idempotency_key=? AND kind='WHATSAPP_TEST_BUDGET'").bind(failureCode, clock().toISOString(), idempotencyKey).run(); } catch { /* The SENDING reservation remains counted. */ }
+          throw new Error("WHATSAPP_TEST_PROVIDER_REJECTED");
+        }
         try { await db.prepare("UPDATE outbound_messages SET status='UNKNOWN',last_error='WHATSAPP_TEST_ACCEPTANCE_UNKNOWN',updated_at=? WHERE idempotency_key=? AND kind='WHATSAPP_TEST_BUDGET'").bind(clock().toISOString(), idempotencyKey).run(); } catch { /* The SENDING reservation remains counted and blocks stale attempts. */ }
         throw new Error("WHATSAPP_TEST_ACCEPTANCE_UNKNOWN");
       }

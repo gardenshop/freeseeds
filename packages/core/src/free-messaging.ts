@@ -3,13 +3,10 @@ import { WHATSAPP_SERVICE_WINDOW_MS } from "./service-window";
 export type WhatsAppOutboundForm = "FREEFORM" | "TEMPLATE";
 export type WhatsAppBillingCategory = "SERVICE" | "UTILITY" | "MARKETING" | "AUTHENTICATION";
 export const FEP_OPENING_POLICY_VERSION = "META-PMP-CTWA-FEP-2026-10-01";
-export const OWNER_CONFIRMED_TEST_MOBILE_POLICY = "OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST";
 
 export type FreeMessagingEvidence = {
   openingResponse?: {
     sourceType: "CTWA_AD";
-    platform?: "ANDROID" | "IOS";
-    mobileOriginAttestation?: typeof OWNER_CONFIRMED_TEST_MOBILE_POLICY;
     clickIdHash: string;
     referralAt: string;
     policyVerified: true;
@@ -21,8 +18,6 @@ export type FreeMessagingEvidence = {
   };
   fep?: {
     sourceType: "CTWA_AD";
-    platform?: "ANDROID" | "IOS";
-    mobileOriginAttestation?: typeof OWNER_CONFIRMED_TEST_MOBILE_POLICY;
     clickIdHash: string;
     conversationIdHash?: string;
     referralAt: string;
@@ -65,17 +60,20 @@ export function evaluateFreeWhatsAppOutbound(input: {
   lastInboundAt: string | null;
   optedOut?: boolean;
   blocked?: boolean;
+  billingIncidentActive?: boolean;
   form: WhatsAppOutboundForm;
   category: WhatsAppBillingCategory;
   locale: "en" | "ur";
   allowFepOpeningResponse?: boolean;
-  allowOwnerMobileTestAttestation?: boolean;
+  allowFepOpeningResponseRetry?: boolean;
+  fepOpeningResponseKeyHash?: string;
   templateId?: string;
   evidence?: unknown;
   safetyMarginMs?: number;
 }): FreeMessagingDecision {
   const deny = (reason: string): FreeMessagingDecision => ({ eligible: false, reason });
   if (input.optedOut) return deny("CUSTOMER_OPTED_OUT");
+  if (input.billingIncidentActive) return deny("UNEXPECTED_BILLABLE_MESSAGE_PAUSE");
   if (input.blocked) return deny("CUSTOMER_BLOCKED");
   const now = input.now.getTime();
   if (!Number.isFinite(now)) return deny("CLOCK_INVALID");
@@ -90,8 +88,8 @@ export function evaluateFreeWhatsAppOutbound(input: {
   const evidence = input.evidence && typeof input.evidence === "object" ? input.evidence as FreeMessagingEvidence : undefined;
   if(input.allowFepOpeningResponse){
     const opening=evidence?.openingResponse;
-    const mobileOriginVerified = Boolean(opening?.platform && ["ANDROID", "IOS"].includes(opening.platform)) || (input.allowOwnerMobileTestAttestation === true && opening?.mobileOriginAttestation === OWNER_CONFIRMED_TEST_MOBILE_POLICY);
-    if(input.form==="FREEFORM"&&input.category==="SERVICE"&&serviceWindowOpen&&opening&&opening.sourceType==="CTWA_AD"&&mobileOriginVerified&&/^[a-f0-9]{64}$/i.test(opening.clickIdHash)&&opening.policyVerified===true&&opening.policyRef===FEP_OPENING_POLICY_VERSION&&opening.sourceEvidenceRef?.trim()&&!opening.firstResponseAttemptedAt){
+    const safeKnownRetry=input.allowFepOpeningResponseRetry===true&&typeof input.fepOpeningResponseKeyHash==="string"&&opening?.firstResponseKeyHash===input.fepOpeningResponseKeyHash&&Boolean(opening?.firstResponseAttemptedAt);
+    if(input.form==="FREEFORM"&&input.category==="SERVICE"&&serviceWindowOpen&&opening&&opening.sourceType==="CTWA_AD"&&/^[a-f0-9]{64}$/i.test(opening.clickIdHash)&&opening.policyVerified===true&&opening.policyRef===FEP_OPENING_POLICY_VERSION&&opening.sourceEvidenceRef?.trim()&&(!opening.firstResponseAttemptedAt||safeKnownRetry)){
       const referralAt=Date.parse(opening.referralAt);
       if(Number.isFinite(referralAt)&&referralAt<=now&&now-referralAt<=WHATSAPP_SERVICE_WINDOW_MS)return {eligible:true,reason:"VERIFIED_FREE",basis:"FEP_OPENING_RESPONSE",expiresAt:new Date(serviceWindowExpiresAt).toISOString(),evidenceRef:opening.sourceEvidenceRef,locale:input.locale};
     }
@@ -112,14 +110,12 @@ export function evaluateFreeWhatsAppOutbound(input: {
   }
 
   if (pricing.basis === "SERVICE_ALLOWANCE") {
-    if (!serviceWindowOpen || input.category !== "SERVICE" || pricing.category!=="SERVICE" || pricing.type !== "free_customer_service" || pricing.subtype !== "free_tier" || !Number.isSafeInteger(pricing.remainingServiceMessages) || Number(pricing.remainingServiceMessages) <= 0) return deny("FREE_SERVICE_ALLOWANCE_UNVERIFIED");
-    return { eligible: true, reason: "VERIFIED_FREE", basis: "SERVICE_ALLOWANCE", expiresAt: new Date(Math.min(serviceWindowExpiresAt, pricingExpiresAt)).toISOString(), evidenceRef: pricing.evidenceRef, locale: input.locale };
+    return deny("FREE_SERVICE_ALLOWANCE_DISABLED");
   }
 
   if (pricing.basis !== "FEP" || pricing.type !== "free_entry_point" || pricing.category!=="REFERRAL_CONVERSION") return deny("FREE_BILLING_UNKNOWN_OR_MISMATCHED");
   const fep = evidence?.fep;
-  const mobileOriginVerified = Boolean(fep?.platform && ["ANDROID", "IOS"].includes(fep.platform)) || (input.allowOwnerMobileTestAttestation === true && fep?.mobileOriginAttestation === OWNER_CONFIRMED_TEST_MOBILE_POLICY);
-  if (pricing.basis !== "FEP" || !fep || fep.sourceType !== "CTWA_AD" || !mobileOriginVerified || !/^[a-f0-9]{64}$/i.test(fep.clickIdHash) || fep.expiryVerified !== true || !fep.expiryEvidenceRef?.trim()) return deny("QUALIFYING_CTWA_EVIDENCE_UNKNOWN");
+  if (pricing.basis !== "FEP" || !fep || fep.sourceType !== "CTWA_AD" || !/^[a-f0-9]{64}$/i.test(fep.clickIdHash) || fep.expiryVerified !== true || !fep.expiryEvidenceRef?.trim()) return deny("QUALIFYING_CTWA_EVIDENCE_UNKNOWN");
   const referralAt = Date.parse(fep.referralAt);
   const firstResponseAt = Date.parse(fep.firstBusinessResponseAt);
   const fepVerifiedAt = Date.parse(fep.verifiedAt);
@@ -128,13 +124,20 @@ export function evaluateFreeWhatsAppOutbound(input: {
   return { eligible: true, reason: "VERIFIED_FREE", basis: "FEP", expiresAt: new Date(Math.min(fepExpiresAt, pricingExpiresAt, input.form === "FREEFORM" ? serviceWindowExpiresAt : Number.POSITIVE_INFINITY)).toISOString(), evidenceRef: `${fep.expiryEvidenceRef}:${pricing.evidenceRef}`, locale: input.locale };
 }
 
-export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date(), options: {allowFepOpeningResponse?:boolean;allowOwnerMobileTestAttestation?:boolean} = {}): Promise<FreeMessagingDecision> {
+export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: string, localeHint?: "en" | "ur", now = new Date(), options: {allowFepOpeningResponse?:boolean;allowFepOpeningResponseRetry?:boolean;fepOpeningResponseKeyHash?:string} = {}): Promise<FreeMessagingDecision> {
+  let recipientHash: string;
+  try {
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(waId.replace(/^\+/, ""))));
+    recipientHash = [...digest].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    const block = await db.prepare("SELECT 1 AS blocked FROM whatsapp_send_blocks WHERE recipient_hash=? AND status='ACTIVE'").bind(recipientHash).first<{ blocked: number }>();
+    if (Number(block?.blocked) === 1) return { eligible: false, reason: "UNEXPECTED_BILLABLE_MESSAGE_PAUSE" };
+  } catch { return { eligible: false, reason: "BILLING_BLOCK_STORAGE_UNAVAILABLE" }; }
   let conversation: { state_data: string | null; last_inbound_at: string | null } | null | undefined;
   try {
     conversation = await db.prepare("SELECT state_data,last_inbound_at FROM whatsapp_conversations WHERE wa_id=?").bind(waId).first<{ state_data: string | null; last_inbound_at: string | null }>();
   } catch { return { eligible: false, reason: "FREE_EVIDENCE_STORAGE_UNAVAILABLE" }; }
   if (!conversation) return { eligible: false, reason: "CUSTOMER_CONVERSATION_UNKNOWN" };
-  let state: { language?: unknown; freeMessagingEvidence?: unknown; blocked?: unknown } = {};
+  let state: { language?: unknown; freeMessagingEvidence?: unknown; blocked?: unknown; leadAccounting?: { billingIncidentActive?: unknown } } = {};
   try { state = JSON.parse(conversation.state_data ?? "{}") as typeof state; } catch { return { eligible: false, reason: "CUSTOMER_STATE_INVALID" }; }
   let optedOut = false;
   try {
@@ -143,5 +146,5 @@ export async function evaluateStoredFreeWhatsAppOutbound(db: D1Database, waId: s
   } catch { return { eligible: false, reason: "FREE_OPT_OUT_STATE_UNKNOWN" }; }
   const locale = localeHint ?? state.language;
   if (locale !== "en" && locale !== "ur") return { eligible: false, reason: "CUSTOMER_LOCALE_UNKNOWN" };
-  return evaluateFreeWhatsAppOutbound({ now, lastInboundAt: conversation.last_inbound_at, optedOut, blocked: state.blocked === true, form: "FREEFORM", category: "SERVICE", locale, evidence: state.freeMessagingEvidence, allowFepOpeningResponse:options.allowFepOpeningResponse, allowOwnerMobileTestAttestation:options.allowOwnerMobileTestAttestation });
+  return evaluateFreeWhatsAppOutbound({ now, lastInboundAt: conversation.last_inbound_at, optedOut, blocked: state.blocked === true, billingIncidentActive: state.leadAccounting?.billingIncidentActive === true, form: "FREEFORM", category: "SERVICE", locale, evidence: state.freeMessagingEvidence, allowFepOpeningResponse:options.allowFepOpeningResponse, allowFepOpeningResponseRetry:options.allowFepOpeningResponseRetry, fepOpeningResponseKeyHash:options.fepOpeningResponseKeyHash });
 }

@@ -52,12 +52,78 @@ export type AnalyticsResult = {
     delivered210: number;
     read210: number;
   };
+  whatsappReliability: {
+    available: boolean;
+    received: number; eligible: number; queued: number; accepted: number; delivered: number; read: number;
+    failed: number; suppressed: number; unresolved: number; responseCoveragePct: number;
+    duplicateResponseAttempts: number; duplicateAcceptedResponses: number; p50LatencyMs: number | null; p95LatencyMs: number | null;
+    activeBillingIncidents: number; queueBacklog: number; deadLetter: number;
+    suppressionReasons: Array<{ reasonCode: string; count: number }>;
+    reconciliation: { classified: number; received: number; balanced: boolean };
+  };
   queryCosts: Array<{ query: string; rowsRead: number }>;
   definitions: string[];
 };
 
 type D1DatabaseLike = Pick<D1Database, "prepare">;
 type QueryResult<T> = { results: T[]; meta?: unknown };
+
+type ReliabilityAccountingRow = { outcome: string; reason_code: string | null; eligible: number; attempted: number; accepted: number; delivered: number; read: number; received_at: string; response_accepted_at: string | null; response_attempts: number; accepted_responses: number };
+const unavailableReliability = (): AnalyticsResult["whatsappReliability"] => ({ available: false, received: 0, eligible: 0, queued: 0, accepted: 0, delivered: 0, read: 0, failed: 0, suppressed: 0, unresolved: 0, responseCoveragePct: 0, duplicateResponseAttempts: 0, duplicateAcceptedResponses: 0, p50LatencyMs: null, p95LatencyMs: null, activeBillingIncidents: 0, queueBacklog: 0, deadLetter: 0, suppressionReasons: [], reconciliation: { classified: 0, received: 0, balanced: false } });
+
+function percentile(values: number[], fraction: number): number | null {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.max(0, Math.ceil(fraction * sorted.length) - 1)];
+}
+
+async function readWhatsAppReliability(filters: AnalyticsFilters, run: <T>(query: string, bindings: unknown[]) => Promise<T[]>): Promise<AnalyticsResult["whatsappReliability"]> {
+  const from = `${filters.from}T00:00:00.000Z`;
+  try {
+    const [accounting, queue, incidents, reasons] = await Promise.all([
+      run<ReliabilityAccountingRow>(`SELECT a.outcome,a.reason_code,a.eligible,a.attempted,a.accepted,a.delivered,a.read,
+        a.received_at,a.response_accepted_at,a.response_attempts,COALESCE(r.accepted_responses,0) AS accepted_responses FROM whatsapp_lead_accounting a
+        LEFT JOIN (SELECT inbound_event_hash,COUNT(*) AS accepted_responses FROM whatsapp_lead_responses GROUP BY inbound_event_hash) r ON r.inbound_event_hash=a.inbound_event_hash
+        WHERE a.received_at>=? AND a.received_at<?`, [from, filters.toExclusive]),
+      run<{ status: string; count: number }>(`SELECT status,COUNT(*) AS count FROM outbox_jobs WHERE kind='WHATSAPP_INITIAL_LEAD_REPLY' AND created_at>=? AND created_at<? GROUP BY status`, [from, filters.toExclusive]),
+      run<{ count: number }>(`SELECT COUNT(*) AS count FROM whatsapp_billing_incidents WHERE upper(status) NOT IN ('RESOLVED','CLOSED')`, []),
+      run<{ reason_code: string; count: number }>(`SELECT a.reason_code,COUNT(*) AS count FROM whatsapp_lead_accounting a
+        WHERE a.received_at>=? AND a.received_at<? AND (a.outcome LIKE 'SUPPRESSED%' OR a.outcome='UNRESOLVED_FREE_ELIGIBILITY')
+        AND a.reason_code IS NOT NULL GROUP BY a.reason_code ORDER BY a.reason_code`, [from, filters.toExclusive])
+    ]);
+    const count = (predicate: (row: ReliabilityAccountingRow) => boolean) => accounting.filter(predicate).length;
+    const received = accounting.length;
+    const suppressed = count((row) => row.outcome.startsWith("SUPPRESSED"));
+    const failedOutcomes = new Set(["RETRYABLE_PROVIDER_REJECTION", "UNRESOLVED_PROVIDER_REJECTION", "UNRESOLVED_PROVIDER_DELIVERY_FAILURE", "UNRESOLVED_RESPONSE_DELIVERY_FAILURE", "UNRESOLVED_INITIAL_REPLY_DEAD_LETTER"]);
+    const failed = count((row) => failedOutcomes.has(row.outcome));
+    const unresolved = count((row) => row.outcome.startsWith("UNRESOLVED") && !failedOutcomes.has(row.outcome));
+    const isClassified = (row: ReliabilityAccountingRow) => row.outcome.startsWith("SUPPRESSED") || row.outcome.startsWith("UNRESOLVED") || row.outcome === "RETRYABLE_PROVIDER_REJECTION" || row.outcome.startsWith("RESPONSE_") || row.outcome === "ELIGIBLE_RESPONSE_ATTEMPTED" || row.outcome.startsWith("PROCESSED_");
+    const classified = count(isClassified);
+    const latencies = accounting.flatMap((row) => {
+      if (!row.accepted || !row.received_at || !row.response_accepted_at) return [];
+      const latency = Date.parse(row.response_accepted_at) - Date.parse(row.received_at);
+      return Number.isFinite(latency) && latency >= 0 ? [latency] : [];
+    });
+    const queueCounts = Object.fromEntries(queue.map((row) => [row.status.toUpperCase(), Number(row.count) || 0]));
+    const queued = (queueCounts.PENDING ?? 0) + (queueCounts.QUEUED ?? 0) + (queueCounts.PROCESSING ?? 0) + (queueCounts.RETRY ?? 0);
+    const accepted = count((row) => Number(row.accepted) === 1);
+    const eligible = count((row) => Number(row.eligible) === 1);
+    return {
+      available: true, received, eligible, queued, accepted,
+      delivered: count((row) => Number(row.delivered) === 1), read: count((row) => Number(row.read) === 1),
+      failed, suppressed, unresolved, responseCoveragePct: eligible ? Number((accepted / eligible * 100).toFixed(2)) : 0,
+      duplicateResponseAttempts: accounting.reduce((sum, row) => sum + Math.max(0, Number(row.response_attempts ?? 0) - 1), 0),
+      duplicateAcceptedResponses: accounting.reduce((sum, row) => sum + Math.max(0, Number(row.accepted_responses ?? 0) - 1), 0),
+      p50LatencyMs: percentile(latencies, 0.5), p95LatencyMs: percentile(latencies, 0.95),
+      activeBillingIncidents: Number(incidents[0]?.count ?? 0), queueBacklog: queued, deadLetter: queueCounts.DEAD_LETTER ?? 0,
+      suppressionReasons: reasons.filter((row) => Number(row.count) > 0).map((row) => ({ reasonCode: row.reason_code, count: Number(row.count) || 0 })),
+      reconciliation: { classified, received, balanced: classified === received }
+    };
+  } catch (error) {
+    if (/no such table|no such column|does not exist|no column/i.test(error instanceof Error ? error.message : String(error))) return unavailableReliability();
+    throw error;
+  }
+}
 
 const STATUSES: AnalyticsStatus[] = ["ALL", "PRE_ORDER", "POST_ORDER", "ADVANCE_PENDING", "COD_CONFIRMED", "ACTIVE"];
 const PRE_ORDER_STATES = ["NEW", "LANGUAGE", "OFFER", "FERTILIZER", "PRODUCT", "PROVINCE", "FULL_NAME", "ADDRESS", "NEARBY", "CITY", "CONTACT", "REVIEW"];
@@ -206,6 +272,8 @@ export async function readInboundAnalytics(db: D1DatabaseLike, filters: Analytic
     reminders = { available: false, stage15: {}, stage210: {}, sent15: 0, delivered15: 0, read15: 0, sent210: 0, delivered210: 0, read210: 0 };
   }
 
+  const whatsappReliability = await readWhatsAppReliability(filters, run);
+
   const submitted = number(order.submitted);
   const filtered = (Object.entries(filteredMap) as Array<[Exclude<AnalyticsStatus, "ALL">, number]>)
     .filter(([status]) => filters.status === "ALL" || filters.status === status)
@@ -216,6 +284,7 @@ export async function readInboundAnalytics(db: D1DatabaseLike, filters: Analytic
     orders: { submitted, paidOrFulfilled: number(order.paid_or_fulfilled), advanceSelected: number(order.advance_selected), codConfirmed: number(order.cod_confirmed), advancePending: number(order.advance_pending), conversionPct: customerMessages ? Number((submitted / customerMessages * 100).toFixed(2)) : 0 },
     abandonment: { preOrder, postOrder, advancePending, codConfirmed, active, filtered, inactivityHours: 24 },
     reminders,
+    whatsappReliability,
     queryCosts: costs.map(({ query, rowsRead: read }) => ({ query: query.split("\n", 1)[0].trim().slice(0, 80), rowsRead: read })),
     definitions: [
       "Customer inbound excludes STATUS callbacks and counts distinct provider_event_id; INTERACTIVE includes button, list, and Flow callbacks because historical subtype is not stored.",
@@ -225,7 +294,11 @@ export async function readInboundAnalytics(db: D1DatabaseLike, filters: Analytic
       "PRE_ORDER and POST_ORDER require the current conversation/order snapshot to be inactive for 24 hours. Historical stage transitions are unavailable, so a historical zero is not proof of zero drop-off.",
       "ADVANCE_PENDING and COD_CONFIRMED are lifecycle snapshots, not mutually exclusive abandonment classes; paid, fulfilled, and cancelled orders are excluded from abandoned pre/post classification.",
       "Reminder statuses are separate: SENT/provider accepted, DELIVERED, and READ. They are stage rows updated in the UTC window; no resend or state write occurs.",
-      "All date filters and daily buckets are UTC (Pakistan local time is UTC+5); convert the selected local calendar dates before comparing business-day totals."
+      "All date filters and daily buckets are UTC (Pakistan local time is UTC+5); convert the selected local calendar dates before comparing business-day totals.",
+      "WhatsApp reliability counts use migration 0052 accounting joined to inbound event receipt timestamps in the selected half-open UTC window; missing schema is unavailable, not zero.",
+      "Provider accepted is distinct from delivered and read. Each received event is classified once by its final accounting outcome; reconciliation must balance received and classified.",
+      "Response latency is inbound event receipt to provider acceptance time for accepted responses only; percentiles use nearest-rank. Duplicate accepted responses count distinct provider message hashes beyond one per inbound event; retries are reported separately.",
+      "Queue backlog and dead-letter are initial-response outbox job statuses created in the selected window. Active billing incidents count all currently active incidents, independent of the selected window."
     ]
   };
 }
@@ -250,7 +323,27 @@ export function analyticsCsv(result: AnalyticsResult): string {
     ["reminder_15_read", result.reminders.read15, "15-minute stage status READ"],
     ["reminder_210_sent_provider_accepted", result.reminders.sent210, "210-minute stage status SENT"],
     ["reminder_210_delivered", result.reminders.delivered210, "210-minute stage status DELIVERED"],
-    ["reminder_210_read", result.reminders.read210, "210-minute stage status READ"]];
+    ["reminder_210_read", result.reminders.read210, "210-minute stage status READ"],
+    ["whatsapp_reliability_available", result.whatsappReliability.available, "False means migration 0052 schema is unavailable; legacy analytics remain available"],
+    ["whatsapp_received", result.whatsappReliability.received, "Distinct accounted inbound events within the UTC window"],
+    ["whatsapp_eligible", result.whatsappReliability.eligible, "Accounting eligible flag"],
+    ["whatsapp_queued", result.whatsappReliability.queued, "Initial-response outbox jobs in pending/queued/processing/retry statuses created in window"],
+    ["whatsapp_provider_accepted", result.whatsappReliability.accepted, "Provider accepted; not equivalent to delivered or read"],
+    ["whatsapp_delivered", result.whatsappReliability.delivered, "Provider delivery status flag"],
+    ["whatsapp_read", result.whatsappReliability.read, "Provider read status flag"],
+    ["whatsapp_failed", result.whatsappReliability.failed, "Retryable or provider rejection outcome"],
+    ["whatsapp_suppressed", result.whatsappReliability.suppressed, "Suppressed response outcome"],
+    ["whatsapp_unresolved", result.whatsappReliability.unresolved, "Unresolved accounting outcome"],
+    ["whatsapp_response_coverage_pct", result.whatsappReliability.responseCoveragePct, "Accepted eligible leads divided by eligible inbound leads"],
+    ["whatsapp_duplicate_response_attempts", result.whatsappReliability.duplicateResponseAttempts, "Excess outbound attempt_count beyond the first, summed per inbound event"],
+    ["whatsapp_duplicate_accepted_responses", result.whatsappReliability.duplicateAcceptedResponses, "Distinct accepted initial replies beyond one per inbound event"],
+    ["whatsapp_p50_latency_ms", result.whatsappReliability.p50LatencyMs, "Nearest-rank p50 accepted inbound-to-outbound-record latency; null when unavailable"],
+    ["whatsapp_p95_latency_ms", result.whatsappReliability.p95LatencyMs, "Nearest-rank p95 accepted inbound-to-outbound-record latency; null when unavailable"],
+    ["whatsapp_active_billing_incidents", result.whatsappReliability.activeBillingIncidents, "All currently active billing incidents"],
+    ["whatsapp_queue_backlog", result.whatsappReliability.queueBacklog, "Initial-response outbox backlog created in selected window"],
+    ["whatsapp_dead_letter", result.whatsappReliability.deadLetter, "Initial-response dead-letter jobs created in selected window"],
+    ...result.whatsappReliability.suppressionReasons.map(({ reasonCode, count }) => [`whatsapp_suppressed_reason_${reasonCode}`, count, "Exact suppression reason code; aggregate only"]),
+    ["whatsapp_outcome_reconciliation", `${result.whatsappReliability.reconciliation.classified}/${result.whatsappReliability.reconciliation.received}`, "Mutually exclusive accounting outcomes classified / received"]];
   const cell = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
   return `\uFEFF${rows.map((row) => row.map(cell).join(",")).join("\r\n")}\r\n`;
 }

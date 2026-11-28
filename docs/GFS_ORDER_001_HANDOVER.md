@@ -1,5 +1,17 @@
 # GFS ORDERFLOW / GFS-ORDER-001 REV.2 Handover
 
+## ZERO-MISSED-LEADS-002 current handover (2026-11-28)
+
+Final local validation: **533 Vitest passed/1 skipped (44 files)**; focused reliability suite278/1; TypeScript/lint PASS; documented Node safety52/52; dummy credential process test PASS; API/Admin dry-runs PASS; production dependency audit0; six development findings preserved; protected hashes923/923 identical. Full details are in the test matrix. No Worker or migration was applied.
+
+Local changes are on branch `codex/gfs-order-001-rev2`, based on published `11b43328caddff502fae2e7b4673932e7acd918b53`; changes remain uncommitted until scoped verification/publishing. Inbound accounting, initial-reply Queue/DLQ lifecycle, actual delivery/read reconciliation, billing incidents and active send block, read-only Admin aggregates/alert, signed CTWA opening path and exact coverage fixture are implemented/tested locally. See [continuation report](GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md).
+
+Quota decision: shared monthly service allowance is disabled because WAM insights are approximate and provide no atomic current balance across external senders/human actions. Do not try a dashboard-count workaround. Signed ad referral without device/test attestation supports only the qualifying one-time opening response; missing referral remains unresolved with exact reason. Later FEP uses actual provider expiry/pricing evidence. No live coverage claim.
+
+Read-only Meta UI currently reports display name Rejected and phone Connected/High; registration expiry is not shown, and previous Graph EXPIRED is not refreshed. Meta Business Agent remains Set up/off. For a future name recovery, the owner selects a business/website-compliant exact name in WhatsApp Manager > Phone Numbers > Profile > Display name > Edit and submits for review; do not guess a brand/legal name or submit without separate approval. Refresh registration status in the existing authenticated Meta controls; never share an OTP. No settings or sends were changed.
+
+Do not apply candidate migration `0052`, deploy Workers, change callback/routes, export/restore D1, or send. Existing `0049 -> unchanged 0050 -> 0051`, migration history, encrypted backup, isolated restore, rollback and separate release approval remain mandatory. Preserve payment/COD Rs.125/FIN-MO-002, Access/recovery/CAPI, six held records, O01-O23/REV.2, standalone MO, Hoja Seeds, new-number lock and Label Printer boundaries. No inherited dirty docs or `.audit-local/` were staged.
+
 ## FEP-LIVE-002 (2026-11-27)
 
 No live send/window began. Current sender registration is EXPIRED and display name DECLINED; Business Agent remains off. Owner's supplied contact and10/30 authorization remain accepted; do not ask again. Exact mobile CTWA action and candidate relay deployment steps are in `GFS_ORDERFLOW_FEP_LIVE_002.md`. Phone registration/name resolution, candidate API deployment, production API/Admin relay block/route authorization and live test remain separate gates. D1 history lacks per-contact expiry; prefer a separately authorized new empty target `getfreeseeds-v2-restore-fep-002` instead of deleting nonempty restore-check schema/config. Restore target creation, production export and isolated restore all remain unauthorized. Preserve current active Worker routes until explicit approval.
@@ -48,7 +60,7 @@ TID-001 local acceptance is complete. See [TID-001 report](GFS_ORDERFLOW_TID_001
 
 ## FEP-001 local implementation (2026-11-26)
 
-Official Meta pricing/webhook references were read-only checked. The initial free CTWA response no longer requires an already-active FEP or post-delivery pricing receipt: one signed mobile-source referral, provider timestamp, open customer-service window and policy evidence permit a single atomic opening response. No mobile platform is inferred if referral metadata omits it. Later active FEP is populated only from a matched signed response status with provider pricing/origin and exact expiry; no 168-hour assumption. No new FEP table/service, live campaign, customer message, account mutation or production rollout. Live per-contact evidence is not verified, so unknown sends remain suppressed.
+Historical FEP notes are superseded by the current policy above. The initial free CTWA response uses a signed documented ad referral, provider timestamp and open customer-service window; no mobile-platform field or test attestation. Later active FEP is populated only from matching provider response status with pricing/origin and exact expiry; no 168-hour assumption. Monthly service allowance remains disabled. No campaign, customer message, account mutation or production rollout occurred.
 
 Audit refreshed2026-11-25. Permanent project **GFS ORDERFLOW** covers REV.2 requirements, S0-S9, historical decisions and future subtasks. Existing filenames, task IDs and branch remain. **S0 is PARTIAL, 80% by full audit gates; WhatsApp leads launch NO-GO.** Hono was patched and locally verified; no production/runtime route, schema, payment, Meta, Cloudflare or customer-message mutation occurred. Git push/commit status is reported below.
 
@@ -96,7 +108,7 @@ Cloudflare Get Free Seeds accountcb5066a6d71ecdee0bd7ed8aacb4d3c2 verified read-
 
 ## Blockers and stage accounting
 
-S0 acceptance:8/10 fully satisfied=80%,20% remaining. A06 needs a separately authorized synthetic/controlled mobile CTWA webhook evidence check retaining ctwa_clid/referral origin, first business response, actual conversation expiry/pricing, plus approved sender display name and quality-cleared utility templates; no live test/send is authorized here. A10 needs full active/previous deployment IDs, code/build/config/binding parity, D1 marker/backup and compatible release-specific rollback evidence. Current Cloudflare view gives active prefixes/traffic only; no rollback was exercised. Original-list and notification-number blockers are resolved by the mapped register and explicit candidate/replacement proposal; do not re-open without new evidence.
+S0 acceptance:8/10 fully satisfied=80%,20% remaining. A06 requires signed CTWA referral/opening and actual expiry/pricing evidence, approved sender display name and quality-cleared utility templates; no device field/test attestation is used and no live test/send is authorized here. A10 needs full active/previous deployment IDs, code/build/config/binding parity, D1 marker/backup and compatible release-specific rollback evidence. Current Cloudflare view gives active prefixes/traffic only; no rollback was exercised. Original-list and notification-number blockers are resolved by the mapped register and explicit candidate/replacement proposal; do not re-open without new evidence.
 
 | Stage | Completion | Remaining | Status |
 |---|---:|---:|---|

@@ -3,7 +3,7 @@ import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import api, { syncPaymentReminderDeliveryStatuses } from "../apps/api/src/index";
 import admin from "../apps/admin/src/index";
-import { codReferenceHmac, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, karachiOrderDate, MockWhatsAppProvider, persistFlowSubmission, selectPaymentMethod, storeReceipt } from "@gfs/core";
+import { codReferenceHmac, evaluateStoredFreeWhatsAppOutbound, formatCustomerOrderStatus, formatPaymentMessage, getLatestOrderForWaId, isInsideWhatsAppServiceWindow, karachiOrderDate, MockWhatsAppProvider, persistFlowSubmission, persistInboundLeadAccounting, selectPaymentMethod, storeReceipt } from "@gfs/core";
 import { defaultPaymentChoiceRecoveryCopy, enqueueDuePaymentChoiceRecoveryStages, paymentChoiceRecoveryCopy } from "../apps/api/src/payment-choice-recovery";
 
 // Synthetic fixtures only. SQLite executes the real migrations and journey SQL.
@@ -170,22 +170,22 @@ async function createSyntheticPaymentReviewOrder(waId: string, idempotencyKey: s
 }
 
 describe("frozen V1 receipt hotfix", () => {
-  it("blocks an initial CTWA response when device eligibility is not owner-attested or provider-documented", async () => {
-    const testRuntime = { ...(env() as unknown as Record<string, unknown>), DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true", WHATSAPP_TEST_MOBILE_ATTESTED: "false", WHATSAPP_TEST_RECIPIENT: sender, WHATSAPP_TEST_WINDOW_START: new Date(Date.now() - 1_000).toISOString() } as never;
+  it("allows a signed CTWA opening without device data or isolated-test attestation", async () => {
+    const testRuntime = { ...(env() as unknown as Record<string, unknown>), DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true", WHATSAPP_TEST_RECIPIENT: sender, WHATSAPP_TEST_WINDOW_START: new Date(Date.now() - 1_000).toISOString() } as never;
     const opening = { from: sender, id: "synthetic-unattested-ctwa-opening", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hello from the synthetic ad" }, referral: { ctwa_clid: "synthetic-unattested-click", source_type: "ad" } };
     injectSyntheticFreeEvidence = false;
     let response: Response;
     try { response = await callback([opening], [], testRuntime); } finally { injectSyntheticFreeEvidence = true; }
     expect(response.status).toBe(200);
-    expect(sends).toHaveLength(0);
-    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET'").get()).toEqual({ count: 0 });
+    expect(sends).toHaveLength(1);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET'").get()).toEqual({ count: 1 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payments").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
   });
 
   it("keeps isolated CTWA test turns on the allowlisted bilingual path with no order, payment, or CAPI writes", async () => {
-    const testRuntime = { ...(env() as unknown as Record<string, unknown>), DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true", WHATSAPP_TEST_MOBILE_ATTESTED: "true", WHATSAPP_TEST_RECIPIENT: sender, WHATSAPP_TEST_WINDOW_START: new Date(Date.now() - 1_000).toISOString() } as never;
+    const testRuntime = { ...(env() as unknown as Record<string, unknown>), DEPLOYMENT_STATE: "ISOLATED_WHATSAPP_TEST", WHATSAPP_TEST_MODE: "true", WHATSAPP_TEST_RECIPIENT: sender, WHATSAPP_TEST_WINDOW_START: new Date(Date.now() - 1_000).toISOString() } as never;
     const opening = { from: sender, id: "synthetic-isolated-ctwa-opening", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hello from the synthetic ad" }, referral: { ctwa_clid: "synthetic-isolated-click", source_type: "ad" } };
     const openingResponse = await callback([opening], [], testRuntime);
     expect(openingResponse.status).toBe(200);
@@ -204,8 +204,8 @@ describe("frozen V1 receipt hotfix", () => {
     expect((await callback([], [deliveredFepStatus], testRuntime)).status).toBe(200);
     const fepRow = sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE wa_id=?").get(sender) as { state_data: string | null } | undefined;
     if (!fepRow?.state_data) throw new Error("SYNTHETIC_FEP_STATE_MISSING");
-    const fepState = JSON.parse(fepRow.state_data) as { freeMessagingEvidence: { fep: { mobileOriginAttestation?: string; platform?: string; expiryVerified: boolean; verifiedExpiresAt: string; firstBusinessResponseAt: string; conversationIdHash?: string }; pricing: { type: string; category: string; billable?: boolean } } };
-    expect(fepState.freeMessagingEvidence.fep).toMatchObject({ mobileOriginAttestation: "OWNER_CONFIRMED_ISOLATED_MOBILE_CTWA_TEST", expiryVerified: true, verifiedExpiresAt: new Date(expirySeconds * 1000).toISOString(), conversationIdHash: expect.any(String) });
+    const fepState = JSON.parse(fepRow.state_data) as { freeMessagingEvidence: { fep: { platform?: string; expiryVerified: boolean; verifiedExpiresAt: string; firstBusinessResponseAt: string; conversationIdHash?: string }; pricing: { type: string; category: string; billable?: boolean } } };
+    expect(fepState.freeMessagingEvidence.fep).toMatchObject({ expiryVerified: true, verifiedExpiresAt: new Date(expirySeconds * 1000).toISOString(), conversationIdHash: expect.any(String) });
     expect(fepState.freeMessagingEvidence.fep.platform).toBeUndefined();
     expect(fepState.freeMessagingEvidence.pricing).toMatchObject({ type: "free_entry_point", category: "REFERRAL_CONVERSION" });
     expect(fepState.freeMessagingEvidence.pricing.billable).toBeUndefined();
@@ -224,7 +224,7 @@ describe("frozen V1 receipt hotfix", () => {
     expect(visibleWhatsAppText(String((sends.at(-1)?.interactive as { body: { text: string } }).body.text))).toContain("کوئی آرڈر یا ادائیگی نہیں بنائی گئی");
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM outbound_messages WHERE kind='WHATSAPP_TEST_BUDGET'").get()).toEqual({ count: 3 });
 
-    const unrelated = { from: "923009999999", id: "synthetic-unrelated-recipient", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hi" }, referral: { ctwa_clid: "synthetic-other-click", source_type: "ad", platform: "android" } };
+    const unrelated = { from: "923009999999", id: "synthetic-unrelated-recipient", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "Hi" }, referral: { ctwa_clid: "synthetic-other-click", source_type: "ad" } };
     expect((await callback([unrelated], [], testRuntime)).status).toBe(403);
     expect(sends).toHaveLength(3);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 0 });
@@ -232,20 +232,65 @@ describe("frozen V1 receipt hotfix", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
   });
 
-  it("does not treat an undocumented platform field as mobile CTWA evidence in production", async () => {
+  it("uses only signed referral evidence when device fields are absent in production", async () => {
     const id="synthetic-ctwa-opening-response";
     const timestamp=String(Math.floor(Date.now()/1000));
-    const message={from:sender,id,timestamp,type:"text",text:{body:"Hello"},referral:{ctwa_clid:"synthetic-ctwa-click-id",source_type:"ad",platform:"android",source_platform:"android"}};
+    const message={from:sender,id,timestamp,type:"text",text:{body:"Hello"},referral:{ctwa_clid:"synthetic-ctwa-click-id",source_type:"ad"}};
     injectSyntheticFreeEvidence=false;
     let response: Response;
     try { response=await callback([message]); } finally { injectSyntheticFreeEvidence=true; }
     expect(response.status).toBe(200);
-    expect(sends).toHaveLength(0);
+    expect(sends).toHaveLength(1);
     const stateRow=sqlite.prepare("SELECT state_data FROM whatsapp_conversations WHERE wa_id=?").get(sender) as {state_data:string};
     const state=JSON.parse(stateRow.state_data) as {freeMessagingEvidence:{openingResponse:Record<string,unknown>;fep?:unknown;pricing?:unknown}};
-    expect(state.freeMessagingEvidence?.openingResponse).toBeUndefined();
+    expect(state.freeMessagingEvidence?.openingResponse).toMatchObject({sourceType:"CTWA_AD",policyVerified:true,clickIdHash:expect.any(String)});
+    expect(state.freeMessagingEvidence.openingResponse.platform).toBeUndefined();
+    expect(state.freeMessagingEvidence.openingResponse.mobileOriginAttestation).toBeUndefined();
     expect(state.freeMessagingEvidence?.fep).toBeUndefined();
     expect(state.freeMessagingEvidence?.pricing).toBeUndefined();
+  });
+
+  it("compares legacy b426 service-window attempts with candidate coverage on identical sanitized lead fixtures", async () => {
+    const now = new Date();
+    const leadMessages = Array.from({ length: 7 }, (_, index) => ({
+      from: String(923000000001 + index),
+      id: `synthetic-coverage-${index + 1}`,
+      timestamp: String(Math.floor(now.getTime() / 1000)),
+      type: "text",
+      text: { body: "START" },
+      ...(index < 5 ? { referral: { ctwa_clid: `synthetic-click-${index + 1}`, source_type: "ad" } } : {})
+    }));
+    const returning = leadMessages[6];
+    sqlite.prepare("INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,last_inbound_at,created_at,updated_at) VALUES('synthetic-returning-lead',?,'NEW',?,'synthetic-returning-prior',?,?,?)")
+      .run(returning.from, JSON.stringify({ language: "en" }), new Date(now.getTime() - 5 * 60_000).toISOString(), now.toISOString(), now.toISOString());
+    const legacyAttempts = leadMessages.filter((message) => isInsideWhatsAppServiceWindow(new Date(Number(message.timestamp) * 1000).toISOString())).length;
+    expect(legacyAttempts).toBe(7);
+
+    injectSyntheticFreeEvidence=false;
+    try { for (const message of leadMessages) expect((await callback([message])).status).toBe(200); }
+    finally { injectSyntheticFreeEvidence=true; }
+    expect(sends).toHaveLength(5);
+    // The b426ba47 Worker (source commit 901f3f6) attempted the same CSW-open welcome path without a free-pricing gate.
+    expect(sqlite.prepare(`SELECT COUNT(*) AS received,SUM(eligible) AS eligible,SUM(attempted) AS attempted,SUM(accepted) AS accepted,
+      SUM(delivered) AS delivered,SUM(read) AS read,SUM(outcome LIKE 'SUPPRESSED%') AS suppressed,SUM(outcome LIKE 'UNRESOLVED%') AS unresolved
+      FROM whatsapp_lead_accounting`).get()).toEqual({ received: 7, eligible: 5, attempted: 5, accepted: 5, delivered: 0, read: 0, suppressed: 0, unresolved: 2 });
+    expect(sqlite.prepare("SELECT outcome,reason_code FROM whatsapp_lead_accounting WHERE outcome='UNRESOLVED_FREE_ELIGIBILITY'").get()).toEqual({ outcome: "UNRESOLVED_FREE_ELIGIBILITY", reason_code: "FREE_BILLING_UNKNOWN_OR_MISMATCHED" });
+
+    injectSyntheticFreeEvidence=false;
+    try { await callback([leadMessages[0]]); }
+    finally { injectSyntheticFreeEvidence=true; }
+    expect(sends).toHaveLength(5);
+    const replies = sqlite.prepare("SELECT provider_message_id FROM outbound_messages WHERE kind='LANGUAGE_SELECTION' AND provider_message_id IS NOT NULL ORDER BY created_at,id").all() as Array<{ provider_message_id: string }>;
+    expect(replies).toHaveLength(5);
+    expect(new Set(replies.map(({ provider_message_id }) => provider_message_id)).size).toBe(5);
+    const statusCallback=await callback([], [{ field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: replies.map(({ provider_message_id }, index) => ({ id: provider_message_id, recipient_id: leadMessages[index].from, status: index < 2 ? "read" : "delivered", timestamp: String(Math.floor(Date.now() / 1000)) })) } }]);
+    expect(statusCallback.status).toBe(200);
+    expect(await statusCallback.json()).toMatchObject({ eventCount: 5 });
+    expect(sqlite.prepare("SELECT status,COUNT(*) AS count FROM outbound_messages WHERE kind='LANGUAGE_SELECTION' AND provider_message_id IS NOT NULL GROUP BY status").all()).toEqual([{ status: "DELIVERED", count: 3 }, { status: "READ", count: 2 }]);
+    expect(sqlite.prepare("SELECT SUM(accepted) AS accepted,SUM(delivered) AS delivered,SUM(read) AS read FROM whatsapp_lead_accounting").get()).toEqual({ accepted: 5, delivered: 5, read: 2 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_events WHERE status IN ('RESPONSE_DELIVERED','RESPONSE_READ') AND event_type<>'STATUS'").get()).toEqual({ count: 5 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS responses FROM whatsapp_lead_responses").get()).toEqual({ responses: 5 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS duplicate_leads FROM (SELECT inbound_event_hash FROM whatsapp_lead_responses GROUP BY inbound_event_hash HAVING COUNT(*)>1)").get()).toEqual({ duplicate_leads: 0 });
   });
 
   it.each(["en", "ur"] as const)("keeps CONTACT for invalid mobile input and normalizes a valid hyphenated number (%s)", async (language) => {
@@ -964,7 +1009,7 @@ beforeEach(() => {
   queueSend = vi.fn(async () => undefined);
   vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init: RequestInit) => {
     if (timeoutNextSend) { timeoutNextSend = false; throw new DOMException("Synthetic timeout", "AbortError"); }
-    if (failNextSend) { failNextSend = false; return new Response("{}", { status: 503 }); }
+    if (failNextSend) { failNextSend = false; return new Response("{}", { status: 429 }); }
     if (init.body instanceof FormData) return Response.json({ id: "synthetic-nonpayable-media" });
     sends.push(JSON.parse(String(init.body)) as Record<string, unknown>);
     return Response.json({ messages: [{ id: `synthetic-outbound-${sends.length}` }] });
@@ -972,6 +1017,51 @@ beforeEach(() => {
 });
 
 afterEach(() => { sqlite.close(); vi.unstubAllGlobals(); });
+
+describe("durable WhatsApp billable-delivery protection", () => {
+  function status(id: string, state: string, billable: boolean | undefined, recipient = sender) {
+    return { field: "messages", value: { metadata: { phone_number_id: phoneId }, statuses: [{ id, recipient_id: recipient, status: state, timestamp: String(Math.floor(Date.now() / 1000)), ...(billable === undefined ? {} : { pricing: { billable, category: "utility", pricing_model: "PMP", type: "regular" } }) }] } };
+  }
+
+  it("records only explicit billable delivered/read callbacks idempotently without raw identities", async () => {
+    const order = await persistFlowSubmission(db, { fullName: "NON-PAYABLE Synthetic", deliveryAddress: "SYNTHETIC BILLING INCIDENT", nearbyPlace: "SYNTHETIC ONLY", city: "Synthetic City", contactNumber: "03001234567", productCode: "FREE_5_PACK_VEGETABLE_SEEDS", province: "Synthetic Province", fertilizerSelected: false }, undefined, "SYNTHETIC-BILLING-INCIDENT-ORDER", sender);
+    const paymentBefore = sqlite.prepare("SELECT * FROM payments").all();
+    const orderBefore = sqlite.prepare("SELECT * FROM orders").all();
+    await callback([], [status("synthetic-sent-billable", "sent", true), status("synthetic-unknown-billable", "delivered", true, ""), status("synthetic-nonbillable", "read", false), status("synthetic-unknown", "delivered", undefined), status("synthetic-failed", "failed", true)]);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_billing_incidents").get()).toEqual({ count: 0 });
+    const billable = status("synthetic-billable-delivered-id", "delivered", true);
+    expect((await callback([], [billable])).status).toBe(200);
+    expect((await callback([], [billable])).status).toBe(200);
+    const read = status("synthetic-billable-read-id", "read", true);
+    expect((await callback([], [read])).status).toBe(200);
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_billing_incidents").get()).toEqual({ count: 2 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM whatsapp_send_blocks WHERE status='ACTIVE'").get()).toEqual({ count: 1 });
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='WHATSAPP_BILLABLE_DELIVERY_INCIDENT'").get()).toEqual({ count: 2 });
+    const incidentData = JSON.stringify({ incidents: sqlite.prepare("SELECT * FROM whatsapp_billing_incidents").all(), blocks: sqlite.prepare("SELECT * FROM whatsapp_send_blocks").all(), audit: sqlite.prepare("SELECT entity_id,metadata_json FROM audit_log WHERE action='WHATSAPP_BILLABLE_DELIVERY_INCIDENT'").all() });
+    expect(incidentData).not.toContain("synthetic-billable-delivered-id");
+    expect(incidentData).not.toContain(sender);
+    expect(sqlite.prepare("SELECT * FROM orders").all()).toEqual(orderBefore);
+    expect(sqlite.prepare("SELECT * FROM payments").all()).toEqual(paymentBefore);
+    expect(order.orderId).toBeTruthy();
+    expect(await evaluateStoredFreeWhatsAppOutbound(db, sender)).toMatchObject({ eligible: false, reason: "UNEXPECTED_BILLABLE_MESSAGE_PAUSE" });
+  });
+
+  it("blocks subsequent API sends across inbound callbacks and fails closed if the durable block table is missing", async () => {
+    await callback([{ from: sender, id: "synthetic-blocked-inbound", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "START" } }]);
+    expect(sends).toHaveLength(1);
+    await callback([{ from: sender, id: "synthetic-blocked-inbound", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "START" } }]);
+    expect(sends).toHaveLength(1);
+    await callback([], [status("synthetic-outbound-1", "read", false)]);
+    expect(sqlite.prepare("SELECT idempotency_key,kind,provider_message_id,status FROM outbound_messages").all()).toEqual(expect.arrayContaining([expect.objectContaining({ idempotency_key: "conversation_reply:synthetic-blocked-inbound", kind: "LANGUAGE_SELECTION", provider_message_id: "synthetic-outbound-1", status: "READ" })]));
+    expect(sqlite.prepare("SELECT delivered,read FROM whatsapp_lead_accounting WHERE inbound_event_hash=(SELECT inbound_event_hash FROM whatsapp_lead_accounting LIMIT 1)").get()).toEqual({ delivered: 1, read: 1 });
+    await callback([], [status("synthetic-delivered-billable-for-send", "delivered", true)]);
+    await callback([{ from: sender, id: "synthetic-blocked-followup", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", text: { body: "START" } }]);
+    expect(sends).toHaveLength(1);
+    expect(sqlite.prepare("SELECT outcome,reason_code,eligible,attempted,accepted,delivered,read FROM whatsapp_lead_accounting WHERE inbound_event_hash=(SELECT inbound_event_hash FROM whatsapp_lead_accounting LIMIT 1)").get()).toMatchObject({ outcome: "RESPONSE_READ", reason_code: "RESPONSE_ACCEPTED", eligible: 1, attempted: 1, accepted: 1, delivered: 1, read: 1 });
+    sqlite.exec("DROP TABLE whatsapp_send_blocks");
+    expect(await evaluateStoredFreeWhatsAppOutbound(db, "923001234568")).toMatchObject({ eligible: false, reason: "BILLING_BLOCK_STORAGE_UNAVAILABLE" });
+  });
+});
 
 describe("GFS-474 interrupted checkout resume", () => {
   it.each(["en", "ur"] as const)("re-presents the current interactive step without losing %s checkout data", async (locale) => {
@@ -1140,7 +1230,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT count(*) AS count FROM orders").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT count(*) AS count FROM payments").get()).toEqual({ count: 0 });
     expect(sqlite.prepare("SELECT count(*) AS count FROM capi_events").get()).toEqual({ count: 0 });
-    expect(sqlite.prepare("SELECT count(*) AS count FROM outbox_jobs").get()).toEqual({ count: 0 });
+    expect(sqlite.prepare("SELECT status FROM outbox_jobs WHERE kind='WHATSAPP_INITIAL_LEAD_REPLY'").get()).toEqual({ status: "SENT" });
     const sendsAfterCancel = sends.length;
     await callback([cancel]);
     expect(sends).toHaveLength(sendsAfterCancel);
@@ -1245,6 +1335,33 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     };
     await expect(api.scheduled({ scheduledTime: Date.now(), cron: "* * * * *", noRetry: vi.fn() } as unknown as ScheduledController, env())).resolves.toBeUndefined();
     expect(recoverySyncAttempts).toBe(1);
+  });
+
+  it("marks stale initial reply processing as unresolved unknown acceptance without replay", async () => {
+    const inboundId="synthetic-stale-initial-reply";
+    const idempotencyKey=`welcome_reply:${inboundId}`;
+    const staleAt=new Date(Date.now()-10*60_000).toISOString();
+    await persistInboundLeadAccounting(db,inboundId,"ELIGIBLE_RESPONSE_ATTEMPTED","TEST_FIXTURE_ELIGIBLE",staleAt);
+    sqlite.prepare("INSERT INTO outbound_messages(id,idempotency_key,order_id,customer_id,kind,status,attempt_count,provider_message_id,last_error,created_at,updated_at) VALUES('synthetic-stale-outbound',?,NULL,NULL,'LANGUAGE_SELECTION','SENDING',1,NULL,NULL,?,?)").run(idempotencyKey,staleAt,staleAt);
+    sqlite.prepare("INSERT INTO outbox_jobs(id,idempotency_key,kind,entity_id,payload_json,status,attempts,last_error,available_at,created_at,updated_at) VALUES('synthetic-stale-job',?,'WHATSAPP_INITIAL_LEAD_REPLY','synthetic-stale-outbound',?,'PROCESSING',0,NULL,?,?,?)")
+      .run(idempotencyKey,JSON.stringify({inboundId,locale:"en"}),staleAt,staleAt,staleAt);
+    const sendsBefore=sends.length;
+    await api.scheduled({scheduledTime:Date.now(),cron:"* * * * *",noRetry:vi.fn()} as unknown as ScheduledController,env());
+    expect(sqlite.prepare("SELECT status,last_error FROM outbox_jobs WHERE id='synthetic-stale-job'").get()).toEqual({status:"UNKNOWN_ACCEPTANCE",last_error:"INITIAL_REPLY_PROCESSING_STALE"});
+    expect(sqlite.prepare("SELECT status,last_error FROM outbound_messages WHERE id='synthetic-stale-outbound'").get()).toEqual({status:"UNKNOWN_ACCEPTANCE",last_error:"INITIAL_REPLY_PROCESSING_STALE"});
+    expect(sqlite.prepare("SELECT outcome,reason_code,accepted FROM whatsapp_lead_accounting").get()).toEqual({outcome:"UNRESOLVED_UNKNOWN_ACCEPTANCE",reason_code:"INITIAL_REPLY_PROCESSING_STALE",accepted:0});
+    expect(sends).toHaveLength(sendsBefore);
+  });
+
+  it("accounts for an orphan initial-reply Queue message before acknowledging it", async () => {
+    const inboundId="synthetic-orphan-initial-reply";
+    await persistInboundLeadAccounting(db,inboundId,"ELIGIBLE_RESPONSE_ATTEMPTED","TEST_FIXTURE_ELIGIBLE");
+    const message={body:{kind:"WHATSAPP_INITIAL_LEAD_REPLY",idempotencyKey:`welcome_reply:${inboundId}`,entityId:"synthetic-orphan-outbound",schemaVersion:1 as const},attempts:1,ack:vi.fn(),retry:vi.fn()};
+    await api.queue({messages:[message]} as unknown as MessageBatch<typeof message.body>,env());
+    expect(message.ack).toHaveBeenCalledOnce();
+    expect(message.retry).not.toHaveBeenCalled();
+    expect(sqlite.prepare("SELECT outcome,reason_code FROM whatsapp_lead_accounting").get()).toEqual({outcome:"UNRESOLVED_INITIAL_REPLY_CONTEXT",reason_code:"ORPHANED_OUTBOX_JOB"});
+    expect(sqlite.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='QUEUE_ORPHANED_OUTBOX_MESSAGE'").get()).toEqual({count:1});
   });
 
   it("permanently blocks a free-form reply retry after the original inbound event leaves the 24-hour window", async () => {
@@ -1352,7 +1469,7 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT wa_id FROM customers").get()).toEqual({ wa_id: sender });
     expect(sqlite.prepare("SELECT method,review_state FROM payments").get()).toEqual({ method: null, review_state: "PENDING" });
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM payment_methods WHERE enabled=1 OR qr_owner_verified=1").get()).toEqual({ count: 0 });
-    expect(sqlite.prepare("SELECT kind,status FROM outbox_jobs").all()).toEqual([{ kind: "CAPI_LEAD", status: "PENDING" }]);
+    expect(sqlite.prepare("SELECT kind,status FROM outbox_jobs ORDER BY kind").all()).toEqual([{ kind: "CAPI_LEAD", status: "PENDING" }, { kind: "WHATSAPP_INITIAL_LEAD_REPLY", status: "SENT" }]);
     expect(queueSend).not.toHaveBeenCalled();
     const beforeReplay = sends.length;
     await callback([confirmation]);
@@ -1407,17 +1524,17 @@ describe("GFS-178 simulated signed-webhook lead-only journey", () => {
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM capi_events").get()).toEqual({ count: 1 });
   });
 
-  it("treats a Meta timeout before acceptance as retryable without duplicating the order or send", async () => {
+  it("keeps a timed-out send unresolved and never retries unknown acceptance", async () => {
     await reachReview("en");
     const sentBefore = sends.length;
     timeoutNextSend = true;
     const confirmation = await inbound(tap("PLACE_ORDER"), "synthetic-meta-timeout");
-    expect(conversation()?.state).toBe("REVIEW");
+    expect(conversation()?.state).toBe("COMPLETE");
     expect(sends).toHaveLength(sentBefore);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
     await callback([confirmation]);
     expect(conversation()?.state).toBe("COMPLETE");
-    expect(sends).toHaveLength(sentBefore + 1);
+    expect(sends).toHaveLength(sentBefore);
     expect(sqlite.prepare("SELECT COUNT(*) AS count FROM orders").get()).toEqual({ count: 1 });
   });
 

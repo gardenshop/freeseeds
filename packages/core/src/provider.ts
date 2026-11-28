@@ -1,4 +1,4 @@
-export type InboundEvent = { id: string; from: string; kind: "text" | "interactive" | "flow" | "media"; payload: unknown; providerTimestamp?: string; referral?: { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string; sourceType?: string; platform?: string } };
+export type InboundEvent = { id: string; from: string; kind: "text" | "interactive" | "flow" | "media" | "unsupported"; payload: unknown; providerTimestamp?: string; referral?: { ctwaClid?: string; campaignId?: string; adSetId?: string; adId?: string; sourceType?: string; platform?: string } };
 export type MediaResult = { mimeType: string; size: number; body: ArrayBuffer; mediaId: string };
 export type OutboundImage = { body: ArrayBuffer; mimeType: "image/jpeg" | "image/png"; filename?: string };
 export type InteractiveButton = { id: string; title: string };
@@ -67,11 +67,11 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
   }
 
   parseInboundEvent(payload: unknown): InboundEvent[] {
-    const root = payload as { entry?: Array<{ changes?: Array<{ value?: { messages?: Array<{ id?: string; from?: string; type?: string; timestamp?: string | number; image?: { id?: string; mime_type?: string }; document?: { id?: string; mime_type?: string }; context?: { id?: string }; interactive?: { nfm_reply?: unknown }; referral?: Record<string, string> }> } }> }> };
+    const root = payload as { entry?: Array<{ changes?: Array<{ value?: { messages?: Array<{ id?: string; from?: string; type?: string; timestamp?: string | number; text?: { body?: string }; image?: { id?: string; mime_type?: string }; document?: { id?: string; mime_type?: string }; context?: { id?: string }; interactive?: { nfm_reply?: unknown }; referral?: Record<string, string> }> } }> }> };
     const result: InboundEvent[] = [];
     for (const entry of root.entry ?? []) for (const change of entry.changes ?? []) for (const message of change.value?.messages ?? []) {
       if (!message.id || !message.from) continue;
-      const kind = message.image || message.document ? "media" : message.interactive?.nfm_reply ? "flow" : message.type === "interactive" ? "interactive" : "text";
+      const kind = message.image || message.document || message.type === "image" || message.type === "document" ? "media" : message.interactive?.nfm_reply ? "flow" : message.type === "interactive" ? "interactive" : message.type === "text" || (!message.type && message.text) ? "text" : "unsupported";
       const referral = message.referral ? {
         ctwaClid: message.referral.ctwa_clid,
         campaignId: message.referral.campaign_id,
@@ -160,10 +160,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
       const form = new FormData();
       form.append("messaging_product", "whatsapp");
       form.append("file", new Blob([qr.body], { type: qr.mimeType }), "payment-qr");
-      const upload = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/media`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}` }, body: form });
-      if (!upload.ok) throw new Error(`META_MEDIA_UPLOAD_${upload.status}`);
-      const uploaded = await upload.json() as { id?: string };
-      if (!uploaded.id) throw new Error("META_MEDIA_UPLOAD_ID_MISSING");
+      const uploaded = await this.uploadOutboundMedia(form);
       return this.performSend({ messaging_product: "whatsapp", to, type: "image", image: { id: uploaded.id, caption: "Payment QR" } });
     });
   }
@@ -174,11 +171,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
     const form = new FormData();
     form.append("messaging_product", "whatsapp");
     form.append("file", new Blob([media.body], { type: media.mimeType }), media.filename ?? "content-image");
-    const response = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/media`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}` }, body: form });
-    if (!response.ok) throw new Error(`META_MEDIA_UPLOAD_${response.status}`);
-    const uploaded = await response.json() as { id?: string };
-    if (!uploaded.id) throw new Error("META_MEDIA_UPLOAD_ID_MISSING");
-    return uploaded.id;
+    return (await this.uploadOutboundMedia(form)).id;
   }
 
   async downloadMedia(mediaId: string): Promise<MediaResult> {
@@ -208,12 +201,35 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
 
   private async performSend(payload: unknown): Promise<{ providerMessageId: string }> {
     this.requireEnabled();
-    const response = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/messages`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (!response.ok) throw new Error(`META_MESSAGE_SEND_${response.status}`);
-    const data = await response.json() as { messages?: Array<{ id?: string }> };
+    let response: Response;
+    try { response = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/messages`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(payload) }); }
+    catch { throw new Error("META_MESSAGE_ACCEPTANCE_UNKNOWN"); }
+    if (!response.ok) {
+      if (response.status === 429) throw new Error("META_MESSAGE_SEND_429");
+      if (response.status >= 500) throw new Error("META_MESSAGE_ACCEPTANCE_UNKNOWN");
+      throw new Error(`META_MESSAGE_SEND_${response.status}`);
+    }
+    let data: { messages?: Array<{ id?: string }> };
+    try { data = await response.json() as { messages?: Array<{ id?: string }> }; }
+    catch { throw new Error("META_MESSAGE_ACCEPTANCE_UNKNOWN"); }
     const providerMessageId = data.messages?.[0]?.id;
-    if (!providerMessageId) throw new Error("META_MESSAGE_ID_MISSING");
+    if (!providerMessageId) throw new Error("META_MESSAGE_ACCEPTANCE_UNKNOWN");
     return { providerMessageId };
+  }
+
+  private async uploadOutboundMedia(form: FormData): Promise<{ id: string }> {
+    let response: Response;
+    try { response = await fetch(`https://graph.facebook.com/${this.config.graphVersion}/${this.config.phoneNumberId}/media`, { method: "POST", headers: { Authorization: `Bearer ${this.config.accessToken}` }, body: form }); }
+    catch { throw new Error("META_MEDIA_UPLOAD_RETRYABLE"); }
+    if (!response.ok) {
+      if (response.status === 429 || response.status >= 500) throw new Error("META_MEDIA_UPLOAD_RETRYABLE");
+      throw new Error(`META_MEDIA_UPLOAD_${response.status}`);
+    }
+    let uploaded: { id?: string };
+    try { uploaded = await response.json() as { id?: string }; }
+    catch { throw new Error("META_MEDIA_UPLOAD_RETRYABLE"); }
+    if (!uploaded.id) throw new Error("META_MEDIA_UPLOAD_RETRYABLE");
+    return { id: uploaded.id };
   }
 
   private async imageFingerprint(image: OutboundImage): Promise<string> { return this.bytesFingerprint(image.body); }

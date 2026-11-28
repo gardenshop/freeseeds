@@ -45,9 +45,12 @@ describe("WhatsApp service-window timestamps", () => {
     sqlite.exec(`
       CREATE TABLE whatsapp_events(id TEXT PRIMARY KEY,provider_event_id TEXT UNIQUE,event_type TEXT,payload_hash TEXT,status TEXT,correlation_id TEXT,created_at TEXT);
       CREATE TABLE whatsapp_conversations(id TEXT,wa_id TEXT UNIQUE,state TEXT,state_data TEXT,last_inbound_message_id TEXT,created_at TEXT,updated_at TEXT);
+      CREATE TABLE cod_schema_migrations(version TEXT PRIMARY KEY,applied_at TEXT NOT NULL);
+      CREATE TABLE audit_log(id TEXT PRIMARY KEY,action TEXT,actor_type TEXT,actor_id TEXT,entity_type TEXT,entity_id TEXT,correlation_id TEXT,metadata_json TEXT,created_at TEXT);
       INSERT INTO whatsapp_conversations(id,wa_id,state,state_data,last_inbound_message_id,created_at,updated_at) VALUES('legacy','923001234567','NEW','{}','old-message','2026-01-01','2026-01-01');
     `);
     sqlite.exec(readFileSync("migrations/0026_whatsapp_last_inbound_at.sql", "utf8"));
+    sqlite.exec(readFileSync("migrations/0052_whatsapp_lead_accounting_and_billing_incidents.sql", "utf8"));
     expect(sqlite.prepare("SELECT last_inbound_at FROM whatsapp_conversations WHERE wa_id='923001234567'").get()).toEqual({ last_inbound_at: null });
     const db = makeDb();
     const start = Date.parse("2026-10-21T08:00:00.000Z");

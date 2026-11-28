@@ -16,7 +16,7 @@ One Admin `Confirm Payment` action reuses the saved order/method/amount, submits
 
 ## FEP-001 local acceptance (2026-11-26)
 
-The shared fail-closed guard now distinguishes a single initial free FEP-opening response (signed explicit mobile CTWA referral in the CSW; no pre-existing expiry/pricing receipt required) from active FEP, service allowance, approved template and unknown eligibility. Signed referral IDs and exact provider pricing/expiry status are minimized into existing conversation state; no separate FEP table/service or 168-hour assumption. Unknown platform, expiry, pricing or template state suppresses. Per-contact live WABA evidence, current remaining free-service counter and template quality status remain launch gates. See [FEP-001 closeout](GFS_ORDERFLOW_FEP_001.md).
+The shared fail-closed guard distinguishes a single initial free CTWA opening response (authenticated signed `source_type=ad` referral, hashed `ctwa_clid`, provider time inside the CSW; no pre-existing FEP expiry/pricing receipt or OS field) from later active FEP and unknown eligibility. Signed referral IDs and exact provider pricing/expiry status are minimized into existing conversation state; no assumed 168-hour expiry. Unknown referral/pricing, actual expiry, or template state suppresses and remains visible. Monthly service allowance is disabled because no exact account-wide pre-send quota exists. See [FEP-001 closeout](GFS_ORDERFLOW_FEP_001.md) and [ZERO-MISSED-LEADS-002](GFS_ORDERFLOW_ZERO_MISSED_LEADS_001.md).
 
 ## PENDING-001 local acceptance (2026-11-26)
 
